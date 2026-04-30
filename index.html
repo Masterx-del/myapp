@@ -6,11 +6,7 @@
     <title>Premium User Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(function(){});
-        }
-    </script>
+    <meta name="monetag" content="e8f291bfd808f9917c0cfee1c5914a1b">
     
     <style>
         :root {
@@ -2108,6 +2104,8 @@
         document.getElementById('chkLinkLabel').textContent = label; document.getElementById('chkLinkInput').placeholder = 'Enter ' + label; document.getElementById('chkPollContainer').style.display = showPoll ? 'block' : 'none';
         document.getElementById('checkoutModal').classList.add('active');
     };
+
+    window.goToStep2 = () => {
         const targetLink = document.getElementById('chkLinkInput').value.trim(); 
         const pollOption = document.getElementById('chkPollInput').value.trim(); 
         
