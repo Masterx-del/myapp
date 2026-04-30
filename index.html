@@ -6,7 +6,6 @@
     <title>Premium User Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <meta name="monetag" content="e8f291bfd808f9917c0cfee1c5914a1b">
     
     <style>
         :root {
@@ -3102,13 +3101,23 @@ window.adwWatchOne = function() {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading Ad...';
 
-    // Trigger the ad network — 3nbf4.com push/popunder ad via their zone
+    // Direct ad links
+    const _adLinks = [
+        'https://omg10.com/4/10945892',
+        'https://omg10.com/4/10945898',
+        'https://omg10.com/4/10945897',
+        'https://omg10.com/4/10945896',
+        'https://omg10.com/4/10945893',
+        'https://omg10.com/4/10945901',
+        'https://omg10.com/4/10945902',
+        'https://omg10.com/4/10945899',
+        'https://omg10.com/4/10945895',
+        'https://omg10.com/4/10945894'
+    ];
     try {
-        const adScript = document.createElement('script');
-        adScript.src = 'https://3nbf4.com/act/files/tag.min.js?z=10945327';
-        adScript.onload = function() { try { if(window.adsbygoogle) window.adsbygoogle.push({}); } catch(e){} };
-        document.head.appendChild(adScript);
-        setTimeout(() => { try { document.head.removeChild(adScript); } catch(e){} }, 5000);
+        const watched = adwGetWatched(_adwKey);
+        const linkIndex = watched % _adLinks.length;
+        window.open(_adLinks[linkIndex], '_blank');
     } catch(e) {}
 
     // Count the ad as watched after 15 seconds (ad duration)
