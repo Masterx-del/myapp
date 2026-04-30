@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -391,57 +392,6 @@
 
         @keyframes bannerSlideIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ── AD WATCH MODAL ── */
-        #adWatchModal {
-            position: absolute; inset: 0; background: rgba(15,23,42,0.85);
-            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-            z-index: 1200; display: none; align-items: center; justify-content: center;
-        }
-        #adWatchModal.active { display: flex; }
-        .adw-box {
-            background: var(--card-bg); border: 1px solid var(--border-color);
-            border-radius: 20px; padding: 28px 24px; width: 100%; max-width: 360px;
-            margin: 20px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-            animation: fadeIn 0.3s ease;
-        }
-        .adw-icon { font-size: 48px; margin-bottom: 12px; }
-        .adw-title { font-size: 18px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; letter-spacing: -0.4px; }
-        .adw-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5; }
-        .adw-progress-wrap { margin-bottom: 20px; }
-        .adw-progress-label { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .adw-bubbles { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-        .adw-bubble {
-            width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border-color);
-            background: var(--input-bg); display: flex; align-items: center; justify-content: center;
-            font-size: 14px; font-weight: 700; color: var(--text-secondary); transition: all 0.3s ease;
-        }
-        .adw-bubble.done { background: var(--accent-cyan); border-color: var(--accent-cyan); color: #fff; transform: scale(1.1); }
-        .adw-bubble.current { border-color: var(--accent-cyan); color: var(--accent-cyan); animation: pulseBadge 1.5s ease infinite; }
-        .adw-counter-text { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
-        .adw-counter-text b { color: var(--accent-cyan); font-size: 16px; }
-        .adw-watch-btn {
-            width: 100%; padding: 14px; border-radius: 10px;
-            background: linear-gradient(135deg, #2563eb, #1e3a8a);
-            border: none; color: #fff; font-size: 15px; font-weight: 700;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-            box-shadow: 0 4px 16px rgba(37,99,235,0.35); transition: all 0.2s; margin-bottom: 10px;
-        }
-        .adw-watch-btn:active { transform: scale(0.97); }
-        .adw-watch-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
-        .adw-skip-btn {
-            background: transparent; border: 1px solid var(--border-color);
-            color: var(--text-secondary); width: 100%; padding: 12px;
-            border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-        }
-        .adw-skip-btn:hover { border-color: var(--accent-pink); color: var(--accent-pink); }
-        .adw-free-badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3);
-            color: #10b981; padding: 5px 14px; border-radius: 20px;
-            font-size: 12px; font-weight: 700; margin-bottom: 16px;
-        }
-        @keyframes adCooldown { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 100; } }
     </style>
 </head>
 <body class="light-mode">
@@ -1087,7 +1037,7 @@
                     </div>
                 </div>
 
-                <div class="coupon-box">
+                <div class="coupon-box" id="chkCouponBox">
                     <input type="text" id="chkCouponInput" placeholder="Enter Promo Code">
                     <button class="btn-apply" onclick="applyCoupon()">APPLY</button>
                 </div>
@@ -1104,12 +1054,16 @@
                     <div class="input-group" id="chkPollContainer" style="display:none;"><label>Poll Vote Option</label><input type="text" id="chkPollInput" placeholder="Enter option to vote for"></div>
                 </div>
 
-                <div style="display:flex; justify-content:space-between; font-weight:700; font-size:16px; border-top:1px solid var(--border-color); padding-top:16px; margin-bottom: 20px; color: var(--text-primary);">
+                <div id="chkTotalRow" style="display:flex; justify-content:space-between; font-weight:700; font-size:16px; border-top:1px solid var(--border-color); padding-top:16px; margin-bottom: 20px; color: var(--text-primary);">
                     <span>Total Amount</span><span id="chkFinalPrice" style="color:var(--accent-cyan);">₹0</span>
                 </div>
 
-                <button class="btn" onclick="goToStep2()">Proceed to Payment <i class="fas fa-arrow-right"></i></button>
-                <button class="btn" id="chkWalletBtn" style="background:var(--accent-purple); margin-top:10px;" onclick="confirmWalletPurchase()"><i class="fas fa-wallet"></i> Pay via Wallet</button>
+                <div id="chkPaymentButtons">
+                    <button class="btn" onclick="goToStep2()">Proceed to Payment <i class="fas fa-arrow-right"></i></button>
+                    <button class="btn" id="chkWalletBtn" style="background:var(--accent-purple); margin-top:10px;" onclick="confirmWalletPurchase()"><i class="fas fa-wallet"></i> Pay via Wallet</button>
+                </div>
+                
+                <button class="btn" id="chkFreeClaimBtn" style="display:none; background:linear-gradient(135deg, #10b981, #059669); margin-top:10px;" onclick="claimFreeOrder()"><i class="fas fa-gift"></i> Claim Free Service</button>
             </div>
 
             <!-- STEP 2: QR Code and Payment -->
@@ -1264,7 +1218,7 @@
     // Build full proxy list — ordered fastest first, all fired in parallel
     const buildVerifyURLs = (verifyUrl) => {
         const enc = encodeURIComponent(verifyUrl);
-        return [
+        return[
             { url: verifyUrl,                                                   opts: {} },
             { url: `https://corsproxy.io/?${enc}`,                              opts: {} },
             { url: `https://api.allorigins.win/raw?url=${enc}`,                 opts: {} },
@@ -1278,8 +1232,7 @@
 
     // Pre-warm proxies the moment checkout modal opens — cuts ~300ms off verification
     function prewarmProxies(verifyUrl) {
-        const enc = encodeURIComponent(verifyUrl);
-        [
+        const enc = encodeURIComponent(verifyUrl);[
             'https://corsproxy.io/?',
             'https://api.allorigins.win/raw?url=',
             'https://corsproxy.org/?',
@@ -1297,6 +1250,7 @@
     let walletBalance = 0; let wfAmount = 0; let wfOrderId = '';
     let linkMgmtRules = {};
     let _productsLoaded = false;
+    let lastFreeOrderTime = 0;
     
     // To store Auto-generated ID
     let currentOrderId = "";
@@ -1320,7 +1274,7 @@
     function playOrderSuccessSound() {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const notes = [
+            const notes =[
                 { freq: 523.25, start: 0,    dur: 0.15 },  // C5
                 { freq: 659.25, start: 0.15, dur: 0.15 },  // E5
                 { freq: 783.99, start: 0.30, dur: 0.15 },  // G5
@@ -1389,22 +1343,69 @@
         currentCatView = { level: 2, cat: catName, subCat: subCatName };
         const catTitle = document.getElementById('catTitle'); catTitle.innerHTML = `<button class="back-btn-cat" onclick="openCategory('${catName}')"><i class="fas fa-arrow-left"></i></button><div style="line-height:1.2;"><div style="font-size:12px; font-weight:600; color:var(--text-secondary);">${catName}</div><div style="font-size:18px;">${subCatName}</div></div>`;
         const list = document.getElementById('catProductsList'); list.innerHTML = ''; let hasItems = false;
-        Object.entries(productsData).forEach(([id, p]) => { const pCat = p.category || 'Other'; const pSub = p.subCategory || 'General'; if(pCat === catName && pSub === subCatName && p.isActive !== false) { hasItems = true; 
-            list.innerHTML += `<div class="product-list-card">
+
+        // Collect matching products and sort: free first, paid after
+        const matchedProducts = [];
+        Object.entries(productsData).forEach(([id, p]) => { 
+            const pCat = p.category || 'Other'; const pSub = p.subCategory || 'General'; 
+            if(pCat === catName && pSub === subCatName && p.isActive !== false) { 
+                matchedProducts.push([id, p]);
+            } 
+        });
+        // Sort: free (price===0) products come first
+        matchedProducts.sort(([, a], [, b]) => {
+            const aFree = parseFloat(a.discountedPrice) === 0 ? 0 : 1;
+            const bFree = parseFloat(b.discountedPrice) === 0 ? 0 : 1;
+            return aFree - bFree;
+        });
+
+        matchedProducts.forEach(([id, p]) => {
+            hasItems = true; 
+            
+            const isFree = parseFloat(p.discountedPrice) === 0;
+            let actionHtml = '';
+            
+            if (isFree) {
+                if (Date.now() - lastFreeOrderTime < 86400000) {
+                    const timeLeft = 86400000 - (Date.now() - lastFreeOrderTime);
+                    const h = Math.floor(timeLeft / 3600000);
+                    const m = Math.floor((timeLeft % 3600000) / 60000);
+                    actionHtml = `<div class="plc-actions"><button class="plc-buy" style="background:var(--text-secondary);cursor:not-allowed;" disabled><i class="fas fa-clock"></i> <span class="free-timer-display">Wait ${h}h ${m}m</span></button></div>`;
+                } else {
+                    actionHtml = `<div class="plc-actions"><button class="plc-buy" onclick="initCheckout('${id}', 'product')" style="background:linear-gradient(135deg, #10b981, #059669);box-shadow:0 3px 12px rgba(16,185,129,0.3);"><i class="fas fa-gift"></i> Get Free</button></div>`;
+                }
+            } else {
+                actionHtml = `<div class="plc-actions">
+                    <button class="plc-cart-btn" onclick="addToCart('${id}')" title="Add to Cart"><i class="fas fa-cart-plus"></i></button>
+                    <button class="plc-buy" onclick="initCheckout('${id}', 'product')">Buy Now</button>
+                </div>`;
+            }
+
+            // Free card gets special green border + FREE badge + shimmer background
+            const freeCardStyle = isFree 
+                ? `border:2px solid #10b981; background: linear-gradient(135deg, rgba(16,185,129,0.06) 0%, var(--card-solid) 60%); position:relative; overflow:hidden;`
+                : '';
+            const freeBadgeHtml = isFree 
+                ? `<div style="position:absolute;top:0;right:0;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:0 10px 0 10px;letter-spacing:0.5px;display:flex;align-items:center;gap:4px;"><i class="fas fa-star" style="font-size:9px;"></i> FREE</div>`
+                : '';
+            const freePriceStyle = isFree
+                ? `color:#10b981;`
+                : '';
+
+            list.innerHTML += `<div class="product-list-card" style="${freeCardStyle}">
+              ${freeBadgeHtml}
               <div class="plc-header">
                 <div class="plc-info"><div class="plc-name">${p.title}</div></div>
-                <div class="plc-price-badge">${p.subCategory || p.category}</div>
+                <div class="plc-price-badge" style="${isFree ? 'background:rgba(16,185,129,0.12);color:#10b981;border-color:rgba(16,185,129,0.3);' : ''}">${p.subCategory || p.category}</div>
               </div>
               ${p.description ? `<p style="font-size:12px;color:var(--text-secondary);margin:0 0 12px;line-height:1.6;">${p.description}</p>` : ''}
               <div style="display:flex;justify-content:space-between;align-items:flex-start;${(p.features && p.features.length)?'border-top:1px solid var(--border-color);padding-top:12px;':''}margin-bottom:14px;">
-                ${(p.features && p.features.length) ? `<ul style="list-style:none;font-size:12px;margin:0;padding:0;flex:1;">${p.features.map(f=>`<li style="margin-bottom:6px;display:flex;align-items:center;gap:7px;color:var(--text-primary);"><i class="fas fa-check-circle" style="color:var(--accent-cyan);font-size:11px;flex-shrink:0;"></i>${f}</li>`).join('')}</ul>` : '<div></div>'}
-                <div class="plc-price" style="margin-bottom:0;margin-left:12px;flex-shrink:0;">₹${p.discountedPrice}</div>
+                ${(p.features && p.features.length) ? `<ul style="list-style:none;font-size:12px;margin:0;padding:0;flex:1;">${p.features.map(f=>`<li style="margin-bottom:6px;display:flex;align-items:center;gap:7px;color:var(--text-primary);"><i class="fas fa-check-circle" style="color:${isFree?'#10b981':'var(--accent-cyan)'};font-size:11px;flex-shrink:0;"></i>${f}</li>`).join('')}</ul>` : '<div></div>'}
+                <div class="plc-price" style="margin-bottom:0;margin-left:12px;flex-shrink:0;${freePriceStyle}">${isFree ? 'FREE' : '₹'+p.discountedPrice}</div>
               </div>
-              <div class="plc-actions">
-                <button class="plc-cart-btn" onclick="addToCart('${id}')" title="Add to Cart"><i class="fas fa-cart-plus"></i></button>
-                ${(function(){ const _r = typeof adwGetRequired === 'function' ? adwGetRequired(p.title||'') : 0; return _r > 0 ? `<button class="plc-buy" style="background:linear-gradient(135deg,#10b981,#059669);flex:2;font-size:11px;" onclick="initCheckout('${id}', 'product')"><i class="fas fa-gift"></i> Free (${_r} Ads)</button><button class="plc-buy" style="flex:1;font-size:11px;" onclick="initCheckoutDirect('${id}')">Buy</button>` : `<button class="plc-buy" onclick="initCheckout('${id}', 'product')">Buy Now</button>`; })()}
-              </div>
-            </div>`; } });
+              ${actionHtml}
+            </div>`; 
+        });
         if(!hasItems) { list.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><p>No services found.</p></div>'; }
         setTimeout(() => { const contentArea = document.querySelector('.content-area'); const pane = document.getElementById('categoryPane'); const targetPos = Math.max(0, pane.offsetTop - 40); contentArea.scrollTo({ top: targetPos, behavior: 'smooth' }); }, 50);
     };
@@ -1424,7 +1425,7 @@
             if(isSignupMode) { 
                 const cred = await createUserWithEmailAndPassword(auth, email, pass); 
                 await updateProfile(cred.user, { displayName: name }); 
-                await set(ref(db, `users/${cred.user.uid}/profile`), { name, email, createdAt: new Date().toISOString(), referredBy: referralSource || null, walletBalance: 0, totalSpent: 0 }); 
+                await set(ref(db, `users/${cred.user.uid}/profile`), { name, email, createdAt: new Date().toISOString(), referredBy: referralSource || null, walletBalance: 0, totalSpent: 0, lastFreeOrderTime: 0 }); 
                 showToast('Account Created!'); 
             } else { 
                 await signInWithEmailAndPassword(auth, email, pass); 
@@ -1490,7 +1491,7 @@
     }
 
     // ── WALLET ────────────────────────────────────────────────────────────
-    let _allWalletTxns = [];
+    let _allWalletTxns =[];
     let _walletFilter = 'all';
 
     function _safeDate(val) {
@@ -1510,7 +1511,7 @@
     }
 
     function _isCreditTx(tx) {
-        return ['credit','wallet_add','referral','admin_credit','wallet_topup'].includes(tx.type);
+        return['credit','wallet_add','referral','admin_credit','wallet_topup'].includes(tx.type);
     }
     function _isOrderTx(tx) {
         const note = (tx.note||'').toLowerCase();
@@ -1539,7 +1540,7 @@
     function renderWalletHistory() {
         const hist = document.getElementById('walletHistory');
         if(!hist) return;
-        let txns = [..._allWalletTxns];
+        let txns =[..._allWalletTxns];
         if(_walletFilter === 'credit')  txns = txns.filter(tx => _isCreditTx(tx));
         else if(_walletFilter === 'debit') txns = txns.filter(tx => !_isCreditTx(tx));
         else if(_walletFilter === 'orders') txns = txns.filter(tx => _isOrderTx(tx));
@@ -1589,6 +1590,7 @@
             if(!snap.exists()) return;
             const p = snap.val();
             walletBalance = parseFloat(p.walletBalance || 0);
+            lastFreeOrderTime = parseInt(p.lastFreeOrderTime || 0);
             const refEarned = parseFloat(p.referralEarned || 0);
             document.getElementById('walletBalance').textContent = `₹${walletBalance.toFixed(2)}`;
             document.getElementById('walletRefAmount').textContent = `₹${refEarned.toFixed(2)}`;
@@ -1600,7 +1602,7 @@
             if(afBal) afBal.textContent = `₹${walletBalance.toFixed(2)}`;
         });
         onValue(ref(db, `users/${currentUser.uid}/walletHistory`), snap => {
-            _allWalletTxns = [];
+            _allWalletTxns =[];
             if(snap.exists()) {
                 snap.forEach(c => {
                     const data = c.val();
@@ -2034,15 +2036,6 @@
         if(type === 'product' && checkoutItem.isActive === false) return showToast('⚠️ This service is currently unavailable');
         checkoutItem.id = id; checkoutItem.purchaseType = type; checkoutFinalAmt = type === 'product' ? parseFloat(checkoutItem.discountedPrice) : parseFloat(checkoutItem.price); appliedCouponKey = null;
 
-        // ── AD FREE ORDER CHECK ──
-        if (type === 'product') {
-            const _adReq = adwGetRequired(checkoutItem.title || '');
-            if (_adReq > 0) {
-                adwOpen(checkoutItem);
-                return;
-            }
-        }
-
         const imgEl = document.getElementById('chkImg'); if(checkoutItem.imageUrl) { imgEl.src = checkoutItem.imageUrl; imgEl.style.display = 'block'; } else { imgEl.style.display = 'none'; }
         document.getElementById('chkTitle').textContent = checkoutItem.title || checkoutItem.planName; document.getElementById('chkType').textContent = type === 'product' ? 'Digital Service' : `${checkoutItem.duration} Days Subscription`; document.getElementById('chkPrice').textContent = `₹${checkoutFinalAmt}`; document.getElementById('chkFinalPrice').textContent = `₹${checkoutFinalAmt}`; document.getElementById('chkPayAmt').textContent = `₹${checkoutFinalAmt}`;
         document.getElementById('chkCouponInput').value = ''; document.getElementById('chkCouponMsg').textContent = ''; document.getElementById('chkLinkInput').value = ''; document.getElementById('chkLinkInput2').value = ''; document.getElementById('chkLinkInput3').value = ''; document.getElementById('chkLinkInput4').value = ''; document.getElementById('chkLinkInput5').value = ''; document.getElementById('chkPollInput').value = '';
@@ -2051,6 +2044,21 @@
         const chkBtn = document.getElementById('chkWalletBtn');
         if(chkBtn) chkBtn.innerHTML = `<i class="fas fa-wallet"></i> Pay via Wallet (Bal: ₹${walletBalance.toFixed(2)})`;
 
+        // Check if free
+        const isFree = type === 'product' && checkoutFinalAmt === 0;
+
+        if (isFree) {
+            document.getElementById('chkCouponBox').style.display = 'none';
+            document.getElementById('chkCouponMsg').style.display = 'none';
+            document.getElementById('chkPaymentButtons').style.display = 'none';
+            document.getElementById('chkFreeClaimBtn').style.display = 'block';
+        } else {
+            document.getElementById('chkCouponBox').style.display = 'flex';
+            document.getElementById('chkCouponMsg').style.display = 'block';
+            document.getElementById('chkPaymentButtons').style.display = 'block';
+            document.getElementById('chkFreeClaimBtn').style.display = 'none';
+        }
+
         document.getElementById('chkStep1').style.display = 'block';
         document.getElementById('chkStep2').style.display = 'none';
 
@@ -2058,8 +2066,10 @@
         updateQRCode(checkoutFinalAmt, currentOrderId);
 
         // Pre-warm proxy connections so verification is faster when user clicks verify
-        const MERCHANT_ID_PW = "MdXwlu49903940058924";
-        prewarmProxies(`https://verify.pikaapis.workers.dev/?trn=PREWARM&id=${MERCHANT_ID_PW}`);
+        if (!isFree) {
+            const MERCHANT_ID_PW = "MdXwlu49903940058924";
+            prewarmProxies(`https://verify.pikaapis.workers.dev/?trn=PREWARM&id=${MERCHANT_ID_PW}`);
+        }
         
         document.getElementById('chkLinkContainer').style.display = 'block';
         if (type === 'product') {
@@ -2080,30 +2090,7 @@
         }
         document.getElementById('checkoutModal').classList.add('active');
     };
-
-    // Direct Buy — skips ad flow, goes straight to normal checkout
-    window.initCheckoutDirect = (id) => {
-        if(!currentUser) { showToast('Please login to purchase!'); switchTab('profileTab'); return; }
-        checkoutItem = productsData[id]; if(!checkoutItem) return showToast('Item unavailable');
-        if(checkoutItem.isActive === false) return showToast('⚠️ This service is currently unavailable');
-        checkoutItem.id = id; checkoutItem.purchaseType = 'product';
-        checkoutFinalAmt = parseFloat(checkoutItem.discountedPrice); appliedCouponKey = null;
-
-        const imgEl = document.getElementById('chkImg'); if(checkoutItem.imageUrl) { imgEl.src = checkoutItem.imageUrl; imgEl.style.display = 'block'; } else { imgEl.style.display = 'none'; }
-        document.getElementById('chkTitle').textContent = checkoutItem.title || checkoutItem.planName; document.getElementById('chkType').textContent = 'Digital Service'; document.getElementById('chkPrice').textContent = `₹${checkoutFinalAmt}`; document.getElementById('chkFinalPrice').textContent = `₹${checkoutFinalAmt}`; document.getElementById('chkPayAmt').textContent = `₹${checkoutFinalAmt}`;
-        document.getElementById('chkCouponInput').value = ''; document.getElementById('chkCouponMsg').textContent = ''; document.getElementById('chkLinkInput').value = ''; document.getElementById('chkLinkInput2').value = ''; document.getElementById('chkLinkInput3').value = ''; document.getElementById('chkLinkInput4').value = ''; document.getElementById('chkLinkInput5').value = ''; document.getElementById('chkPollInput').value = '';
-        const chkBtn = document.getElementById('chkWalletBtn'); if(chkBtn) chkBtn.innerHTML = `<i class="fas fa-wallet"></i> Pay via Wallet (Bal: ₹${walletBalance.toFixed(2)})`; if(chkBtn) chkBtn.style.display = '';
-        document.getElementById('chkStep1').style.display = 'block'; document.getElementById('chkStep2').style.display = 'none';
-        currentOrderId = generateUTR(12); updateQRCode(checkoutFinalAmt, currentOrderId);
-        const MERCHANT_ID_D = "MdXwlu49903940058924"; prewarmProxies(`https://verify.pikaapis.workers.dev/?trn=PREWARM&id=${MERCHANT_ID_D}`);
-        document.getElementById('chkLinkContainer').style.display = 'block';
-        document.getElementById('chkExtraLinksContainer').style.display = 'none';
-        let cat = checkoutItem.category || ''; let sub = checkoutItem.subCategory || ''; let label = 'Target Link'; let showPoll = false;
-        const ruleKey = `${cat}|${sub}`; if(linkMgmtRules[ruleKey]) { label = linkMgmtRules[ruleKey]; } else { const subLow = sub.toLowerCase(); if(cat==='Instagram'){if(subLow.includes('follower'))label='Paste Your Profile Link';else if(subLow.includes('reel'))label='Reels Link';else if(subLow.includes('story view'))label='Username';else if(subLow.includes('poll')){label='Story Link';showPoll=true;}else label='Post Link';}else if(cat==='YouTube'){if(subLow.includes('sub'))label='Channel Link';else if(subLow.includes('view')||subLow.includes('watch'))label='Video Link';else label='Post/Video Link';}else if(cat==='Facebook'){if(subLow.includes('group'))label='Group Link';else if(subLow.includes('follower'))label='Page/Profile Link';else label='Post/Video Link';}else if(cat==='WhatsApp'){if(subLow.includes('follower'))label='Channel Link';else label='Channel Post Link';}else if(cat==='Telegram'){if(subLow.includes('group'))label='Group Link';else if(subLow.includes('member'))label='Channel Link';else if(subLow.includes('poll')){label='Post Link';showPoll=true;}else label='Post Link';}else{label='Target Link / Username';} }
-        document.getElementById('chkLinkLabel').textContent = label; document.getElementById('chkLinkInput').placeholder = 'Enter ' + label; document.getElementById('chkPollContainer').style.display = showPoll ? 'block' : 'none';
-        document.getElementById('checkoutModal').classList.add('active');
-    };
-
+    
     window.goToStep2 = () => {
         const targetLink = document.getElementById('chkLinkInput').value.trim(); 
         const pollOption = document.getElementById('chkPollInput').value.trim(); 
@@ -2145,6 +2132,104 @@
         updateQRCode(checkoutFinalAmt, currentOrderId);
     };
 
+    window.claimFreeOrder = async () => {
+        if (_guardOrder()) return;
+        const targetLink  = document.getElementById('chkLinkInput').value.trim();
+        const pollOption  = document.getElementById('chkPollInput').value.trim();
+
+        if (!targetLink) { _unlockOrder(); return showToast('Please enter the required link/username'); }
+        if (document.getElementById('chkPollContainer').style.display === 'block' && !pollOption) {
+            _unlockOrder(); return showToast('Please enter the poll vote option');
+        }
+
+        if (Date.now() - lastFreeOrderTime < 86400000) {
+            _unlockOrder(); return showToast('❌ You have already claimed a free service today!');
+        }
+
+        showLoader();
+        try {
+            const utr = 'FREE_' + generateUTR(8);
+
+            const hasApiConfig = !!(
+                checkoutItem.apiUrl && checkoutItem.apiKey &&
+                checkoutItem.serviceId && checkoutItem.quantity && targetLink
+            );
+
+            const orderData = {
+                productId:       checkoutItem.id,
+                productSnapshot: checkoutItem,
+                userId:          currentUser.uid,
+                userEmail:       currentUser.email,
+                finalAmount:     '0.00',
+                utrId:           utr,
+                targetLink,
+                pollOption:      document.getElementById('chkPollContainer').style.display === 'block' ? pollOption : null,
+                status:          hasApiConfig ? 'progress' : 'pending',
+                createdAt:       new Date().toISOString(),
+                isSubscription:  false,
+                apiStatus:       hasApiConfig ? 'calling' : null,
+                paymentMethod:   'free'
+            };
+
+            const newOrderRef = push(ref(db, 'orders'));
+            const newFreeTime = Date.now();
+
+            lastFreeOrderTime = newFreeTime;
+
+            await Promise.all([
+                update(ref(db, `users/${currentUser.uid}/profile`), { lastFreeOrderTime: newFreeTime }),
+                set(newOrderRef, orderData)
+            ]);
+
+            _unlockOrder();
+            closeCheckout();
+            notifyLive('✅ Free Service Claimed Successfully!');
+            playOrderSuccessSound();
+            switchTab('ordersTab');
+            hideLoader();
+
+            sendTelegramOrderNotification([{product: checkoutItem}], 0, utr, targetLink);
+
+            if (hasApiConfig) {
+                const apiPayload = `key=${encodeURIComponent(checkoutItem.apiKey)}&action=add&service=${encodeURIComponent(checkoutItem.serviceId)}&link=${encodeURIComponent(targetLink)}&quantity=${encodeURIComponent(checkoutItem.quantity)}`;
+                const apiUrl     = checkoutItem.apiUrl;
+                const _freeOrderRefKey = newOrderRef.key;
+                (async () => {
+                    let _apiFiredFree = false;
+                    const apiURLs =[
+                        { url: apiUrl, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
+                        { url: `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
+                        { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl+'?'+apiPayload)}`, opts: { method:'GET' } }
+                    ];
+                    for(const { url, opts } of apiURLs) {
+                        if(_apiFiredFree) break;
+                        try {
+                            const r = await fetchWithTimeout(url, opts, 8000);
+                            const text = await r.text();
+                            let j; try { j = JSON.parse(text); } catch(e) { continue; }
+                            if(!j || typeof j !== 'object' || Array.isArray(j)) continue;
+                            _apiFiredFree = true;
+                            const orderId = j.order ?? j.order_id ?? j.id ?? j.orderId ?? null;
+                            const hasError = j.error || j.status === 'error' || j.message?.toLowerCase().includes('error');
+                            if (!hasError) {
+                                await update(ref(db, `orders/${_freeOrderRefKey}`), { apiStatus: 'placed', apiOrderId: orderId ? String(orderId) : 'placed', apiRawResponse: text.substring(0,500) });
+                            } else {
+                                await update(ref(db, `orders/${_freeOrderRefKey}`), { apiStatus: 'error', apiRawResponse: text.substring(0,500) });
+                            }
+                            break;
+                        } catch(e) { continue; }
+                    }
+                    if(!_apiFiredFree) await update(ref(db, `orders/${_freeOrderRefKey}`), { apiStatus: 'failed', apiRawResponse: 'All proxies failed / timeout' }).catch(()=>{});
+                })().catch(() => {});
+            }
+
+        } catch (e) {
+            _unlockOrder();
+            hideLoader();
+            showToast('❌ System Error: ' + e.message);
+        }
+    };
+
     window.confirmPurchase = async () => {
         // ── Strict double-submit guard: disable button immediately ──
         const verifyBtn = document.querySelector('#chkStep2 .btn');
@@ -2170,7 +2255,7 @@
             const verifyUrl   = `https://verify.pikaapis.workers.dev/?trn=${utr}&id=${MERCHANT_ID}`;
             const verifyURLs  = buildVerifyURLs(verifyUrl);
 
-            const [utrSnapshot, verifyResult] = await Promise.all([
+            const[utrSnapshot, verifyResult] = await Promise.all([
                 get(query(ref(db, 'orders'), orderByChild('utrId'), equalTo(utr))),
                 raceFetch(verifyURLs, j => j && typeof j.STATUS !== 'undefined'),
             ]);
@@ -2263,7 +2348,7 @@
                     // Server-side guard: abort if order already processed (e.g. duplicate trigger)
                     const _existSnap = await get(ref(db, `orders/${_capturedOrderKey}/apiStatus`)).catch(()=>null);
                     if (_existSnap && _existSnap.exists() && _existSnap.val() !== 'calling') return;
-                    const apiURLs = [
+                    const apiURLs =[
                         { url: apiUrl, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
                         { url: `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
                         { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl+'?'+apiPayload)}`, opts: { method:'GET' } },
@@ -2363,7 +2448,7 @@
                 update(ref(db, `users/${currentUser.uid}/profile`), { walletBalance: newBal }),
                 push(ref(db, `users/${currentUser.uid}/walletHistory`), { type: 'debit', amount: checkoutFinalAmt, note: 'Purchased: ' + (checkoutItem.title || checkoutItem.planName), utrId: utr, createdAt: new Date().toISOString() }),
                 set(newOrderRef, orderData),
-                ...(appliedCouponKey ? [update(ref(db, `coupons/${appliedCouponKey}`), { usedCount: (couponsData[appliedCouponKey].usedCount || 0) + 1 })] : []),
+                ...(appliedCouponKey ?[update(ref(db, `coupons/${appliedCouponKey}`), { usedCount: (couponsData[appliedCouponKey].usedCount || 0) + 1 })] :[]),
             ]);
 
             _unlockOrder();
@@ -2392,7 +2477,7 @@
                     // Server-side guard: abort if order already processed (e.g. duplicate trigger)
                     const _existSnapW = await get(ref(db, `orders/${_capturedOrderKeyW}/apiStatus`)).catch(()=>null);
                     if (_existSnapW && _existSnapW.exists() && _existSnapW.val() !== 'calling') return;
-                    const apiURLs = [
+                    const apiURLs =[
                         { url: apiUrl, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
                         { url: `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
                         { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl+'?'+apiPayload)}`, opts: { method:'GET' } },
@@ -2440,7 +2525,7 @@
     });
 
     // ── CART SYSTEM ────────────────────────────────────────────────────────
-    let cart = []; // [{id, product, link, couponDiscount}]
+    let cart = []; //[{id, product, link, couponDiscount}]
     let cartOrderId = '';
     let cartFinalAmt = 0;
     let cartAppliedCoupon = null;
@@ -2643,7 +2728,7 @@
                         const _existSnapC = await get(ref(db, `orders/${_orderRefKey}/apiStatus`)).catch(()=>null);
                         if (_existSnapC && _existSnapC.exists() && _existSnapC.val() !== 'calling') return;
                         let _apiFired = false;
-                        const apiURLs = [
+                        const apiURLs =[
                             { url: apiUrl, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
                             { url: `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
                             { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl+'?'+apiPayload)}`, opts: { method:'GET' } },
@@ -2687,7 +2772,7 @@
             // Send Telegram notification (non-blocking)
             sendTelegramOrderNotification(cart, paidVal, utr, cart[0]?.link || null);
 
-            cart = []; updateCartBadge();
+            cart =[]; updateCartBadge();
             _unlockOrder();
             closeCart(); notifyLive('✅ Payment Verified! All orders placed successfully!'); playOrderSuccessSound(); switchTab('ordersTab');
             hideLoader();
@@ -2745,7 +2830,7 @@
                         const _existSnapCW = await get(ref(db, `orders/${_wOrderRefKey}/apiStatus`)).catch(()=>null);
                         if (_existSnapCW && _existSnapCW.exists() && _existSnapCW.val() !== 'calling') return;
                         let _wApiFired = false;
-                        const apiURLs = [
+                        const apiURLs =[
                             { url: apiUrl, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
                             { url: `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
                             { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl+'?'+apiPayload)}`, opts: { method:'GET' } },
@@ -2787,7 +2872,7 @@
 
             sendTelegramOrderNotification(cart, cartFinalAmt, utr, cart[0]?.link || null);
 
-            cart = []; updateCartBadge();
+            cart =[]; updateCartBadge();
             _unlockOrder();
             closeCart(); notifyLive('✅ Wallet Payment Successful! Orders placed!'); playOrderSuccessSound(); switchTab('ordersTab');
             hideLoader();
@@ -2800,7 +2885,8 @@
     async function sendTelegramOrderNotification(cartItems, amount, utr, targetLink) {
         try {
             const isWallet = utr.startsWith('WALLET_');
-            const payLabel = isWallet ? 'Wallet' : 'UPI';
+            const isFree = utr.startsWith('FREE_');
+            const payLabel = isFree ? 'Free Claim' : isWallet ? 'Wallet' : 'UPI';
             const itemLines = cartItems.map(i => `  ▸ ${i.product?.title || i.product?.planName || 'Service'}`).join('\n');
             const now = new Date().toLocaleString('en-IN');
 
@@ -2979,307 +3065,22 @@
         } catch(e) {}
     }
 
+    // ── Start Free Timer updates globally ─────────────────────────
+    setInterval(() => {
+        const els = document.querySelectorAll('.free-timer-display');
+        if(els.length === 0) return;
+        const diff = Date.now() - lastFreeOrderTime;
+        if(diff >= 86400000) {
+            if(currentCatView.level === 2) openSubCategory(currentCatView.cat, currentCatView.subCat);
+        } else {
+            const timeLeft = 86400000 - diff;
+            const h = Math.floor(timeLeft / 3600000);
+            const m = Math.floor((timeLeft % 3600000) / 60000);
+            els.forEach(el => el.textContent = `Wait ${h}h ${m}m`);
+        }
+    }, 60000);
+
     loadPublicData(); window.switchTab = switchTab;
-</script>
-
-<!-- ══════════════════════════════════════════════
-     AD WATCH MODAL — Free Order Unlock System
-     ══════════════════════════════════════════════ -->
-<div id="adWatchModal">
-    <div class="adw-box">
-        <div class="adw-icon">🎬</div>
-        <div class="adw-free-badge"><i class="fas fa-gift"></i> FREE ORDER</div>
-        <div class="adw-title" id="adwTitle">Watch Ads for Free Order</div>
-        <div class="adw-subtitle" id="adwSubtitle">Watch a few short ads to unlock your free order — no payment needed!</div>
-        <div class="adw-progress-wrap">
-            <div class="adw-progress-label">Your Ad Progress</div>
-            <div class="adw-bubbles" id="adwBubbles"></div>
-            <div class="adw-counter-text">Watched <b id="adwWatchedCount">0</b> of <b id="adwTotalCount">6</b> ads</div>
-        </div>
-        <button class="adw-watch-btn" id="adwWatchBtn" onclick="this.dataset.adwMode==='claim'?adwClaimFreeOrder():adwWatchOne()">
-            <i class="fas fa-play-circle"></i> Watch Ad Now
-        </button>
-        <button class="adw-skip-btn" onclick="adwClose()">
-            <i class="fas fa-times"></i> Cancel
-        </button>
-    </div>
-</div>
-
-<script>
-// ── AD WATCH FREE ORDER SYSTEM ──────────────────────────────────────────
-// Rules: service title matching (case-insensitive)
-//   "5k" + "reel" → 6 ads → free order
-//   "1k"          → 2 ads → free order
-//   "10k"         → 10 ads → free order
-
-const ADW_RULES = [
-    { test: (t) => /10[,\s]?000|10k/i.test(t) && /reel/i.test(t),  adsRequired: 10 },
-    { test: (t) => /5[,\s]?000|5k/i.test(t)   && /reel/i.test(t),  adsRequired: 6  },
-    { test: (t) => /1[,\s]?000|1k/i.test(t)   && /reel/i.test(t),  adsRequired: 2  },
-];
-
-let _adwItem       = null;   // current checkout item
-let _adwRequired   = 0;      // ads required for this item
-let _adwKey        = '';     // localStorage key for progress
-let _adwCooldown   = false;  // prevent spam clicking
-
-function adwGetRequired(title) {
-    for (const rule of ADW_RULES) {
-        if (rule.test(title || '')) return rule.adsRequired;
-    }
-    return 0;
-}
-
-function adwGetWatched(key) {
-    try { return parseInt(localStorage.getItem('adw_' + key) || '0'); } catch(e) { return 0; }
-}
-
-function adwSetWatched(key, count) {
-    try { localStorage.setItem('adw_' + key, String(count)); } catch(e) {}
-}
-
-function adwOpen(item) {
-    _adwItem = item;
-    const title = item.title || item.planName || '';
-    _adwRequired = adwGetRequired(title);
-    _adwKey = (item.id || title).replace(/\s+/g, '_').toLowerCase();
-
-    document.getElementById('adwTitle').textContent = 'Watch Ads — Free ' + title;
-    document.getElementById('adwSubtitle').textContent =
-        'Watch ' + _adwRequired + ' short ads to get this service completely FREE!';
-    document.getElementById('adwTotalCount').textContent = _adwRequired;
-
-    adwRenderProgress();
-    document.getElementById('adWatchModal').classList.add('active');
-}
-
-function adwClose() {
-    document.getElementById('adWatchModal').classList.remove('active');
-    _adwItem = null; _adwCooldown = false;
-}
-
-function adwRenderProgress() {
-    const watched = adwGetWatched(_adwKey);
-    document.getElementById('adwWatchedCount').textContent = watched;
-    document.getElementById('adwTotalCount').textContent = _adwRequired;
-
-    const bubblesEl = document.getElementById('adwBubbles');
-    bubblesEl.innerHTML = '';
-    for (let i = 0; i < _adwRequired; i++) {
-        const b = document.createElement('div');
-        b.className = 'adw-bubble';
-        if (i < watched) {
-            b.classList.add('done');
-            b.innerHTML = '<i class="fas fa-check" style="font-size:12px;"></i>';
-        } else if (i === watched) {
-            b.classList.add('current');
-            b.textContent = i + 1;
-        } else {
-            b.textContent = i + 1;
-        }
-        bubblesEl.appendChild(b);
-    }
-
-    const btn = document.getElementById('adwWatchBtn');
-    btn.disabled = false;
-    if (watched >= _adwRequired) {
-        btn.innerHTML = '<i class="fas fa-gift"></i> Claim Free Order!';
-        btn.dataset.adwMode = 'claim';
-    } else {
-        btn.innerHTML = '<i class="fas fa-play-circle"></i> Watch Ad Now';
-        btn.dataset.adwMode = 'watch';
-    }
-}
-
-window.adwWatchOne = function() {
-    if (_adwCooldown) return;
-    const watched = adwGetWatched(_adwKey);
-    if (watched >= _adwRequired) { adwClaimFreeOrder(); return; }
-
-    const btn = document.getElementById('adwWatchBtn');
-    _adwCooldown = true;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading Ad...';
-
-    // Direct ad links
-    const _adLinks = [
-        'https://omg10.com/4/10945892',
-        'https://omg10.com/4/10945898',
-        'https://omg10.com/4/10945897',
-        'https://omg10.com/4/10945896',
-        'https://omg10.com/4/10945893',
-        'https://omg10.com/4/10945901',
-        'https://omg10.com/4/10945902',
-        'https://omg10.com/4/10945899',
-        'https://omg10.com/4/10945895',
-        'https://omg10.com/4/10945894'
-    ];
-    try {
-        const watched = adwGetWatched(_adwKey);
-        const linkIndex = watched % _adLinks.length;
-        window.open(_adLinks[linkIndex], '_blank');
-    } catch(e) {}
-
-    // Count the ad as watched after 15 seconds (ad duration)
-    btn.innerHTML = '<i class="fas fa-clock"></i> Ad Playing... (15s)';
-
-    let countdown = 15;
-    const timer = setInterval(() => {
-        countdown--;
-        if (countdown > 0) {
-            btn.innerHTML = `<i class="fas fa-clock"></i> Ad Playing... (${countdown}s)`;
-        } else {
-            clearInterval(timer);
-            // Credit the watched ad
-            const newCount = adwGetWatched(_adwKey) + 1;
-            adwSetWatched(_adwKey, newCount);
-            _adwCooldown = false;
-            adwRenderProgress();
-            if (newCount >= _adwRequired) {
-                showToast('🎉 All ads watched! Claim your free order!');
-            } else {
-                showToast(`✅ Ad ${newCount}/${_adwRequired} done! ${_adwRequired - newCount} more to go.`);
-            }
-        }
-    }, 1000);
-};
-
-window.adwClaimFreeOrder = async function() {
-    if (!_adwItem || !currentUser) return showToast('Please login first');
-    const watched = adwGetWatched(_adwKey);
-    if (watched < _adwRequired) return showToast(`⚠️ Watch ${_adwRequired - watched} more ad(s) first!`);
-
-    const targetLink = document.getElementById('chkLinkInput') ? document.getElementById('chkLinkInput').value.trim() : '';
-
-    // Open checkout modal first to get target link if not already entered
-    if (!targetLink) {
-        adwClose();
-        // Open the real checkout modal so user enters their link, then we intercept
-        checkoutItem = _adwItem;
-        checkoutItem.purchaseType = 'product';
-        checkoutFinalAmt = 0;
-        appliedCouponKey = null;
-
-        const imgEl = document.getElementById('chkImg');
-        if (checkoutItem.imageUrl) { imgEl.src = checkoutItem.imageUrl; imgEl.style.display = 'block'; } else { imgEl.style.display = 'none'; }
-        document.getElementById('chkTitle').textContent = checkoutItem.title || checkoutItem.planName;
-        document.getElementById('chkType').textContent = 'Digital Service — FREE (Ads Reward)';
-        document.getElementById('chkPrice').textContent = '₹0.00';
-        document.getElementById('chkFinalPrice').textContent = '₹0.00';
-        document.getElementById('chkPayAmt').textContent = '₹0.00';
-        document.getElementById('chkCouponInput').value = '';
-        document.getElementById('chkCouponMsg').textContent = '';
-        document.getElementById('chkLinkInput').value = '';
-        document.getElementById('chkLinkInput2').value = '';
-        document.getElementById('chkLinkInput3').value = '';
-        document.getElementById('chkLinkInput4').value = '';
-        document.getElementById('chkLinkInput5').value = '';
-        document.getElementById('chkPollInput').value = '';
-
-        // Set the wallet button to be the "Free Claim" button
-        const chkBtn = document.getElementById('chkWalletBtn');
-        if (chkBtn) chkBtn.style.display = 'none';
-        // Replace Step2 pay button with free claim
-        document.getElementById('chkStep1').style.display = 'block';
-        document.getElementById('chkStep2').style.display = 'none';
-
-        // Set link label
-        let cat = checkoutItem.category || ''; let sub = checkoutItem.subCategory || ''; let label = 'Target Link';
-        const subLow = sub.toLowerCase();
-        if (cat === 'Instagram') { if (subLow.includes('follower')) label = 'Paste Your Profile Link'; else if (subLow.includes('reel')) label = 'Reels Link'; else label = 'Post Link'; } else { label = 'Target Link / Username'; }
-        document.getElementById('chkLinkLabel').textContent = label;
-        document.getElementById('chkLinkInput').placeholder = 'Enter ' + label;
-        document.getElementById('chkPollContainer').style.display = 'none';
-        document.getElementById('chkExtraLinksContainer').style.display = 'none';
-        document.getElementById('chkLinkContainer').style.display = 'block';
-
-        currentOrderId = generateUTR(12);
-        // Override Step2 to show free claim instead of QR
-        _adwPendingFreeOrder = true;
-        document.getElementById('checkoutModal').classList.add('active');
-        return;
-    }
-
-    await _adwPlaceFreeOrder(targetLink);
-};
-
-let _adwPendingFreeOrder = false;
-
-// Override goToStep2 to intercept free-order flow
-const _origGoToStep2 = window.goToStep2;
-window.goToStep2 = function() {
-    if (_adwPendingFreeOrder) {
-        const targetLink = document.getElementById('chkLinkInput').value.trim();
-        if (!targetLink) return showToast('Please enter the required link/username');
-        // Show a simplified "Confirm Free Order" step
-        document.getElementById('chkStep1').style.display = 'none';
-        document.getElementById('chkStep2').style.display = 'block';
-        // Update step2 UI to show free order (no QR)
-        document.getElementById('chkPayAmt').textContent = '₹0.00 (FREE)';
-        const verifyBtn = document.querySelector('#chkStep2 .btn');
-        if (verifyBtn) {
-            verifyBtn.innerHTML = '<i class="fas fa-gift"></i> Confirm Free Order';
-            verifyBtn.onclick = async function() {
-                const link = document.getElementById('chkLinkInput').value.trim();
-                await _adwPlaceFreeOrder(link);
-            };
-        }
-        return;
-    }
-    _origGoToStep2();
-};
-
-async function _adwPlaceFreeOrder(targetLink) {
-    if (!_adwItem || !currentUser) return showToast('Please login first');
-    if (!targetLink) return showToast('Please enter the required link/username');
-
-    showLoader();
-    try {
-        const utr = 'FREE_ADS_' + generateUTR(8);
-        const orderData = {
-            productId:       _adwItem.id,
-            productSnapshot: _adwItem,
-            userId:          currentUser.uid,
-            userEmail:       currentUser.email,
-            finalAmount:     '0.00',
-            utrId:           utr,
-            targetLink:      targetLink,
-            status:          'pending',
-            createdAt:       new Date().toISOString(),
-            isSubscription:  false,
-            paymentMethod:   'free_ads',
-            adsWatched:      _adwRequired,
-        };
-
-        await push(ref(db, 'orders'), orderData);
-
-        // Reset ad count after successful free order
-        adwSetWatched(_adwKey, 0);
-        _adwPendingFreeOrder = false;
-
-        // Restore wallet button
-        const chkBtn = document.getElementById('chkWalletBtn');
-        if (chkBtn) chkBtn.style.display = '';
-
-        // Restore verify button
-        const verifyBtn = document.querySelector('#chkStep2 .btn');
-        if (verifyBtn) {
-            verifyBtn.innerHTML = '<i class="fas fa-lock"></i> I Have Paid. Verify Now';
-            verifyBtn.onclick = window.confirmPurchase;
-        }
-
-        hideLoader();
-        adwClose();
-        document.getElementById('checkoutModal').classList.remove('active');
-        notifyLive('🎉 Free Order Placed via Ads Reward!');
-        playOrderSuccessSound();
-        switchTab('ordersTab');
-        _adwItem = null;
-    } catch(e) {
-        hideLoader();
-        showToast('❌ Error: ' + e.message);
-    }
-}
 </script>
 
 </body>
