@@ -1407,7 +1407,7 @@
               </div>
               <div class="plc-actions">
                 <button class="plc-cart-btn" onclick="addToCart('${id}')" title="Add to Cart"><i class="fas fa-cart-plus"></i></button>
-                ${(function(){ const _r = typeof adwGetRequired === 'function' ? adwGetRequired(p.title||'') : 0; return _r > 0 ? `<button class="plc-buy" style="background:linear-gradient(135deg,#10b981,#059669);flex:2;" onclick="initCheckout('${id}', 'product')"><i class="fas fa-gift"></i> Free (Watch ${_r} Ads)</button>` : `<button class="plc-buy" onclick="initCheckout('${id}', 'product')">Buy Now</button>`; })()}
+                ${(function(){ const _r = typeof adwGetRequired === 'function' ? adwGetRequired(p.title||'') : 0; return _r > 0 ? `<button class="plc-buy" style="background:linear-gradient(135deg,#10b981,#059669);flex:2;font-size:11px;" onclick="initCheckout('${id}', 'product')"><i class="fas fa-gift"></i> Free (${_r} Ads)</button><button class="plc-buy" style="flex:1;font-size:11px;" onclick="initCheckoutDirect('${id}')">Buy</button>` : `<button class="plc-buy" onclick="initCheckout('${id}', 'product')">Buy Now</button>`; })()}
               </div>
             </div>`; } });
         if(!hasItems) { list.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><p>No services found.</p></div>'; }
@@ -2085,8 +2085,29 @@
         }
         document.getElementById('checkoutModal').classList.add('active');
     };
-    
-    window.goToStep2 = () => {
+
+    // Direct Buy — skips ad flow, goes straight to normal checkout
+    window.initCheckoutDirect = (id) => {
+        if(!currentUser) { showToast('Please login to purchase!'); switchTab('profileTab'); return; }
+        checkoutItem = productsData[id]; if(!checkoutItem) return showToast('Item unavailable');
+        if(checkoutItem.isActive === false) return showToast('⚠️ This service is currently unavailable');
+        checkoutItem.id = id; checkoutItem.purchaseType = 'product';
+        checkoutFinalAmt = parseFloat(checkoutItem.discountedPrice); appliedCouponKey = null;
+
+        const imgEl = document.getElementById('chkImg'); if(checkoutItem.imageUrl) { imgEl.src = checkoutItem.imageUrl; imgEl.style.display = 'block'; } else { imgEl.style.display = 'none'; }
+        document.getElementById('chkTitle').textContent = checkoutItem.title || checkoutItem.planName; document.getElementById('chkType').textContent = 'Digital Service'; document.getElementById('chkPrice').textContent = `₹${checkoutFinalAmt}`; document.getElementById('chkFinalPrice').textContent = `₹${checkoutFinalAmt}`; document.getElementById('chkPayAmt').textContent = `₹${checkoutFinalAmt}`;
+        document.getElementById('chkCouponInput').value = ''; document.getElementById('chkCouponMsg').textContent = ''; document.getElementById('chkLinkInput').value = ''; document.getElementById('chkLinkInput2').value = ''; document.getElementById('chkLinkInput3').value = ''; document.getElementById('chkLinkInput4').value = ''; document.getElementById('chkLinkInput5').value = ''; document.getElementById('chkPollInput').value = '';
+        const chkBtn = document.getElementById('chkWalletBtn'); if(chkBtn) chkBtn.innerHTML = `<i class="fas fa-wallet"></i> Pay via Wallet (Bal: ₹${walletBalance.toFixed(2)})`; if(chkBtn) chkBtn.style.display = '';
+        document.getElementById('chkStep1').style.display = 'block'; document.getElementById('chkStep2').style.display = 'none';
+        currentOrderId = generateUTR(12); updateQRCode(checkoutFinalAmt, currentOrderId);
+        const MERCHANT_ID_D = "MdXwlu49903940058924"; prewarmProxies(`https://verify.pikaapis.workers.dev/?trn=PREWARM&id=${MERCHANT_ID_D}`);
+        document.getElementById('chkLinkContainer').style.display = 'block';
+        document.getElementById('chkExtraLinksContainer').style.display = 'none';
+        let cat = checkoutItem.category || ''; let sub = checkoutItem.subCategory || ''; let label = 'Target Link'; let showPoll = false;
+        const ruleKey = `${cat}|${sub}`; if(linkMgmtRules[ruleKey]) { label = linkMgmtRules[ruleKey]; } else { const subLow = sub.toLowerCase(); if(cat==='Instagram'){if(subLow.includes('follower'))label='Paste Your Profile Link';else if(subLow.includes('reel'))label='Reels Link';else if(subLow.includes('story view'))label='Username';else if(subLow.includes('poll')){label='Story Link';showPoll=true;}else label='Post Link';}else if(cat==='YouTube'){if(subLow.includes('sub'))label='Channel Link';else if(subLow.includes('view')||subLow.includes('watch'))label='Video Link';else label='Post/Video Link';}else if(cat==='Facebook'){if(subLow.includes('group'))label='Group Link';else if(subLow.includes('follower'))label='Page/Profile Link';else label='Post/Video Link';}else if(cat==='WhatsApp'){if(subLow.includes('follower'))label='Channel Link';else label='Channel Post Link';}else if(cat==='Telegram'){if(subLow.includes('group'))label='Group Link';else if(subLow.includes('member'))label='Channel Link';else if(subLow.includes('poll')){label='Post Link';showPoll=true;}else label='Post Link';}else{label='Target Link / Username';} }
+        document.getElementById('chkLinkLabel').textContent = label; document.getElementById('chkLinkInput').placeholder = 'Enter ' + label; document.getElementById('chkPollContainer').style.display = showPoll ? 'block' : 'none';
+        document.getElementById('checkoutModal').classList.add('active');
+    };
         const targetLink = document.getElementById('chkLinkInput').value.trim(); 
         const pollOption = document.getElementById('chkPollInput').value.trim(); 
         
@@ -3083,11 +3104,10 @@ window.adwWatchOne = function() {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading Ad...';
 
-    // Trigger the ad network — 5gvci.com push/popunder ad via their zone
+    // Trigger the ad network — 3nbf4.com push/popunder ad via their zone
     try {
-        // Method 1: use their script tag ad trigger (popunder/interstitial)
         const adScript = document.createElement('script');
-        adScript.src = 'https://5gvci.com/act/files/tag.min.js?z=10945180';
+        adScript.src = 'https://3nbf4.com/act/files/tag.min.js?z=10945327';
         adScript.onload = function() { try { if(window.adsbygoogle) window.adsbygoogle.push({}); } catch(e){} };
         document.head.appendChild(adScript);
         setTimeout(() => { try { document.head.removeChild(adScript); } catch(e){} }, 5000);
