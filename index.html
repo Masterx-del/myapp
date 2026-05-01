@@ -1901,7 +1901,7 @@
         const utr = wfOrderId;
         if(!utr) return showToast('⚠️ Invalid Order ID');
         
-        showLoader();
+        showPayVerify();
         try {
             // ── Steps 1+2: Firebase duplicate check AND payment verify IN PARALLEL ──
             const MERCHANT_ID = "MdXwlu49903940058924";
@@ -1914,23 +1914,23 @@
             ]);
             let verifyResult = _wfVerifyResult0;
 
-            if(utrSnapshot.exists()) { hideLoader(); return showToast('❌ This Order ID has already been used!'); }
+            if(utrSnapshot.exists()) { hidePayVerify(); return showToast('❌ This Order ID has already been used!'); }
             if(!verifyResult) { 
                 showToast('⚠️ Network slow, retrying...');
                 await new Promise(r => setTimeout(r, 2500));
                 const retryResult = await raceFetch(verifyURLs, j => j && typeof j.STATUS !== 'undefined');
-                if(!retryResult) { hideLoader(); return showToast("❌ Network Error. Check internet and try again."); }
+                if(!retryResult) { hidePayVerify(); return showToast("❌ Network Error. Check internet and try again."); }
                 verifyResult = retryResult;
             }
             
             const result = verifyResult.json;
             if(result.STATUS !== "TXN_SUCCESS" || result.RESPMSG !== "Txn Success") { 
-                hideLoader(); 
+                hidePayVerify(); 
                 return showToast("❌ Payment not verified yet. " + (result.RESPMSG || "Try again in a few seconds.")); 
             }
             
             const paidVal = parseFloat(result.TXNAMOUNT);
-            if(paidVal < wfAmount) { hideLoader(); return showToast(`❌ Amount mismatch! Required ₹${wfAmount}, paid ₹${paidVal}`); }
+            if(paidVal < wfAmount) { hidePayVerify(); return showToast(`❌ Amount mismatch! Required ₹${wfAmount}, paid ₹${paidVal}`); }
 
             // ── Step 3: Wallet Addition Logic ──
             const newBal = walletBalance + paidVal;
@@ -1938,11 +1938,19 @@
             await push(ref(db, `users/${currentUser.uid}/walletHistory`), { type: 'credit', amount: paidVal, note: 'Wallet Top-Up', utrId: utr, createdAt: new Date().toISOString() });
             await push(ref(db, 'orders'), { userId: currentUser.uid, userEmail: currentUser.email, utrId: utr, finalAmount: paidVal.toFixed(2), type: 'wallet_topup', status: 'completed', createdAt: new Date().toISOString() });
 
-            hideLoader(); 
-            closeWalletFund(); 
-            notifyLive(`✅ ₹${paidVal.toFixed(2)} added to your wallet!`);
+            playOrderSuccessSound();
+            // Show wallet-specific success message
+            const _pvoLabel = document.getElementById('pvoLabel');
+            const _pvoSub   = document.getElementById('pvoSublabel');
+            showPayVerifySuccess(() => {
+                closeWalletFund();
+                notifyLive(`✅ ₹${paidVal.toFixed(2)} added to your wallet!`);
+                switchTab('walletTab');
+            });
+            if(_pvoLabel) _pvoLabel.textContent = 'Wallet Credited! ✅';
+            if(_pvoSub)   _pvoSub.innerHTML = `₹${paidVal.toFixed(2)} added successfully.<br>Redirecting to wallet...`;
         } catch(e) { 
-            hideLoader(); 
+            hidePayVerify(); 
             showToast('❌ Error: ' + e.message); 
         }
     };
@@ -2513,11 +2521,20 @@
             ]);
 
             _unlockOrder();
-            closeCheckout(); 
-            notifyLive('✅ Wallet Payment Successful! Order Placed.'); 
+            closeCheckout();
             playOrderSuccessSound();
-            switchTab('ordersTab');
             hideLoader();
+            const _pvoLabelW = document.getElementById('pvoLabel');
+            const _pvoSubW   = document.getElementById('pvoSublabel');
+            showPayVerify();
+            setTimeout(() => {
+                showPayVerifySuccess(() => {
+                    notifyLive('✅ Wallet Payment Successful! Order Placed.');
+                    switchTab('ordersTab');
+                });
+                if(_pvoLabelW) _pvoLabelW.textContent = 'Order Placed! ✅';
+                if(_pvoSubW)   _pvoSubW.innerHTML = 'Wallet payment successful.<br>Redirecting to orders...';
+            }, 100);
 
             // Spend tracking & Referral
             get(ref(db, `users/${currentUser.uid}/profile`)).then(spentSnap => {
@@ -2571,7 +2588,7 @@
 
         } catch (e) {
             _unlockOrder();
-            hideLoader();
+            hidePayVerify();
             showToast('❌ System Error: ' + e.message);
         }
     };
@@ -2741,7 +2758,7 @@
         if (_guardOrder()) return;
         const utr = cartOrderId;
         if(!utr) { _unlockOrder(); return showToast('❌ Invalid Order ID'); }
-        showLoader();
+        showPayVerify();
         try {
             // ── Steps 1+2: Firebase duplicate check AND payment verify IN PARALLEL ──
             const MERCHANT_ID = "MdXwlu49903940058924";
@@ -2753,17 +2770,17 @@
                 raceFetch(verifyURLs, j => j && typeof j.STATUS !== 'undefined'),
             ]);
 
-            if(utrSnapshot.exists()) { _unlockOrder(); hideLoader(); return showToast('❌ This Order ID already used!'); }
-            if(!verifyResult) { _unlockOrder(); hideLoader(); return showToast("❌ Network Error."); }
+            if(utrSnapshot.exists()) { _unlockOrder(); hidePayVerify(); return showToast('❌ This Order ID already used!'); }
+            if(!verifyResult) { _unlockOrder(); hidePayVerify(); return showToast("❌ Network Error."); }
             
             const result = verifyResult.json;
             if(result.STATUS !== "TXN_SUCCESS" || result.RESPMSG !== "Txn Success") { 
-                _unlockOrder(); hideLoader(); 
+                _unlockOrder(); hidePayVerify(); 
                 return showToast("❌ Payment not verified yet. " + (result.RESPMSG || "Wait a moment and try again.")); 
             }
             
             const paidVal = parseFloat(result.TXNAMOUNT);
-            if(paidVal < cartFinalAmt) { _unlockOrder(); hideLoader(); return showToast(`❌ Amount mismatch! Required ₹${cartFinalAmt.toFixed(2)}, paid ₹${paidVal}`); }
+            if(paidVal < cartFinalAmt) { _unlockOrder(); hidePayVerify(); return showToast(`❌ Amount mismatch! Required ₹${cartFinalAmt.toFixed(2)}, paid ₹${paidVal}`); }
 
             // Save one order per cart item and call external API if needed
             const promises = cart.map(async item => {
@@ -2835,9 +2852,17 @@
 
             cart = []; updateCartBadge();
             _unlockOrder();
-            closeCart(); notifyLive('✅ Payment Verified! All orders placed successfully!'); playOrderSuccessSound(); switchTab('ordersTab');
-            hideLoader();
-        } catch(e) { _unlockOrder(); hideLoader(); showToast('❌ Error: ' + e.message); }
+            closeCart();
+            playOrderSuccessSound();
+            const _pvoLabelC = document.getElementById('pvoLabel');
+            const _pvoSubC   = document.getElementById('pvoSublabel');
+            if(_pvoLabelC) _pvoLabelC.textContent = 'Payment Verified! ✅';
+            if(_pvoSubC)   _pvoSubC.innerHTML = 'All orders placed successfully.<br>Redirecting to orders...';
+            showPayVerifySuccess(() => {
+                notifyLive('✅ Payment Verified! All orders placed successfully!');
+                switchTab('ordersTab');
+            });
+        } catch(e) { _unlockOrder(); hidePayVerify(); showToast('❌ Error: ' + e.message); }
     };
 
     window.confirmCartWalletPurchase = async () => {
@@ -2854,7 +2879,7 @@
             _unlockOrder(); return showToast(`❌ Insufficient Wallet Balance! Need ₹${cartFinalAmt.toFixed(2)}`);
         }
 
-        showLoader();
+        showPayVerify();
         try {
             const utr = 'WALLET_' + generateUTR(8);
 
@@ -2935,11 +2960,19 @@
 
             cart = []; updateCartBadge();
             _unlockOrder();
-            closeCart(); notifyLive('✅ Wallet Payment Successful! Orders placed!'); playOrderSuccessSound(); switchTab('ordersTab');
-            hideLoader();
+            closeCart();
+            playOrderSuccessSound();
+            const _pvoLabelCW = document.getElementById('pvoLabel');
+            const _pvoSubCW   = document.getElementById('pvoSublabel');
+            if(_pvoLabelCW) _pvoLabelCW.textContent = 'Order Placed! ✅';
+            if(_pvoSubCW)   _pvoSubCW.innerHTML = 'Wallet payment successful.<br>Redirecting to orders...';
+            showPayVerifySuccess(() => {
+                notifyLive('✅ Wallet Payment Successful! Orders placed!');
+                switchTab('ordersTab');
+            });
         } catch(e) { 
             _unlockOrder();
-            hideLoader(); showToast('❌ Error: ' + e.message); 
+            hidePayVerify(); showToast('❌ Error: ' + e.message); 
         }
     };
 
