@@ -2174,11 +2174,10 @@
             const verifyUrl   = `https://verify.pikaapis.workers.dev/?trn=${utr}&id=${MERCHANT_ID}`;
             const verifyURLs  = buildVerifyURLs(verifyUrl);
 
-            const [utrSnapshot, _verifyResult0] = await Promise.all([
+            const [utrSnapshot, verifyResult] = await Promise.all([
                 get(query(ref(db, 'orders'), orderByChild('utrId'), equalTo(utr))),
                 raceFetch(verifyURLs, j => j && typeof j.STATUS !== 'undefined'),
             ]);
-            let verifyResult = _verifyResult0;
 
             if (utrSnapshot.exists()) { 
                 _unlockOrder(); _resetBtn(); hideLoader(); 
@@ -2186,15 +2185,8 @@
             }
 
             if (!verifyResult) { 
-                // Auto-retry once more before giving up
-                showToast('⚠️ Network slow, retrying...');
-                await new Promise(r => setTimeout(r, 2500));
-                const retryResult = await raceFetch(verifyURLs, j => j && typeof j.STATUS !== 'undefined');
-                if (!retryResult) {
-                    _unlockOrder(); _resetBtn(); hideLoader(); 
-                    return showToast("❌ Network Error. Check your internet connection and try again."); 
-                }
-                verifyResult = retryResult;
+                _unlockOrder(); _resetBtn(); hideLoader(); 
+                return showToast("❌ Network Error. Check your internet connection."); 
             }
 
             const result = verifyResult.json;
