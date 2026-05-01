@@ -413,7 +413,7 @@
         @keyframes pvoIn { from{transform:scale(0.8) translateY(20px);opacity:0;} to{transform:scale(1) translateY(0);opacity:1;} }
 
         /* Circular progress ring */
-        .pvo-ring-wrap { position:relative; width:100px; height:100px; margin:0 auto 20px; }
+        .pvo-ring-wrap { position:relative; width:72px; height:72px; margin:0 auto 20px; }
         .pvo-ring-bg { stroke: var(--border-color, #e2e8f0); fill: none; }
         .pvo-ring-fg {
             fill: none;
@@ -421,15 +421,15 @@
             stroke-linecap: round;
             transform-origin: center;
             transform: rotate(-90deg);
-            stroke-dasharray: 283;
-            stroke-dashoffset: 283;
+            stroke-dasharray: 185;
+            stroke-dashoffset: 185;
             transition: stroke-dashoffset 0.3s ease, stroke 0.3s ease;
             animation: pvoRingFill 3s linear forwards;
         }
         @keyframes pvoRingFill {
-            0%   { stroke-dashoffset: 283; stroke: #2563eb; }
-            40%  { stroke-dashoffset: 170; stroke: #3b82f6; }
-            75%  { stroke-dashoffset: 71;  stroke: #0ea5e9; }
+            0%   { stroke-dashoffset: 185; stroke: #2563eb; }
+            40%  { stroke-dashoffset: 111; stroke: #3b82f6; }
+            75%  { stroke-dashoffset: 46;  stroke: #0ea5e9; }
             100% { stroke-dashoffset: 0;   stroke: #10b981; }
         }
         .pvo-icon-center {
@@ -1245,9 +1245,9 @@
 <div id="payVerifyOverlay">
     <div class="pvo-card">
         <div class="pvo-ring-wrap">
-            <svg viewBox="0 0 100 100" width="100" height="100">
-                <circle class="pvo-ring-bg" cx="50" cy="50" r="45" stroke-width="6"/>
-                <circle class="pvo-ring-fg" id="pvoRingFg" cx="50" cy="50" r="45" stroke-width="6"/>
+            <svg viewBox="0 0 72 72" width="72" height="72">
+                <circle class="pvo-ring-bg" cx="36" cy="36" r="29" stroke-width="5"/>
+                <circle class="pvo-ring-fg" id="pvoRingFg" cx="36" cy="36" r="29" stroke-width="5"/>
             </svg>
             <div class="pvo-icon-center" id="pvoIconCenter">
                 <div class="pvo-dots">
@@ -1981,7 +1981,8 @@
         onValue(ref(db, 'meta/offers'), s => { if(s.exists()){ const d = s.val(); const banner = document.getElementById('offerBanner'); if(d.name && d.imageUrl) { banner.style.display = 'flex'; banner.style.backgroundImage = `url('${d.imageUrl}')`; document.getElementById('offerTitle').textContent = d.name; document.getElementById('offerDesc').textContent = d.description || ''; document.getElementById('offerPrice').textContent = `₹${d.newRate || 0}`; document.getElementById('offerOldPrice').textContent = `₹${d.oldRate || 0}`; document.getElementById('contactLink').href = d.contactUsername ? (d.contactUsername.startsWith('http') ? d.contactUsername : `https://t.me/${d.contactUsername.replace('@','')}`) : '#'; document.getElementById('updatesLink').href = d.channelLink || '#'; } else { banner.style.display = 'none'; } } });
         onValue(ref(db, 'meta/contact'), s => { if(s.exists() && s.val().socialTelegram){ if(document.getElementById('contactLink').getAttribute('href') === '#') { document.getElementById('contactLink').href = s.val().socialTelegram; } } });
         onValue(ref(db, 'meta/linkMgmt'), s => { linkMgmtRules = s.exists() ? s.val() : {}; });
-        onValue(ref(db, 'products'), s => { productsData = s.exists() ? s.val() : {}; _productsLoaded = true; if(document.getElementById('categoryPane').style.display === 'block') { if(currentCatView.level === 1) { openCategory(currentCatView.cat); } else if(currentCatView.level === 2) { openSubCategory(currentCatView.cat, currentCatView.subCat); } } });
+        let _firstProductLoad = true;
+        onValue(ref(db, 'products'), s => { productsData = s.exists() ? s.val() : {}; _productsLoaded = true; if(document.getElementById('categoryPane').style.display === 'block') { if(currentCatView.level === 1) { openCategory(currentCatView.cat); } else if(currentCatView.level === 2) { openSubCategory(currentCatView.cat, currentCatView.subCat); } } if(_firstProductLoad) { _firstProductLoad = false; openCategory('Instagram'); } });
         onValue(ref(db, 'subscriptions'), s => { subsData = s.exists() ? s.val() : {}; renderSubscriptions(); });
         onValue(ref(db, 'coupons'), s => { couponsData = s.exists() ? s.val() : {}; });
 
