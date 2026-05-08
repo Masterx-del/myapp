@@ -2175,30 +2175,31 @@
                     if(referredList.length > 0) {
                         listWrap.style.display = 'block';
 
-                        // Read referrer's actual walletHistory to show real earned per referred user
-                        let myHistoryTxns = [];
+                        // Read referrer's actual walletHistory — real earned per referred user
+                        let refWalletTxns = [];
                         try {
                             const histSnap = await get(ref(db, `users/${user.uid}/walletHistory`));
-                            if(histSnap.exists()) {
-                                histSnap.forEach(h => { myHistoryTxns.push(h.val()); });
-                            }
+                            if(histSnap.exists()) histSnap.forEach(h => refWalletTxns.push(h.val()));
                         } catch(e) {}
 
-                        // Signup referral txns sorted by date (oldest first — matches referredList order)
-                        const signupTxns = myHistoryTxns
+                        // Signup txns sorted oldest→newest (index matches referredList order by joinedAt)
+                        const signupTxns = refWalletTxns
                             .filter(tx => tx.type === 'referral' && tx.subtype === 'signup')
-                            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                            .sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-                        // Spend referral txns — sum all for total
-                        const spendTotal = myHistoryTxns
-                            .filter(tx => tx.type === 'referral' && tx.subtype === 'spend')
-                            .reduce((s, tx) => s + parseFloat(tx.amount || 0), 0);
+                        // Sort referredList oldest→newest too so index matches signupTxns
+                        referredList.sort((a,b) => new Date(a.joinedAt) - new Date(b.joinedAt));
 
                         listEl.innerHTML = referredList.map((u, idx) => {
                             const dateStr = u.joinedAt ? new Date(u.joinedAt).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) : '—';
-                            // Actual signup reward earned for this specific referred user
-                            const signupAmt = signupTxns[idx] ? parseFloat(signupTxns[idx].amount || 0) : 0;
-                            const earnedStr = `₹${signupAmt.toFixed(2)}`;
+                            // Actual signup reward credited for this referred user
+                            const signupAmt  = signupTxns[idx] ? parseFloat(signupTxns[idx].amount || 0) : 0;
+                            // Spend rewards: sum all spend txns proportionally (total / referred count)
+                            const spendTotal = refWalletTxns
+                                .filter(tx => tx.type === 'referral' && tx.subtype === 'spend')
+                                .reduce((s,tx) => s + parseFloat(tx.amount||0), 0);
+                            const totalEarned = signupAmt + (referredList.length > 0 ? spendTotal / referredList.length : 0);
+                            const earnedStr = `₹${totalEarned.toFixed(2)}`;
                             return `<div style="display:flex;justify-content:space-between;align-items:center;background:var(--card-bg);border:1px solid var(--border-color);border-radius:8px;padding:10px 12px;gap:8px;">
                                 <div style="flex:1;min-width:0;">
                                     <div style="font-size:12px;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.name}</div>
@@ -2547,17 +2548,18 @@
     // Type A: Signup reward (flat ₹) — called once when new user joins
     // Type B: Spend % reward — called on every order
 
+    // ── REFERRAL REWARD CORE ── atomic multi-path write so Firebase rules pass
     async function _applyReferralReward(referredBy, amount, note, subtype) {
         try {
             const refSnap = await get(ref(db, `users/${referredBy}/profile`));
             if(!refSnap.exists()) return;
             const refProfile = refSnap.val();
-            const refBal = parseFloat(refProfile.walletBalance || 0);
+            const refBal    = parseFloat(refProfile.walletBalance  || 0);
             const refEarned = parseFloat(refProfile.referralEarned || 0);
 
             const settingsSnap = await get(ref(db, 'meta/referralSettings'));
-            const refSettings = settingsSnap.exists() ? settingsSnap.val() : {};
-            const maxReward = parseFloat(refSettings.maxRewardPerUser || 0);
+            const refSettings  = settingsSnap.exists() ? settingsSnap.val() : {};
+            const maxReward    = parseFloat(refSettings.maxRewardPerUser || 0);
             if(maxReward > 0 && refEarned >= maxReward) return;
             const actualReward = (maxReward > 0) ? Math.min(amount, maxReward - refEarned) : amount;
             if(actualReward <= 0) return;
@@ -2566,21 +2568,17 @@
             const newEarned = parseFloat((refEarned + actualReward).toFixed(2));
             const histKey   = push(ref(db, `users/${referredBy}/walletHistory`)).key;
 
-            // Multi-path atomic write — works with new Firebase rules
-            // (current user writes to referrer's profile+walletHistory via referredBy permission)
-            const multiUpdate = {};
-            multiUpdate[`users/${referredBy}/profile/walletBalance`]    = newBal;
-            multiUpdate[`users/${referredBy}/profile/referralEarned`]   = newEarned;
-            multiUpdate[`users/${referredBy}/walletHistory/${histKey}`] = {
-                type: 'referral',
-                subtype,
-                amount: actualReward,
-                note,
+            // Single atomic multi-path write — passes Firebase referredBy rule
+            const mu = {};
+            mu[`users/${referredBy}/profile/walletBalance`]   = newBal;
+            mu[`users/${referredBy}/profile/referralEarned`]  = newEarned;
+            mu[`users/${referredBy}/walletHistory/${histKey}`] = {
+                type: 'referral', subtype, amount: actualReward, note,
                 createdAt: new Date().toISOString()
             };
-            await update(ref(db), multiUpdate);
+            await update(ref(db), mu);
         } catch(e) {
-            console.error('[_applyReferralReward error]', e);
+            console.error('[_applyReferralReward]', e.message);
         }
     }
 
@@ -2588,30 +2586,28 @@
     async function processSignupReferralReward(newUserId, referredBy) {
         try {
             const settingsSnap = await get(ref(db, 'meta/referralSettings'));
-            const refSettings = settingsSnap.exists() ? settingsSnap.val() : {};
+            const refSettings  = settingsSnap.exists() ? settingsSnap.val() : {};
             if(refSettings.active === false) return;
             const signupReward = parseFloat(refSettings.rewardAmount || 0);
             if(signupReward <= 0) return;
 
-            // Prevent duplicate: check if this new user already triggered signup reward
+            // Prevent duplicate reward
             const newUserSnap = await get(ref(db, `users/${newUserId}/profile`));
             if(newUserSnap.exists() && newUserSnap.val().signupRewardProcessed === true) return;
 
-            // Mark as processed first to prevent race conditions / double reward
+            // Mark processed BEFORE giving reward — prevents race condition
             await update(ref(db, `users/${newUserId}/profile`), { signupRewardProcessed: true });
-
-            const noteDesc = `🎉 Signup Reward — New user joined via your link`;
-            await _applyReferralReward(referredBy, signupReward, noteDesc, 'signup');
+            await _applyReferralReward(referredBy, signupReward, '🎉 Signup Reward — New user joined via your link', 'signup');
         } catch(e) {
-            console.error('[processSignupReferralReward error]', e);
+            console.error('[processSignupReferralReward]', e.message);
         }
     }
 
-    // ── TYPE B: Spend % Reward — har order pe ──
+    // ── TYPE B: Spend % Reward — har order pe (single/cart/wallet sab) ──
     async function processReferralReward(userId, spentAmount) {
         try {
             const settingsSnap = await get(ref(db, 'meta/referralSettings'));
-            const refSettings = settingsSnap.exists() ? settingsSnap.val() : {};
+            const refSettings  = settingsSnap.exists() ? settingsSnap.val() : {};
             if(refSettings.active === false) return;
 
             const userSnap = await get(ref(db, `users/${userId}/profile`));
@@ -2625,10 +2621,9 @@
             const reward = parseFloat(((spentAmount * spendPercent) / 100).toFixed(2));
             if(reward <= 0) return;
 
-            const noteDesc = `💰 Spend Reward — ${spendPercent}% of ₹${spentAmount.toFixed(2)} order`;
-            await _applyReferralReward(referredBy, reward, noteDesc, 'spend');
+            await _applyReferralReward(referredBy, reward, `💰 Spend Reward — ${spendPercent}% of ₹${spentAmount.toFixed(2)} order`, 'spend');
         } catch(e) {
-            console.error('[processReferralReward error]', e);
+            console.error('[processReferralReward]', e.message);
         }
     }
 
