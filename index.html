@@ -2175,37 +2175,20 @@
                     if(referredList.length > 0) {
                         listWrap.style.display = 'block';
 
-                        // Read referrer's actual walletHistory to get real earned per referred user
-                        let _refTxnMap = {};
+                        // Read referrer's walletHistory — match by refUid for accurate per-user earned
+                        const _uidEarned = {};
                         try {
                             const _histSnap = await get(ref(db, `users/${user.uid}/walletHistory`));
                             if(_histSnap.exists()) {
                                 _histSnap.forEach(h => {
                                     const tx = h.val();
-                                    // note format: "... New user joined via your link" contains no uid
-                                    // So we match by subtype=signup, sorted by createdAt to align with referredList
-                                    if(tx.type === 'referral') {
-                                        const key = tx.subtype + '_' + (tx.createdAt || '');
-                                        _refTxnMap[key] = tx;
+                                    if(tx.type === 'referral' && tx.refUid) {
+                                        // Sum both signup + spend rewards per referred user
+                                        _uidEarned[tx.refUid] = (_uidEarned[tx.refUid] || 0) + parseFloat(tx.amount || 0);
                                     }
                                 });
                             }
                         } catch(e) {}
-
-                        // Build per-referred-user earned map using uid stored in note (most reliable)
-                        // Since note doesn't have uid, match signup txns by sorted join date order
-                        const _signupTxns = Object.values(_refTxnMap)
-                            .filter(tx => tx.subtype === 'signup')
-                            .sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
-
-                        // Sort referredList by join date too
-                        const _sortedList = [...referredList].sort((a,b) => new Date(a.joinedAt) - new Date(b.joinedAt));
-
-                        // Map uid -> signup amount earned
-                        const _uidEarned = {};
-                        _sortedList.forEach((u, i) => {
-                            _uidEarned[u.uid] = _signupTxns[i] ? parseFloat(_signupTxns[i].amount || 0) : 0;
-                        });
 
                         listEl.innerHTML = referredList.map(u => {
                             const dateStr = u.joinedAt ? new Date(u.joinedAt).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) : '—';
@@ -2559,7 +2542,7 @@
     // Type A: Signup reward (flat ₹) — called once when new user joins
     // Type B: Spend % reward — called on every order
 
-    async function _applyReferralReward(referredBy, amount, note, subtype) {
+    async function _applyReferralReward(referredBy, amount, note, subtype, refUid) {
         try {
             const refSnap = await get(ref(db, `users/${referredBy}/profile`));
             if(!refSnap.exists()) return;
@@ -2583,6 +2566,7 @@
                 subtype,
                 amount: actualReward,
                 note,
+                refUid: refUid || null,
                 createdAt: new Date().toISOString()
             });
         } catch(e) {}
@@ -2605,7 +2589,7 @@
             await update(ref(db, `users/${newUserId}/profile`), { signupRewardProcessed: true });
 
             const noteDesc = `🎉 Signup Reward — New user joined via your link`;
-            await _applyReferralReward(referredBy, signupReward, noteDesc, 'signup');
+            await _applyReferralReward(referredBy, signupReward, noteDesc, 'signup', newUserId);
         } catch(e) {}
     }
 
@@ -2628,7 +2612,7 @@
             if(reward <= 0) return;
 
             const noteDesc = `💰 Spend Reward — ${spendPercent}% of ₹${spentAmount.toFixed(2)} order`;
-            await _applyReferralReward(referredBy, reward, noteDesc, 'spend');
+            await _applyReferralReward(referredBy, reward, noteDesc, 'spend', userId);
         } catch(e) {}
     }
 
