@@ -1167,6 +1167,31 @@
                     </div>
                 </div>
 
+                <!-- Legal Links -->
+                <div style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--border-radius);overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow);">
+                    <div style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.8px;padding:14px 16px 10px;">Legal & Info</div>
+                    <button onclick="openLegalModal('privacy')" style="width:100%;padding:14px 16px;background:none;border:none;border-top:1px solid var(--border-color);display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;transition:var(--transition);" onmouseover="this.style.background='var(--input-bg)'" onmouseout="this.style.background='none'">
+                        <div style="width:36px;height:36px;border-radius:10px;background:rgba(37,99,235,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <i class="fas fa-shield-alt" style="color:var(--accent-cyan);font-size:15px;"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:13px;font-weight:700;color:var(--text-primary);">Privacy Policy</div>
+                            <div style="font-size:11px;color:var(--text-secondary);margin-top:1px;">How we collect & protect your data</div>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:var(--text-secondary);font-size:12px;flex-shrink:0;"></i>
+                    </button>
+                    <button onclick="openLegalModal('terms')" style="width:100%;padding:14px 16px;background:none;border:none;border-top:1px solid var(--border-color);display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;transition:var(--transition);" onmouseover="this.style.background='var(--input-bg)'" onmouseout="this.style.background='none'">
+                        <div style="width:36px;height:36px;border-radius:10px;background:rgba(16,185,129,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <i class="fas fa-file-contract" style="color:#10b981;font-size:15px;"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:13px;font-weight:700;color:var(--text-primary);">Terms & Conditions</div>
+                            <div style="font-size:11px;color:var(--text-secondary);margin-top:1px;">Rules & guidelines for using our service</div>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:var(--text-secondary);font-size:12px;flex-shrink:0;"></i>
+                    </button>
+                </div>
+
                 <!-- Logout -->
                 <div style="text-align:center;padding-bottom:10px;">
                     <button id="logoutBtn" class="btn" style="background:var(--card-solid);color:var(--accent-pink);border:1px solid var(--accent-pink);width:auto;padding:12px 36px;display:inline-block;box-shadow:none;font-size:14px;">
@@ -1919,6 +1944,119 @@
                 <i class="fas fa-sign-out-alt" style="font-size:12px;"></i> Use Different Account
             </button>
         </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     LEGAL MODAL (Privacy Policy & Terms)
+     ══════════════════════════════════════════ -->
+<style>
+#legalModal {
+    position: fixed; inset: 0; z-index: 3500;
+    background: rgba(15,23,42,0.7);
+    backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+    display: none; align-items: flex-end; justify-content: center;
+    padding: 0;
+}
+#legalModal.active { display: flex; }
+.legal-sheet {
+    background: var(--card-solid, #fff);
+    border-radius: 22px 22px 0 0;
+    width: 100%; max-width: 480px;
+    max-height: 88vh; max-height: 88dvh;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.2);
+}
+#legalModal.active .legal-sheet {
+    transform: translateY(0);
+}
+.legal-sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--border-color);
+    border-radius: 2px;
+    margin: 10px auto 0;
+    flex-shrink: 0;
+}
+.legal-sheet-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px 14px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+#legalIconWrap {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.legal-sheet-title {
+    font-size: 16px; font-weight: 800;
+    color: var(--text-primary); flex: 1;
+    letter-spacing: -0.3px;
+}
+.legal-close-btn {
+    width: 30px; height: 30px;
+    border-radius: 50%; border: 1px solid var(--border-color);
+    background: var(--input-bg); color: var(--text-secondary);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 13px; flex-shrink: 0;
+    transition: all 0.2s;
+}
+.legal-close-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+.legal-sheet-body {
+    flex: 1; overflow-y: auto; padding: 18px 18px 24px;
+    -webkit-overflow-scrolling: touch;
+}
+.legal-section { margin-bottom: 20px; }
+.legal-updated {
+    display: inline-block; font-size: 10.5px; font-weight: 700;
+    color: var(--text-secondary); background: var(--input-bg);
+    border: 1px solid var(--border-color); border-radius: 20px;
+    padding: 3px 10px; margin-bottom: 10px;
+    text-transform: uppercase; letter-spacing: 0.4px;
+}
+.legal-section p {
+    font-size: 13px; color: var(--text-secondary);
+    line-height: 1.65; font-weight: 500;
+}
+.legal-section-title {
+    font-size: 13px; font-weight: 800;
+    color: var(--text-primary); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 7px;
+}
+.legal-section-title i { color: var(--accent-cyan); font-size: 13px; }
+.legal-item {
+    display: flex; align-items: flex-start; gap: 9px;
+    margin-bottom: 8px; font-size: 13px;
+    color: var(--text-secondary); line-height: 1.5; font-weight: 500;
+}
+.legal-item i { font-size: 9px; margin-top: 4px; flex-shrink: 0; color: var(--accent-cyan); }
+.legal-contact {
+    background: rgba(37,99,235,0.06);
+    border: 1px solid rgba(37,99,235,0.18);
+    border-radius: 10px; padding: 12px 14px;
+    font-size: 12.5px; font-weight: 600;
+    color: var(--accent-cyan);
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 4px;
+}
+</style>
+
+<div id="legalModal" onclick="if(event.target===this)closeLegalModal()">
+    <div class="legal-sheet">
+        <div class="legal-sheet-handle"></div>
+        <div class="legal-sheet-header">
+            <div id="legalIconWrap" style="background:rgba(37,99,235,0.12);">
+                <i id="legalModalIcon" class="fas fa-shield-alt" style="color:var(--accent-cyan);font-size:16px;"></i>
+            </div>
+            <div id="legalModalTitle" class="legal-sheet-title">Privacy Policy</div>
+            <button class="legal-close-btn" onclick="closeLegalModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="legal-sheet-body" id="legalModalBody"></div>
     </div>
 </div>
 
@@ -4957,6 +5095,121 @@
     };
 
     loadPublicData(); window.switchTab = switchTab;
+
+    // ── LEGAL MODAL FUNCTIONS ─────────────────────────────────────────────
+    window.openLegalModal = function(type) {
+        const modal = document.getElementById('legalModal');
+        const title = document.getElementById('legalModalTitle');
+        const icon  = document.getElementById('legalModalIcon');
+        const body  = document.getElementById('legalModalBody');
+
+        if(type === 'privacy') {
+            title.textContent = 'Privacy Policy';
+            icon.className = 'fas fa-shield-alt';
+            icon.style.color = 'var(--accent-cyan)';
+            document.getElementById('legalIconWrap').style.background = 'rgba(37,99,235,0.12)';
+            body.innerHTML = `
+                <div class="legal-section">
+                    <div class="legal-updated">Last updated: January 2025</div>
+                    <p>We value your privacy. This Privacy Policy explains how <b id="legalBrandInline">our platform</b> collects, uses, and protects your information when you use our services.</p>
+                </div>
+                <div class="legal-section">
+                    <div class="legal-section-title"><i class="fas fa-database"></i> Information We Collect</div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span><b>Account Info:</b> Name, email address, and password when you register.</span></div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span><b>Transaction Data:</b> Payment records, wallet top-ups, order history, and UTR references.</span></div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span><b>Usage Data:</b> Pages visited, features used, and device/browser type for improving our service.</span></div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span><b>Referral Info:</b> Referral links clicked and users referred by you.</span></div>
+                </div>
+                <div class="legal-section">
+                    <div class="legal-section-title"><i class="fas fa-cogs"></i> How We Use Your Data</div>
+                    <div class="legal-item"><i class="fas fa-check-circle" style="color:#10b981;"></i><span>To process orders and manage your wallet balance.</span></div>
+                    <div class="legal-item"><i class="fas fa-check-circle" style="color:#10b981;"></i><span>To send transactional notifications and order updates.</span></div>
+                    <div class="legal-item"><i class="fas fa-check-circle" style="color:#10b981;"></i><span>To prevent fraud and ensure platform security.</span></div>
+                    <div class="legal-item"><i class="fas fa-check-circle" style="color:#10b981;"></i><span>To improve our platform features and user experience.</span></div>
+                    <div class="legal-item"><i class="fas fa-times-circle" style="color:#ef4444;"></i><span>We <b>never sell</b> your personal data to third parties.</span></div>
+                </div>
+                <div class="legal-section">
+                    <div class="legal-section-title"><i class="fas fa-lock"></i> Data Security</div>
+                    <p>Your data is stored securely using Firebase (Google Cloud). All payment references are encrypted. Passwords are hashed and never stored in plain text. We use HTTPS encryption for all data transfers.</p>
+                </div>
+                <div class="legal-section">
+                    <div class="legal-section-title"><i class="fas fa-user-shield"></i> Your Rights</div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span>Request deletion of your account and personal data.</span></div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span>Access a copy of data we hold about you.</span></div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span>Update or correct your account information at any time.</span></div>
+                </div>
+                <div class="legal-section">
+                    <div class="legal-section-title"><i class="fas fa-cookie-bite"></i> Cookies</div>
+                    <p>We use essential cookies only to keep you logged in and maintain your session. No tracking or advertising cookies are used.</p>
+                </div>
+                <div class="legal-contact">
+                    <i class="fas fa-envelope"></i> For privacy concerns, contact us via the Support section in the app.
+                </div>`;
+        } else {
+            title.textContent = 'Terms & Conditions';
+            icon.className = 'fas fa-file-contract';
+            icon.style.color = '#10b981';
+            document.getElementById('legalIconWrap').style.background = 'rgba(16,185,129,0.12)';
+            body.innerHTML = `
+                <div class="legal-section">
+                    <div class="legal-updated">Last updated: January 2025</div>
+                    <p>By using our platform, you agree to these Terms & Conditions. Please read them carefully before placing any orders or making payments.</p>
+                </div>
+                <div class="legal-section">
+                    <div class="legal-section-title"><i class="fas fa-clipboard-check"></i> Acceptance of Terms</div>
+                    <p>By creating an account or using any feature of our service, you confirm you are at least 13 years of age and accept these terms in full.</p>
+                </div>
+                <div class="legal-section">
+                    <div class="legal-section-title"><i class="fas fa-shopping-bag"></i> Orders & Services</div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span>All orders are non-refundable once processing has begun.</span></div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span>Delivery times shown are estimates and may vary.</span></div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span>You must provide accurate links and details for your orders.</span></div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span>We reserve the right to cancel orders that violate platform policies.</span></div>
+                </div>
+                <div class="legal-section">
+                    <div class="legal-section-title"><i class="fas fa-wallet"></i> Wallet & Payments</div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span>Wallet balance is non-transferable and non-withdrawable.</span></div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span>Always pay the exact amount shown — incorrect payments may be lost.</span></div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span>Save your UTR/transaction reference after every payment.</span></div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span>In case of payment issues, contact support within 24 hours with proof.</span></div>
+                    <div class="legal-item"><i class="fas fa-times-circle" style="color:#ef4444;"></i><span>Fraudulent payment claims will result in immediate account ban.</span></div>
+                </div>
+                <div class="legal-section">
+                    <div class="legal-section-title"><i class="fas fa-ban"></i> Prohibited Activities</div>
+                    <div class="legal-item"><i class="fas fa-times-circle" style="color:#ef4444;"></i><span>Creating fake accounts or using bots to abuse referral systems.</span></div>
+                    <div class="legal-item"><i class="fas fa-times-circle" style="color:#ef4444;"></i><span>Attempting to exploit platform bugs or payment systems.</span></div>
+                    <div class="legal-item"><i class="fas fa-times-circle" style="color:#ef4444;"></i><span>Sharing account credentials with others.</span></div>
+                    <div class="legal-item"><i class="fas fa-times-circle" style="color:#ef4444;"></i><span>Using our services for any illegal activities.</span></div>
+                </div>
+                <div class="legal-section">
+                    <div class="legal-section-title"><i class="fas fa-gift"></i> Referral Program</div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span>Referral rewards are credited only after the referred user completes a valid order.</span></div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span>Self-referrals and fake account referrals are strictly prohibited.</span></div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span>We reserve the right to modify or terminate the referral program at any time.</span></div>
+                </div>
+                <div class="legal-section">
+                    <div class="legal-section-title"><i class="fas fa-gavel"></i> Liability & Disputes</div>
+                    <p>We are not liable for any indirect losses arising from the use of our services. All disputes must be raised through our support system. We reserve the right to update these terms at any time with notice.</p>
+                </div>
+                <div class="legal-contact">
+                    <i class="fas fa-headset"></i> For any queries, reach us through the Support tab in the app.
+                </div>`;
+        }
+
+        // Update brand name inline
+        const brandNameEl = document.getElementById('brandName');
+        const inline = document.getElementById('legalBrandInline');
+        if(inline && brandNameEl) inline.textContent = brandNameEl.textContent || 'our platform';
+
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => modal.classList.add('active'));
+    };
+
+    window.closeLegalModal = function() {
+        const modal = document.getElementById('legalModal');
+        modal.classList.remove('active');
+        setTimeout(() => { modal.style.display = 'none'; }, 300);
+    };
 
     // ── GIFT CODE LIVE FORMATTING ───────────────────────────────────────
     const giftInput = document.getElementById('giftCodeInput');
