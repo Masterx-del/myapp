@@ -1891,12 +1891,43 @@
     </div>
 </div>
 
+<!-- EMAIL VERIFICATION MODAL -->
+<div id="emailVerifyModal" style="display:none;position:fixed;inset:0;z-index:2500;background:rgba(15,23,42,0.7);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:16px;">
+    <div style="background:var(--card-solid,#fff);border-radius:22px;overflow:hidden;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.35);animation:giftModalIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;">
+        <div style="background:linear-gradient(135deg,#2563eb 0%,#1e3a8a 100%);padding:24px 20px;text-align:center;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,0.08);border-radius:50%;"></div>
+            <div style="width:64px;height:64px;background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;border:2px solid rgba(255,255,255,0.3);">
+                <i class="fas fa-envelope-open-text" style="font-size:28px;color:#fff;"></i>
+            </div>
+            <div style="font-size:19px;font-weight:800;color:#fff;letter-spacing:-0.3px;">Verify Your Email</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:4px;">One last step to secure your account</div>
+        </div>
+        <div style="padding:24px 20px;">
+            <div style="background:rgba(37,99,235,0.06);border:1px solid rgba(37,99,235,0.18);border-radius:12px;padding:14px 16px;margin-bottom:18px;text-align:center;">
+                <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;">A verification link has been sent to</div>
+                <div id="evModalEmail" style="font-size:14px;font-weight:700;color:var(--accent-cyan);margin-top:4px;word-break:break-all;"></div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:6px;line-height:1.5;">Check your inbox (and spam folder) and click the link to verify.</div>
+            </div>
+            <div id="evMsg" style="margin-bottom:10px;min-height:0;transition:all 0.3s;"></div>
+            <button id="evResendBtn" class="btn" onclick="window.resendVerificationEmail()" style="margin-bottom:10px;">
+                <i class="fas fa-paper-plane" style="font-size:13px;"></i> Resend Verification Email
+            </button>
+            <button class="btn" onclick="window.checkEmailVerified()" style="background:var(--accent-purple);margin-bottom:10px;">
+                <i class="fas fa-sync-alt" style="font-size:13px;"></i> I've Verified — Continue
+            </button>
+            <button onclick="window.signOutFromVerifyModal()" style="width:100%;padding:11px;background:none;border:none;color:var(--text-secondary);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                <i class="fas fa-sign-out-alt" style="font-size:12px;"></i> Use Different Account
+            </button>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="toastBox"><i class="fas fa-info-circle"></i> <span>Message</span></div>
 <div class="loader-overlay" id="loaderBox"><div class="spinner"></div></div>
 
 <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, linkWithCredential, EmailAuthProvider, fetchSignInMethodsForEmail, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, linkWithCredential, EmailAuthProvider, fetchSignInMethodsForEmail, sendPasswordResetEmail, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
     import { getDatabase, ref, get, set, push, onValue, query, orderByChild, equalTo, update, onChildChanged } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
 
     const firebaseConfig = {
@@ -2524,12 +2555,28 @@
                 await updateProfile(cred.user, { displayName: name }); 
                 await set(ref(db, `users/${cred.user.uid}/profile`), { name, email, createdAt: new Date().toISOString(), referredBy: referralSource || null, walletBalance: 0, totalSpent: 0 }); 
                 if(referralSource) processSignupReferralReward(cred.user.uid, referralSource).catch(()=>{});
+                // Send email verification
+                try { await sendEmailVerification(cred.user); } catch(_) {}
                 // Clear validation marks on success
                 [emailInput, passInput, nameInput].forEach(el => { el.classList.remove('input-error','input-success'); });
-                showToast('Account Created! Welcome 🎉', 'success'); 
+                hideLoader();
+                btn.classList.remove('btn-loading');
+                btn.disabled = false;
+                showEmailVerifyModal(cred.user.email);
+                return; 
             } else { 
-                await signInWithEmailAndPassword(auth, email, pass);
+                const loginCred = await signInWithEmailAndPassword(auth, email, pass);
                 [emailInput, passInput].forEach(el => { el.classList.remove('input-error','input-success'); });
+                // Check email verification for email/password users
+                if (!loginCred.user.emailVerified) {
+                    // Send a fresh verification email silently
+                    try { await sendEmailVerification(loginCred.user); } catch(_) {}
+                    hideLoader();
+                    btn.classList.remove('btn-loading');
+                    btn.disabled = false;
+                    showEmailVerifyModal(loginCred.user.email);
+                    return;
+                }
                 showToast('Logged In Successfully ✓', 'success'); 
             } 
         } catch(e) { 
@@ -2735,8 +2782,23 @@
     onAuthStateChanged(auth, user => { 
         currentUser = user;
         if(user) {
+            // ── Email verification gate (skip for Google/provider users) ──
+            const isEmailProvider = user.providerData.some(p => p.providerId === 'password');
+            if(isEmailProvider && !user.emailVerified) {
+                // User is logged in but email not verified — show modal, block dashboard
+                currentUser = null; // treat as logged out for dashboard purposes
+                _authReady = true;
+                hideLoader();
+                document.getElementById('authView').style.display = 'none';
+                document.getElementById('userProfileView').style.display = 'none';
+                showEmailVerifyModal(user.email);
+                return;
+            }
             _authReady = true;
             hideLoader();
+            // Close verify modal if somehow open
+            const evModal = document.getElementById('emailVerifyModal');
+            if(evModal) evModal.style.display = 'none';
             document.getElementById('authView').style.display = 'none'; document.getElementById('userProfileView').style.display = 'block'; document.getElementById('profileName').textContent = user.displayName || 'User'; document.getElementById('profileEmail').textContent = user.email; document.getElementById('profileAvatar').textContent = (user.displayName || 'U').charAt(0).toUpperCase();
             if ("Notification" in window && Notification.permission === "default") { Notification.requestPermission(); }
             loadOrders(); loadChat(); loadWallet();
@@ -4777,6 +4839,82 @@
             }
             if(btn){ btn.disabled = false; btn.innerHTML = '<i class="fas fa-gift"></i> Redeem Gift Code'; }
         }
+    };
+
+    // ── EMAIL VERIFICATION HELPERS ────────────────────────────────────────
+
+    function showEmailVerifyModal(email) {
+        const modal = document.getElementById('emailVerifyModal');
+        const emailEl = document.getElementById('evModalEmail');
+        const msg = document.getElementById('evMsg');
+        if(emailEl) emailEl.textContent = email || '';
+        if(msg) msg.innerHTML = '';
+        if(modal) { modal.style.display = 'flex'; }
+    }
+
+    window.resendVerificationEmail = async () => {
+        const btn = document.getElementById('evResendBtn');
+        const msg = document.getElementById('evMsg');
+        if(!auth.currentUser) return;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:13px;"></i> Sending...';
+        msg.innerHTML = '';
+        try {
+            await sendEmailVerification(auth.currentUser);
+            msg.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:9px;font-size:12.5px;font-weight:600;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);color:#10b981;margin-bottom:8px;"><i class="fas fa-check-circle"></i> Verification email resent! Check your inbox.</div>`;
+        } catch(e) {
+            let errMsg = 'Failed to resend. Please wait a moment and try again.';
+            if(e.code === 'auth/too-many-requests') errMsg = 'Too many attempts. Wait a few minutes before retrying.';
+            msg.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:9px;font-size:12.5px;font-weight:600;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#ef4444;margin-bottom:8px;"><i class="fas fa-exclamation-circle"></i> ${errMsg}</div>`;
+        } finally {
+            // Cooldown 30s
+            let cd = 30;
+            const interval = setInterval(() => {
+                cd--;
+                if(!document.getElementById('evResendBtn')) { clearInterval(interval); return; }
+                document.getElementById('evResendBtn').innerHTML = `<i class="fas fa-clock" style="font-size:13px;"></i> Resend again in ${cd}s`;
+                if(cd <= 0) { clearInterval(interval); btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane" style="font-size:13px;"></i> Resend Verification Email'; }
+            }, 1000);
+        }
+    };
+
+    window.checkEmailVerified = async () => {
+        const msg = document.getElementById('evMsg');
+        if(!auth.currentUser) return;
+        msg.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:9px;font-size:12.5px;font-weight:600;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);color:var(--accent-cyan);margin-bottom:8px;"><i class="fas fa-spinner fa-spin"></i> Checking verification status...</div>`;
+        try {
+            await auth.currentUser.reload();
+            if(auth.currentUser.emailVerified) {
+                document.getElementById('emailVerifyModal').style.display = 'none';
+                showToast('✅ Email verified! Welcome 🎉', 'success');
+                // Manually trigger auth state update
+                const u = auth.currentUser;
+                currentUser = u;
+                document.getElementById('authView').style.display = 'none';
+                document.getElementById('userProfileView').style.display = 'block';
+                document.getElementById('profileName').textContent = u.displayName || 'User';
+                document.getElementById('profileEmail').textContent = u.email;
+                document.getElementById('profileAvatar').textContent = (u.displayName || 'U').charAt(0).toUpperCase();
+                loadOrders(); loadChat(); loadWallet();
+                bindRealTimeNotifications(u.uid);
+                bindAdminMessageNotification(u.uid);
+                const refLink = `${window.location.origin}${window.location.pathname}?ref=${u.uid}`;
+                if(document.getElementById('referralLinkDisplay')) document.getElementById('referralLinkDisplay').value = refLink;
+                if(document.getElementById('profileTab').classList.contains('active')) switchTab('homeTab');
+            } else {
+                msg.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:9px;font-size:12.5px;font-weight:600;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);color:#d97706;margin-bottom:8px;"><i class="fas fa-exclamation-triangle"></i> Email not verified yet. Please click the link in your inbox.</div>`;
+            }
+        } catch(e) {
+            msg.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:9px;font-size:12.5px;font-weight:600;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#ef4444;margin-bottom:8px;"><i class="fas fa-exclamation-circle"></i> Error checking status. Try again.</div>`;
+        }
+    };
+
+    window.signOutFromVerifyModal = async () => {
+        try { await signOut(auth); } catch(_) {}
+        document.getElementById('emailVerifyModal').style.display = 'none';
+        document.getElementById('authView').style.display = 'block';
+        document.getElementById('userProfileView').style.display = 'none';
+        showToast('Signed out. Please login again.', 'warn');
     };
 
     // ── TELEGRAM CHANNEL NOTIFICATIONS ───────────────────────────────
