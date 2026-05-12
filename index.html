@@ -1011,7 +1011,13 @@
                         <label>Full Name</label><input type="text" id="authName" placeholder="John Doe">
                     </div>
                     <div class="input-group"><label>Email Address</label><input type="email" id="authEmail" placeholder="you@example.com"></div>
-                    <div class="input-group"><label>Password</label><input type="password" id="authPassword" placeholder="••••••••"></div>
+                    <div class="input-group">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <label style="margin-bottom:0;">Password</label>
+                            <a href="#" id="forgotPasswordLink" style="font-size:12px; color:var(--accent-cyan); font-weight:600; text-decoration:none; display:none;" onclick="openForgotPassword(); return false;">Forgot Password?</a>
+                        </div>
+                        <input type="password" id="authPassword" placeholder="••••••••">
+                    </div>
                     
                     <button id="authSubmitBtn" class="btn"><i class="fas fa-lock" style="font-size:12px;"></i> Login Securely</button>
                     
@@ -1840,12 +1846,57 @@
     </div>
 </div>
 
+<!-- FORGOT PASSWORD MODAL -->
+<div class="modal-overlay" id="forgotPasswordModal" style="position:fixed !important;">
+    <div class="bottom-sheet" style="max-height:auto; overflow:visible;">
+        <div class="sheet-header">
+            <div>
+                <div class="sheet-title">Reset Password</div>
+                <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">We'll send a reset link to your email</div>
+            </div>
+            <button onclick="closeForgotPassword()" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;">×</button>
+        </div>
+
+        <!-- Step 1: Enter email -->
+        <div id="fpStep1">
+            <div style="background:rgba(37,99,235,0.06);border:1px solid rgba(37,99,235,0.18);border-radius:10px;padding:12px 14px;margin-bottom:18px;display:flex;align-items:flex-start;gap:9px;">
+                <i class="fas fa-info-circle" style="color:var(--accent-cyan);margin-top:1px;flex-shrink:0;"></i>
+                <span style="font-size:12.5px;color:var(--text-secondary);line-height:1.5;">Enter the email linked to your account. If it exists, you'll receive a password reset link.</span>
+            </div>
+            <div class="input-group">
+                <label>Email Address</label>
+                <input type="email" id="fpEmailInput" placeholder="you@example.com" autocomplete="email">
+            </div>
+            <div id="fpMsg" style="margin-bottom:12px;min-height:32px;transition:all 0.3s;"></div>
+            <button id="fpSendBtn" class="btn" onclick="sendPasswordReset()">
+                <i class="fas fa-paper-plane" style="font-size:13px;"></i> Send Reset Link
+            </button>
+            <button onclick="closeForgotPassword()" style="width:100%;padding:12px;background:none;border:none;color:var(--text-secondary);font-size:13px;font-weight:500;cursor:pointer;margin-top:10px;">Cancel</button>
+        </div>
+
+        <!-- Step 2: Success state -->
+        <div id="fpStep2" style="display:none;text-align:center;padding:8px 0 16px;">
+            <div style="width:64px;height:64px;border-radius:50%;background:rgba(16,185,129,0.12);border:2px solid rgba(16,185,129,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                <i class="fas fa-envelope-open-text" style="font-size:26px;color:#10b981;"></i>
+            </div>
+            <div style="font-size:17px;font-weight:800;color:var(--text-primary);margin-bottom:6px;letter-spacing:-0.3px;">Check Your Inbox</div>
+            <div id="fpSuccessEmail" style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px;"></div>
+            <button class="btn" style="background:#10b981;box-shadow:0 2px 8px rgba(16,185,129,0.25);" onclick="closeForgotPassword()">
+                <i class="fas fa-check"></i> Got It
+            </button>
+            <div style="margin-top:12px;font-size:12px;color:var(--text-secondary);">
+                Didn't get it? Check spam or <a href="#" onclick="resetFpToStep1();return false;" style="color:var(--accent-cyan);font-weight:600;text-decoration:none;">try again</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="toastBox"><i class="fas fa-info-circle"></i> <span>Message</span></div>
 <div class="loader-overlay" id="loaderBox"><div class="spinner"></div></div>
 
 <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, linkWithCredential, EmailAuthProvider, fetchSignInMethodsForEmail } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, linkWithCredential, EmailAuthProvider, fetchSignInMethodsForEmail, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
     import { getDatabase, ref, get, set, push, onValue, query, orderByChild, equalTo, update, onChildChanged } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
 
     const firebaseConfig = {
@@ -2325,7 +2376,108 @@
 
     let isSignupMode = false;
     document.getElementById('authToggleBtn').addEventListener('click', (e) => { 
-        e.preventDefault(); isSignupMode = !isSignupMode; document.getElementById('authTitle').textContent = isSignupMode ? 'Create Account' : 'Welcome Back'; document.getElementById('authSubmitBtn').innerHTML = isSignupMode ? '<i class="fas fa-user-plus" style="font-size:12px;"></i> Sign Up Securely' : '<i class="fas fa-lock" style="font-size:12px;"></i> Login Securely'; document.getElementById('authToggleText').textContent = isSignupMode ? 'Already have an account?' : 'Don\'t have an account?'; document.getElementById('authToggleBtn').textContent = isSignupMode ? 'Login' : 'Sign Up'; document.getElementById('signupNameGroup').style.display = isSignupMode ? 'block' : 'none';
+        e.preventDefault(); isSignupMode = !isSignupMode;
+        document.getElementById('authTitle').textContent = isSignupMode ? 'Create Account' : 'Welcome Back';
+        document.getElementById('authSubmitBtn').innerHTML = isSignupMode ? '<i class="fas fa-user-plus" style="font-size:12px;"></i> Sign Up Securely' : '<i class="fas fa-lock" style="font-size:12px;"></i> Login Securely';
+        document.getElementById('authToggleText').textContent = isSignupMode ? 'Already have an account?' : 'Don\'t have an account?';
+        document.getElementById('authToggleBtn').textContent = isSignupMode ? 'Login' : 'Sign Up';
+        document.getElementById('signupNameGroup').style.display = isSignupMode ? 'block' : 'none';
+        // Show "Forgot Password?" only in login mode
+        document.getElementById('forgotPasswordLink').style.display = isSignupMode ? 'none' : 'inline';
+    });
+
+    // Show Forgot Password link on initial load (login mode by default)
+    document.getElementById('forgotPasswordLink').style.display = 'inline';
+
+    // ── FORGOT PASSWORD FUNCTIONS ──────────────────────────────────────
+    window.openForgotPassword = () => {
+        // Pre-fill email if already typed
+        const emailVal = document.getElementById('authEmail').value.trim();
+        if(emailVal) document.getElementById('fpEmailInput').value = emailVal;
+        document.getElementById('fpStep1').style.display = 'block';
+        document.getElementById('fpStep2').style.display = 'none';
+        document.getElementById('fpMsg').innerHTML = '';
+        document.getElementById('fpEmailInput').classList.remove('input-error','input-success');
+        document.getElementById('forgotPasswordModal').classList.add('active');
+        setTimeout(() => document.getElementById('fpEmailInput').focus(), 350);
+    };
+
+    window.closeForgotPassword = () => {
+        document.getElementById('forgotPasswordModal').classList.remove('active');
+    };
+
+    window.resetFpToStep1 = () => {
+        document.getElementById('fpStep1').style.display = 'block';
+        document.getElementById('fpStep2').style.display = 'none';
+        document.getElementById('fpMsg').innerHTML = '';
+        document.getElementById('fpEmailInput').value = '';
+        document.getElementById('fpEmailInput').classList.remove('input-error','input-success');
+        setTimeout(() => document.getElementById('fpEmailInput').focus(), 100);
+    };
+
+    window.sendPasswordReset = async () => {
+        const emailInp = document.getElementById('fpEmailInput');
+        const email = emailInp.value.trim();
+        const btn = document.getElementById('fpSendBtn');
+        const msg = document.getElementById('fpMsg');
+
+        // Validate
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if(!email) {
+            emailInp.classList.add('input-error');
+            msg.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;font-size:12.5px;font-weight:600;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#ef4444;"><i class='fas fa-exclamation-circle'></i> Please enter your email address</span>`;
+            emailInp.style.animation = 'shake 0.4s ease';
+            setTimeout(() => emailInp.style.animation = '', 400);
+            return;
+        }
+        if(!emailRegex.test(email)) {
+            emailInp.classList.add('input-error');
+            msg.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;font-size:12.5px;font-weight:600;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#ef4444;"><i class='fas fa-exclamation-circle'></i> Enter a valid email address</span>`;
+            return;
+        }
+
+        emailInp.classList.remove('input-error');
+        btn.disabled = true;
+        btn.classList.add('btn-loading');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:13px;"></i> Sending...';
+        msg.innerHTML = '';
+
+        try {
+            await sendPasswordResetEmail(auth, email);
+            // Show success step
+            document.getElementById('fpStep1').style.display = 'none';
+            document.getElementById('fpSuccessEmail').innerHTML = `A reset link has been sent to<br><strong style="color:var(--text-primary);">${email}</strong><br><span style="font-size:12px;">Click the link in the email to set a new password. It may take a minute to arrive.</span>`;
+            document.getElementById('fpStep2').style.display = 'block';
+        } catch(e) {
+            let errMsg = 'Something went wrong. Please try again.';
+            if(e.code === 'auth/user-not-found' || e.code === 'auth/invalid-email') {
+                errMsg = 'No account found with this email address.';
+                emailInp.classList.add('input-error');
+            } else if(e.code === 'auth/too-many-requests') {
+                errMsg = 'Too many attempts. Please wait a few minutes and try again.';
+            }
+            msg.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;font-size:12.5px;font-weight:600;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#ef4444;"><i class='fas fa-exclamation-circle'></i> ${errMsg}</span>`;
+        } finally {
+            btn.disabled = false;
+            btn.classList.remove('btn-loading');
+            btn.innerHTML = '<i class="fas fa-paper-plane" style="font-size:13px;"></i> Send Reset Link';
+        }
+    };
+
+    // Allow Enter key in forgot password email input
+    document.getElementById('fpEmailInput').addEventListener('keydown', (e) => {
+        if(e.key === 'Enter') { e.preventDefault(); sendPasswordReset(); }
+    });
+    // Clear error on typing
+    document.getElementById('fpEmailInput').addEventListener('input', function() {
+        if(this.classList.contains('input-error') && this.value) {
+            this.classList.remove('input-error');
+            document.getElementById('fpMsg').innerHTML = '';
+        }
+    });
+    // Close modal on backdrop tap
+    document.getElementById('forgotPasswordModal').addEventListener('click', function(e) {
+        if(e.target === this) closeForgotPassword();
     });
 
     document.getElementById('authSubmitBtn').addEventListener('click', async () => { 
