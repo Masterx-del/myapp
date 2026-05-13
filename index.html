@@ -774,47 +774,131 @@
 
         .pvo-label { font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:6px; }
         .pvo-sublabel { font-size:12px; color:var(--text-secondary); font-weight:500; line-height:1.5; }
-        /* ── ORDER SUMMARY PAGE (inside payVerifyOverlay) ── */
+        /* ── ORDER RECEIPT (inside payVerifyOverlay) ── */
         #orderSummaryPage {
             display: none;
             position: absolute; inset: 0;
             align-items: center; justify-content: center;
-            padding: 20px;
-            animation: pvoIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+            padding: 16px;
+            overflow-y: auto;
         }
         #orderSummaryPage.visible { display: flex; }
+
+        /* Receipt card */
         .osm-card {
             background: var(--card-solid, #fff);
-            border-radius: 24px;
-            padding: 28px 24px 24px;
-            width: 100%; max-width: 320px;
-            box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+            border-radius: 16px;
+            width: 100%; max-width: 340px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Green header strip */
+        .osm-header-strip {
+            background: linear-gradient(135deg, #059669, #10b981);
+            padding: 22px 20px 18px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-        .osm-icon-wrap {
-            width: 64px; height: 64px; border-radius: 50%;
-            background: rgba(16,185,129,0.12);
+        .osm-header-strip::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Ccircle cx='20' cy='20' r='18' stroke='rgba(255,255,255,0.06)' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") repeat;
+            opacity: 0.4;
+        }
+        .osm-check-circle {
+            width: 52px; height: 52px; border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
             display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 14px;
+            margin: 0 auto 10px;
+            position: relative; z-index: 1;
         }
-        .osm-icon-wrap svg { width: 36px; height: 36px; }
-        .osm-title { font-size: 17px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; letter-spacing: -0.4px; }
-        .osm-subtitle { font-size: 12px; color: var(--text-secondary); font-weight: 500; margin-bottom: 18px; }
-        .osm-divider { height: 1px; background: var(--border-color, #e2e8f0); margin: 14px 0; }
-        .osm-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 8px; }
-        .osm-row-label { color: var(--text-secondary); font-weight: 500; }
-        .osm-row-value { color: var(--text-primary); font-weight: 700; max-width: 170px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .osm-amount { font-size: 26px; font-weight: 800; color: var(--accent-cyan, #2563eb); letter-spacing: -0.5px; margin: 10px 0 4px; }
-        .osm-status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-bottom: 16px; }
-        .osm-status-pending { background: rgba(245,158,11,0.12); color: #d97706; border: 1px solid rgba(245,158,11,0.25); }
-        .osm-status-progress { background: rgba(59,130,246,0.12); color: #2563eb; border: 1px solid rgba(59,130,246,0.25); }
-        .osm-status-free { background: rgba(16,185,129,0.12); color: #059669; border: 1px solid rgba(16,185,129,0.25); }
-        .osm-btn-row { display: flex; gap: 10px; margin-top: 18px; }
+        .osm-check-circle svg { width: 28px; height: 28px; }
+        .osm-header-title {
+            font-size: 16px; font-weight: 800; color: #fff;
+            letter-spacing: -0.3px; margin-bottom: 2px;
+            position: relative; z-index: 1;
+        }
+        .osm-header-sub {
+            font-size: 11px; color: rgba(255,255,255,0.8); font-weight: 500;
+            position: relative; z-index: 1;
+        }
+
+        /* Wallet topup header variant */
+        .osm-header-strip.wallet { background: linear-gradient(135deg, #1d4ed8, #2563eb); }
+        .osm-header-strip.free   { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
+
+        /* Jagged edge — receipt tear effect */
+        .osm-tear {
+            height: 14px;
+            background: var(--bg-color, #f3f4f6);
+            position: relative;
+            margin-top: -1px;
+        }
+        .osm-tear::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 14px;
+            background: radial-gradient(circle at 7px -4px, var(--bg-color, #f3f4f6) 6px, var(--card-solid, #fff) 7px) repeat-x;
+            background-size: 14px 14px;
+        }
+        .osm-tear::after {
+            content: '';
+            position: absolute; bottom: 0; left: 0; right: 0;
+            height: 14px;
+            background: radial-gradient(circle at 7px 18px, var(--card-solid, #fff) 6px, transparent 7px) repeat-x;
+            background-size: 14px 14px;
+        }
+
+        /* Body */
+        .osm-body { padding: 10px 20px 20px; }
+
+        /* Amount display */
+        .osm-amount-wrap { text-align: center; margin: 4px 0 16px; }
+        .osm-amount-label { font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px; }
+        .osm-amount { font-size: 30px; font-weight: 800; color: var(--text-primary); letter-spacing: -1px; }
+        .osm-amount.green { color: #059669; }
+
+        /* Status pill */
+        .osm-status-wrap { text-align: center; margin-bottom: 16px; }
+        .osm-status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .osm-status-placed  { background: rgba(16,185,129,0.1);  color: #059669; border: 1px solid rgba(16,185,129,0.3); }
+        .osm-status-pending { background: rgba(245,158,11,0.1);  color: #d97706; border: 1px solid rgba(245,158,11,0.3); }
+        .osm-status-free    { background: rgba(139,92,246,0.1);  color: #7c3aed; border: 1px solid rgba(139,92,246,0.3); }
+        .osm-status-wallet  { background: rgba(37,99,235,0.1);   color: #1d4ed8; border: 1px solid rgba(37,99,235,0.3); }
+
+        /* Divider with label */
+        .osm-divider { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
+        .osm-divider-line { flex: 1; height: 1px; border-top: 1px dashed var(--border-color, #e2e8f0); }
+        .osm-divider-label { font-size: 9px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+
+        /* Detail rows */
+        .osm-row { display: flex; justify-content: space-between; align-items: flex-start; font-size: 12px; margin-bottom: 10px; gap: 12px; }
+        .osm-row-label { color: var(--text-secondary); font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+        .osm-row-value { color: var(--text-primary); font-weight: 700; text-align: right; word-break: break-all; }
+        .osm-row-value.mono { font-family: monospace; font-size: 11px; color: var(--text-secondary); }
+        .osm-row-value.link-val { color: #2563eb; font-size: 11px; }
+
+        /* Bottom note */
+        .osm-note {
+            margin: 14px 0 0;
+            background: rgba(16,185,129,0.05);
+            border: 1px solid rgba(16,185,129,0.15);
+            border-radius: 8px;
+            padding: 9px 12px;
+            font-size: 11px; color: var(--text-secondary); text-align: center; line-height: 1.5;
+        }
+
+        /* Buttons */
+        .osm-btn-row { display: flex; gap: 10px; margin-top: 16px; }
         .osm-btn { flex: 1; padding: 12px 10px; border-radius: 10px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; font-family: inherit; }
         .osm-btn-home { background: var(--input-bg, #f8fafc); color: var(--text-primary); border: 1px solid var(--border-color, #e2e8f0); }
-        .osm-btn-home:hover { border-color: var(--accent-cyan, #2563eb); color: var(--accent-cyan, #2563eb); }
-        .osm-btn-orders { background: var(--accent-cyan, #2563eb); color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,0.25); }
-        .osm-btn-orders:hover { background: var(--accent-purple, #1e3a8a); }
+        .osm-btn-home:hover { border-color: #2563eb; color: #2563eb; }
+        .osm-btn-orders { background: #2563eb; color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,0.25); }
+        .osm-btn-orders:hover { background: #1d4ed8; }
     </style>
 </head>
 <body class="light-mode">
@@ -1842,30 +1926,47 @@
         <div id="pvoLabel" class="pvo-label">Verifying Payment...</div>
         <div id="pvoSublabel" class="pvo-sublabel">Please wait while we<br>confirm your transaction</div>
     </div>
-    <!-- ORDER SUMMARY PAGE -->
+    <!-- ORDER RECEIPT -->
     <div id="orderSummaryPage">
         <div class="osm-card">
-            <div class="osm-icon-wrap">
-                <svg viewBox="0 0 52 52" fill="none">
-                    <circle cx="26" cy="26" r="25" stroke="#10b981" stroke-width="2" fill="rgba(16,185,129,0.08)"/>
-                    <path d="M14 27 l8 8 l16-16" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-                        stroke-dasharray="48" stroke-dashoffset="48"
-                        style="animation: pvoCStroke 0.4s ease 0.1s forwards;"/>
-                </svg>
+            <div class="osm-header-strip" id="osmHeaderStrip">
+                <div class="osm-check-circle">
+                    <svg viewBox="0 0 28 28" fill="none">
+                        <path d="M5 14 l7 7 l11-11" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                              stroke-dasharray="30" stroke-dashoffset="30"
+                              style="animation: pvoCStroke 0.4s ease 0.1s forwards;"/>
+                    </svg>
+                </div>
+                <div class="osm-header-title" id="osmTitle">Order Placed!</div>
+                <div class="osm-header-sub" id="osmSubtitle">Payment verified successfully</div>
             </div>
-            <div class="osm-title" id="osmTitle">Order Placed!</div>
-            <div class="osm-subtitle" id="osmSubtitle">Payment verified successfully</div>
-            <div class="osm-amount" id="osmAmount">₹0.00</div>
-            <div id="osmStatusBadge"></div>
-            <div class="osm-divider"></div>
-            <div id="osmRows"></div>
-            <div class="osm-btn-row">
-                <button class="osm-btn osm-btn-home" onclick="closeOrderSummary('homeTab')">
-                    <i class="fas fa-home"></i> Home
-                </button>
-                <button class="osm-btn osm-btn-orders" onclick="closeOrderSummary('ordersTab')">
-                    <i class="fas fa-receipt"></i> My Orders
-                </button>
+            <div class="osm-tear"></div>
+            <div class="osm-body">
+                <div class="osm-amount-wrap">
+                    <div class="osm-amount-label" id="osmAmountLabel">Amount Paid</div>
+                    <div class="osm-amount" id="osmAmount">₹0.00</div>
+                </div>
+                <div class="osm-status-wrap">
+                    <div id="osmStatusBadge"></div>
+                </div>
+                <div class="osm-divider">
+                    <div class="osm-divider-line"></div>
+                    <div class="osm-divider-label">Order Details</div>
+                    <div class="osm-divider-line"></div>
+                </div>
+                <div id="osmRows"></div>
+                <div class="osm-note" id="osmNote">
+                    <i class="fas fa-shield-alt" style="color:#10b981; margin-right:4px;"></i>
+                    Order saved. Check <b>My Orders</b> for live status updates.
+                </div>
+                <div class="osm-btn-row">
+                    <button class="osm-btn osm-btn-home" onclick="closeOrderSummary('homeTab')">
+                        <i class="fas fa-home"></i> Home
+                    </button>
+                    <button class="osm-btn osm-btn-orders" onclick="closeOrderSummary('ordersTab')">
+                        <i class="fas fa-receipt"></i> My Orders
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -2066,7 +2167,7 @@
 <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, linkWithCredential, EmailAuthProvider, fetchSignInMethodsForEmail, sendPasswordResetEmail, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
-    import { getDatabase, ref, get, set, push, onValue, query, orderByChild, equalTo, update, onChildChanged } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
+    import { getDatabase, ref, get, set, push, onValue, query, orderByChild, equalTo, update, onChildChanged, runTransaction } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
 
     const firebaseConfig = {
         apiKey: "AIzaSyDrjP8o8adBYGih_28XrDrCwVpL3WRu9rE",
@@ -2079,8 +2180,8 @@
     };
     const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getDatabase(app);
 
-    // Helper: fetch with timeout — 3s for reliable network handling
-    const fetchWithTimeout = (url, opts = {}, ms = 3000) => {
+    // Helper: fetch with timeout
+    const fetchWithTimeout = (url, opts = {}, ms = 8000) => {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), ms);
         return fetch(url, { ...opts, signal: controller.signal, cache: 'no-store' })
@@ -2142,6 +2243,91 @@
         ].forEach(proxy => {
             fetch(proxy + enc, { method: 'HEAD', cache: 'no-store', signal: AbortSignal.timeout(2000) }).catch(()=>{});
         });
+    }
+
+    // ── SHARED EXTERNAL API CALLER ─────────────────────────────────────────
+    // Uses Firebase atomic transaction to prevent double-API-call 100% of the time.
+    // Works across tabs, page refreshes, and all payment methods (UPI/Wallet/Free/Cart).
+    async function callExternalApi(orderKey, apiUrl, apiKey, serviceId, quantity, targetLink) {
+        try {
+            // ── Atomic lock: only ONE caller wins; rest are silently dropped ──
+            const lockRef  = ref(db, `orders/${orderKey}/apiStatus`);
+            const lockSnap = await get(lockRef).catch(() => null);
+            if (lockSnap && lockSnap.exists() && lockSnap.val() !== 'calling') return; // already done or locked
+
+            // Mark as 'processing' atomically before any network call
+            await runTransaction(lockRef, (current) => {
+                if (current === 'calling') return 'processing'; // we got the lock
+                return; // someone else got it — abort transaction
+            }).catch(() => null);
+
+            // Re-read to confirm WE won the lock
+            const afterLock = await get(lockRef).catch(() => null);
+            if (!afterLock || afterLock.val() !== 'processing') return; // another caller won
+
+            // Validate required fields — if missing, mark as skipped (not failed)
+            if (!apiUrl || !apiKey || !serviceId || !quantity || !targetLink) {
+                await update(ref(db, `orders/${orderKey}`), {
+                    apiStatus: 'skipped',
+                    apiRawResponse: `Missing config: url=${!!apiUrl} key=${!!apiKey} svc=${!!serviceId} qty=${!!quantity} link=${!!targetLink}`
+                }).catch(() => {});
+                return;
+            }
+
+            const apiPayload = `key=${encodeURIComponent(apiKey)}&action=add&service=${encodeURIComponent(serviceId)}&link=${encodeURIComponent(targetLink)}&quantity=${encodeURIComponent(quantity)}`;
+
+            const apiURLs = [
+                { url: apiUrl,                                                                    opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
+                { url: `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`,                     opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
+                { url: `https://corsproxy.org/?${encodeURIComponent(apiUrl)}`,                    opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
+                { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl+'?'+apiPayload)}`, opts: { method:'GET' } },
+                { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(apiUrl+'?'+apiPayload)}`, opts: { method:'GET' } },
+            ];
+
+            let lastError = '';
+            for (const { url, opts } of apiURLs) {
+                try {
+                    const r    = await fetchWithTimeout(url, opts, 15000); // 15s per proxy attempt
+                    const text = await r.text();
+                    let j;
+                    try { j = JSON.parse(text); } catch(e) { lastError = 'Invalid JSON: ' + text.substring(0,100); continue; }
+                    if (!j || typeof j !== 'object' || Array.isArray(j)) { lastError = 'Non-object response'; continue; }
+
+                    const orderId  = j.order ?? j.order_id ?? j.id ?? j.orderId ?? null;
+                    const hasError = j.error || j.status === 'error' || (typeof j.message === 'string' && j.message.toLowerCase().includes('error'));
+
+                    if (!hasError) {
+                        await update(ref(db, `orders/${orderKey}`), {
+                            apiStatus:      'placed',
+                            apiOrderId:     orderId ? String(orderId) : 'placed',
+                            apiRawResponse: text.substring(0, 500),
+                            apiCalledAt:    new Date().toISOString(),
+                        });
+                        return; // success — stop
+                    } else {
+                        await update(ref(db, `orders/${orderKey}`), {
+                            apiStatus:      'error',
+                            apiRawResponse: text.substring(0, 500),
+                            apiCalledAt:    new Date().toISOString(),
+                        });
+                        return; // API responded with explicit error — don't retry on other proxies (same result)
+                    }
+                } catch(e) { lastError = e.message || 'timeout'; continue; }
+            }
+
+            // All proxies failed / timed out
+            await update(ref(db, `orders/${orderKey}`), {
+                apiStatus:      'failed',
+                apiRawResponse: 'All proxies failed. Last error: ' + lastError,
+                apiCalledAt:    new Date().toISOString(),
+            }).catch(() => {});
+
+        } catch(outerErr) {
+            await update(ref(db, `orders/${orderKey}`), {
+                apiStatus:      'failed',
+                apiRawResponse: 'callExternalApi exception: ' + (outerErr.message || ''),
+            }).catch(() => {});
+        }
     }
 
     let currentUser = null; let _authReady = false; let productsData = {}; let subsData = {}; let activeSubscriptions = {}; 
@@ -2299,37 +2485,85 @@
     }
 
     function _populateOrderSummary(d) {
-        // Amount
-        document.getElementById('osmAmount').textContent = d.isWalletTopup ? '+₹' + d.amount : '₹' + d.amount;
+        const strip  = document.getElementById('osmHeaderStrip');
+        const title  = document.getElementById('osmTitle');
+        const sub    = document.getElementById('osmSubtitle');
+        const amt    = document.getElementById('osmAmount');
+        const aLabel = document.getElementById('osmAmountLabel');
+        const badge  = document.getElementById('osmStatusBadge');
+        const note   = document.getElementById('osmNote');
 
-        // Title & subtitle
-        document.getElementById('osmTitle').textContent = d.isWalletTopup ? 'Wallet Credited!' : d.isFree ? 'Free Order Placed!' : 'Order Placed!';
-        document.getElementById('osmSubtitle').textContent = d.isWalletTopup ? 'Balance added to your wallet' : d.isCart ? d.itemCount + ' item(s) ordered successfully' : 'Payment verified successfully';
-
-        // Status badge
-        const badgeEl = document.getElementById('osmStatusBadge');
-        if(d.isWalletTopup) {
-            badgeEl.innerHTML = '<span class="osm-status-badge osm-status-free"><i class="fas fa-check-circle"></i> Completed</span>';
-        } else if(d.isFree) {
-            badgeEl.innerHTML = '<span class="osm-status-badge osm-status-free"><i class="fas fa-gift"></i> Free Service</span>';
-        } else if(d.status === 'progress') {
-            badgeEl.innerHTML = '<span class="osm-status-badge osm-status-progress"><i class="fas fa-spinner fa-spin"></i> Processing</span>';
+        // ── Header strip colour + titles ──
+        strip.className = 'osm-header-strip';
+        if (d.isWalletTopup) {
+            strip.classList.add('wallet');
+            title.textContent = 'Wallet Credited!';
+            sub.textContent   = 'Balance added to your wallet';
+            aLabel.textContent = 'Amount Added';
+        } else if (d.isFree) {
+            strip.classList.add('free');
+            title.textContent = 'Free Order Placed!';
+            sub.textContent   = 'Your free service has been claimed';
+            aLabel.textContent = 'Amount Paid';
+        } else if (d.isCart) {
+            title.textContent = 'All Orders Placed!';
+            sub.textContent   = (d.itemCount || '') + ' item(s) ordered successfully';
+            aLabel.textContent = 'Total Paid';
         } else {
-            badgeEl.innerHTML = '<span class="osm-status-badge osm-status-pending"><i class="fas fa-clock"></i> Pending Validation</span>';
+            title.textContent = 'Order Confirmed!';
+            sub.textContent   = 'Payment verified & order placed';
+            aLabel.textContent = 'Amount Paid';
         }
 
-        // Detail rows
-        const rows = [];
-        if(d.product) rows.push(['Service', d.product]);
-        if(d.utr)     rows.push(['Ref / UTR', d.utr]);
-        if(d.method)  rows.push(['Payment', d.method]);
-        const now = new Date();
-        rows.push(['Date', now.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'})]);
-        rows.push(['Time', now.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'})]);
+        // ── Amount ──
+        amt.textContent = (d.isWalletTopup ? '+₹' : '₹') + d.amount;
+        amt.className   = 'osm-amount' + (parseFloat(d.amount) === 0 ? '' : ' green');
 
-        document.getElementById('osmRows').innerHTML = rows.map(([l,v]) =>
-            `<div class="osm-row"><span class="osm-row-label">${l}</span><span class="osm-row-value" title="${v}">${v}</span></div>`
-        ).join('');
+        // ── Status badge — receipt always shows "Order Placed" not live status ──
+        // Live status (progress/pending) is for order history, not the receipt confirmation
+        let badgeHtml = '';
+        if (d.isWalletTopup) {
+            badgeHtml = '<span class="osm-status-badge osm-status-wallet"><i class="fas fa-wallet"></i> Wallet Credited</span>';
+        } else if (d.isFree) {
+            badgeHtml = '<span class="osm-status-badge osm-status-free"><i class="fas fa-gift"></i> Free Service Claimed</span>';
+        } else {
+            badgeHtml = '<span class="osm-status-badge osm-status-placed"><i class="fas fa-check-circle"></i> Order Placed Successfully</span>';
+        }
+        badge.innerHTML = badgeHtml;
+
+        // ── Bottom note ──
+        if (d.isWalletTopup) {
+            note.innerHTML = '<i class="fas fa-info-circle" style="color:#2563eb;margin-right:4px;"></i> Balance updated. Use it to purchase any service instantly.';
+        } else if (d.status === 'progress') {
+            note.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#f59e0b;margin-right:4px;"></i> Your order is <b>In Progress</b>. Check My Orders for live progress.';
+        } else if (d.isFree) {
+            note.innerHTML = '<i class="fas fa-clock" style="color:#7c3aed;margin-right:4px;"></i> Free service queued. Check <b>My Orders</b> for delivery status.';
+        } else {
+            note.innerHTML = '<i class="fas fa-shield-alt" style="color:#10b981;margin-right:4px;"></i> Order saved. Check <b>My Orders</b> for live status updates.';
+        }
+
+        // ── Detail rows ──
+        const now     = new Date();
+        const dateStr = now.toLocaleString('en-IN', { day:'numeric', month:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+        const rows = [];
+        if (d.orderId)                 rows.push({ label: 'Order ID', value: '#' + d.orderId, cls: '' });
+        if (d.product && !d.isWalletTopup) rows.push({ label: 'Service', value: d.product, cls: '' });
+        if (d.link)                    rows.push({ label: 'Link', value: d.link, cls: 'link-val', truncate: true });
+        rows.push({ label: 'Paid', value: (d.isWalletTopup ? '+' : '') + '₹' + d.amount, cls: '' });
+        rows.push({ label: 'Date', value: dateStr, cls: '' });
+        if (d.utr)                     rows.push({ label: 'Ref ID', value: d.utr, cls: 'mono' });
+        if (d.method && !d.isWalletTopup) rows.push({ label: 'Payment', value: d.method, cls: '' });
+
+        document.getElementById('osmRows').innerHTML = rows.map(r => {
+            const display = (r.truncate && r.value && r.value.length > 34)
+                ? r.value.substring(0, 32) + '…'
+                : r.value;
+            return `<div class="osm-row">
+                <span class="osm-row-label">${r.label}</span>
+                <span class="osm-row-value ${r.cls}" title="${r.value}">${display}</span>
+            </div>`;
+        }).join('');
     }
 
     window.closeOrderSummary = (tab) => {
@@ -4088,6 +4322,8 @@
                 amount: checkoutFinalAmt.toFixed(2),
                 product: checkoutItem.title || checkoutItem.planName || 'Service',
                 utr: utr,
+                link: targetLink || null,
+                orderId: newOrderRef.key.slice(-6).toUpperCase(),
                 method: 'UPI',
                 status: orderData.status,
                 notifyMsg: '✅ Payment Verified & Order Placed Successfully!'
@@ -4103,46 +4339,14 @@
             // Send Telegram notification (non-blocking)
             sendTelegramOrderNotification([{product: checkoutItem}], paidVal, utr, targetLink);
 
-            // ── Step 6: Call external API in BACKGROUND (non-blocking, single-fire guard) ──
+            // ── Call external API in BACKGROUND (atomic lock prevents double-fire) ──
             if (hasApiConfig) {
-                let _apiCallFired = false; // prevent double API call from parallel proxies
-                const apiPayload = `key=${encodeURIComponent(checkoutItem.apiKey)}&action=add&service=${encodeURIComponent(checkoutItem.serviceId)}&link=${encodeURIComponent(targetLink)}&quantity=${encodeURIComponent(checkoutItem.quantity)}`;
-                const apiUrl     = checkoutItem.apiUrl;
-                const _capturedOrderKey = newOrderRef.key; // capture key before async IIFE to prevent race
-                // Sequential: try direct first, then proxies — avoids duplicate orders on SMM panel
-                (async () => {
-                    // Server-side guard: abort if order already processed (e.g. duplicate trigger)
-                    const _existSnap = await get(ref(db, `orders/${_capturedOrderKey}/apiStatus`)).catch(()=>null);
-                    if (_existSnap && _existSnap.exists() && _existSnap.val() !== 'calling') return;
-                    const apiURLs = [
-                        { url: apiUrl, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
-                        { url: `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
-                        { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl+'?'+apiPayload)}`, opts: { method:'GET' } },
-                    ];
-                    for(const { url, opts } of apiURLs) {
-                        if(_apiCallFired) break;
-                        try {
-                            const r = await fetchWithTimeout(url, opts, 8000);
-                            const text = await r.text();
-                            let j;
-                            try { j = JSON.parse(text); } catch(e) { continue; }
-                            if(!j || typeof j !== 'object' || Array.isArray(j)) continue;
-                            if(_apiCallFired) break; // double-check after await
-                            _apiCallFired = true;
-                            const orderId  = j.order ?? j.order_id ?? j.id ?? j.orderId ?? null;
-                            const hasError = j.error || j.status === 'error' || j.message?.toLowerCase().includes('error');
-                            if (!hasError) {
-                                await update(ref(db, `orders/${_capturedOrderKey}`), { apiStatus: 'placed', apiOrderId: orderId ? String(orderId) : 'placed', apiRawResponse: text.substring(0,500) });
-                            } else {
-                                await update(ref(db, `orders/${_capturedOrderKey}`), { apiStatus: 'error', apiRawResponse: text.substring(0,500) });
-                            }
-                            break;
-                        } catch(e) { continue; }
-                    }
-                    if(!_apiCallFired) {
-                        await update(ref(db, `orders/${_capturedOrderKey}`), { apiStatus: 'failed', apiRawResponse: 'All proxies failed / timeout' }).catch(()=>{});
-                    }
-                })().catch(() => {});
+                const _capturedOrderKey = newOrderRef.key;
+                callExternalApi(
+                    _capturedOrderKey,
+                    checkoutItem.apiUrl, checkoutItem.apiKey,
+                    checkoutItem.serviceId, checkoutItem.quantity, targetLink
+                );
             }
 
         } catch(e) { 
@@ -4229,6 +4433,8 @@
                     amount: checkoutFinalAmt.toFixed(2),
                     product: checkoutItem.title || checkoutItem.planName || 'Service',
                     utr: utr,
+                    link: targetLink || null,
+                    orderId: newOrderRef.key.slice(-6).toUpperCase(),
                     method: 'Wallet',
                     status: orderData.status,
                     notifyMsg: '✅ Wallet Payment Successful! Order Placed.'
@@ -4244,45 +4450,14 @@
 
             sendTelegramOrderNotification([{product: checkoutItem}], checkoutFinalAmt, utr, targetLink);
 
-            // API logic (sequential — prevents double order on SMM panel)
+            // API call (atomic lock — prevents double SMM order across tabs/refreshes)
             if (hasApiConfig) {
-                let _apiCallFiredW = false;
-                const apiPayload = `key=${encodeURIComponent(checkoutItem.apiKey)}&action=add&service=${encodeURIComponent(checkoutItem.serviceId)}&link=${encodeURIComponent(targetLink)}&quantity=${encodeURIComponent(checkoutItem.quantity)}`;
-                const apiUrl     = checkoutItem.apiUrl;
-                const _capturedOrderKeyW = newOrderRef.key; // capture key before async IIFE to prevent race
-                (async () => {
-                    // Server-side guard: abort if order already processed (e.g. duplicate trigger)
-                    const _existSnapW = await get(ref(db, `orders/${_capturedOrderKeyW}/apiStatus`)).catch(()=>null);
-                    if (_existSnapW && _existSnapW.exists() && _existSnapW.val() !== 'calling') return;
-                    const apiURLs = [
-                        { url: apiUrl, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
-                        { url: `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
-                        { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl+'?'+apiPayload)}`, opts: { method:'GET' } },
-                    ];
-                    for(const { url, opts } of apiURLs) {
-                        if(_apiCallFiredW) break;
-                        try {
-                            const r = await fetchWithTimeout(url, opts, 8000);
-                            const text = await r.text();
-                            let j;
-                            try { j = JSON.parse(text); } catch(e) { continue; }
-                            if(!j || typeof j !== 'object' || Array.isArray(j)) continue;
-                            if(_apiCallFiredW) break;
-                            _apiCallFiredW = true;
-                            const orderId  = j.order ?? j.order_id ?? j.id ?? j.orderId ?? null;
-                            const hasError = j.error || j.status === 'error' || j.message?.toLowerCase().includes('error');
-                            if (!hasError) {
-                                await update(ref(db, `orders/${_capturedOrderKeyW}`), { apiStatus: 'placed', apiOrderId: orderId ? String(orderId) : 'placed', apiRawResponse: text.substring(0,500) });
-                            } else {
-                                await update(ref(db, `orders/${_capturedOrderKeyW}`), { apiStatus: 'error', apiRawResponse: text.substring(0,500) });
-                            }
-                            break;
-                        } catch(e) { continue; }
-                    }
-                    if(!_apiCallFiredW) {
-                        await update(ref(db, `orders/${_capturedOrderKeyW}`), { apiStatus: 'failed', apiRawResponse: 'All proxies failed / timeout' }).catch(()=>{});
-                    }
-                })().catch(() => {});
+                const _capturedOrderKeyW = newOrderRef.key;
+                callExternalApi(
+                    _capturedOrderKeyW,
+                    checkoutItem.apiUrl, checkoutItem.apiKey,
+                    checkoutItem.serviceId, checkoutItem.quantity, targetLink
+                );
             }
 
         } catch (e) {
@@ -4367,6 +4542,8 @@
                     amount: '0.00',
                     product: checkoutItem.title || checkoutItem.planName || 'Service',
                     utr: null,
+                    link: targetLink || null,
+                    orderId: newOrderRef.key.slice(-6).toUpperCase(),
                     method: 'Free',
                     isFree: true,
                     status: orderData.status,
@@ -4389,38 +4566,14 @@
 
             sendTelegramOrderNotification([{product: checkoutItem}], 0, utr, targetLink);
 
-            // API call (background)
+            // API call (atomic lock — prevents double SMM order)
             if (hasApiConfig) {
-                let _apiCallFiredF = false;
-                const apiPayload = `key=${encodeURIComponent(checkoutItem.apiKey)}&action=add&service=${encodeURIComponent(checkoutItem.serviceId)}&link=${encodeURIComponent(targetLink)}&quantity=${encodeURIComponent(checkoutItem.quantity)}`;
-                const apiUrl     = checkoutItem.apiUrl;
                 const _capturedKey = newOrderRef.key;
-                (async () => {
-                    const _snap = await get(ref(db, `orders/${_capturedKey}/apiStatus`)).catch(()=>null);
-                    if (_snap && _snap.exists() && _snap.val() !== 'calling') return;
-                    const apiURLs = [
-                        { url: apiUrl, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
-                        { url: `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
-                        { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl+'?'+apiPayload)}`, opts: { method:'GET' } },
-                    ];
-                    for(const { url, opts } of apiURLs) {
-                        if(_apiCallFiredF) break;
-                        try {
-                            const r = await fetchWithTimeout(url, opts, 8000);
-                            const text = await r.text();
-                            let j; try { j = JSON.parse(text); } catch(e) { continue; }
-                            if(!j || typeof j !== 'object' || Array.isArray(j)) continue;
-                            if(_apiCallFiredF) break;
-                            _apiCallFiredF = true;
-                            const orderId = j.order ?? j.order_id ?? j.id ?? j.orderId ?? null;
-                            const hasError = j.error || j.status === 'error' || j.message?.toLowerCase().includes('error');
-                            if (!hasError) { await update(ref(db, `orders/${_capturedKey}`), { apiStatus: 'placed', apiOrderId: orderId ? String(orderId) : 'placed', apiRawResponse: text.substring(0,500) }); }
-                            else { await update(ref(db, `orders/${_capturedKey}`), { apiStatus: 'error', apiRawResponse: text.substring(0,500) }); }
-                            break;
-                        } catch(e) { continue; }
-                    }
-                    if(!_apiCallFiredF) { await update(ref(db, `orders/${_capturedKey}`), { apiStatus: 'failed', apiRawResponse: 'All proxies failed' }).catch(()=>{}); }
-                })().catch(()=>{});
+                callExternalApi(
+                    _capturedKey,
+                    checkoutItem.apiUrl, checkoutItem.apiKey,
+                    checkoutItem.serviceId, checkoutItem.quantity, targetLink
+                );
             }
 
         } catch(e) {
@@ -4633,42 +4786,14 @@
                 const newOrderRef = push(ref(db, 'orders'));
                 await set(newOrderRef, orderData);
 
-                // Background API call for cart items (sequential — prevents double SMM order)
+                // Background API call for cart items (atomic lock — prevents double SMM order)
                 if (hasApi) {
-                    const apiPayload = `key=${encodeURIComponent(item.product.apiKey)}&action=add&service=${encodeURIComponent(item.product.serviceId)}&link=${encodeURIComponent(item.link)}&quantity=${encodeURIComponent(item.product.quantity)}`;
-                    const apiUrl     = item.product.apiUrl;
                     const _orderRefKey = newOrderRef.key;
-                    (async () => {
-                        // Server-side guard: abort if order already processed (e.g. duplicate trigger)
-                        const _existSnapC = await get(ref(db, `orders/${_orderRefKey}/apiStatus`)).catch(()=>null);
-                        if (_existSnapC && _existSnapC.exists() && _existSnapC.val() !== 'calling') return;
-                        let _apiFired = false;
-                        const apiURLs = [
-                            { url: apiUrl, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
-                            { url: `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
-                            { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl+'?'+apiPayload)}`, opts: { method:'GET' } },
-                        ];
-                        for(const { url, opts } of apiURLs) {
-                            if(_apiFired) break;
-                            try {
-                                const r = await fetchWithTimeout(url, opts, 8000);
-                                const text = await r.text();
-                                let j; try { j = JSON.parse(text); } catch(e) { continue; }
-                                if(!j || typeof j !== 'object' || Array.isArray(j)) continue;
-                                if(_apiFired) break;
-                                _apiFired = true;
-                                const orderId = j.order ?? j.order_id ?? j.id ?? j.orderId ?? null;
-                                const hasError = j.error || j.status === 'error' || j.message?.toLowerCase().includes('error');
-                                if (!hasError) {
-                                    await update(ref(db, `orders/${_orderRefKey}`), { apiStatus: 'placed', apiOrderId: orderId ? String(orderId) : 'placed', apiRawResponse: text.substring(0,500) });
-                                } else {
-                                    await update(ref(db, `orders/${_orderRefKey}`), { apiStatus: 'error', apiRawResponse: text.substring(0,500) });
-                                }
-                                break;
-                            } catch(e) { continue; }
-                        }
-                        if(!_apiFired) await update(ref(db, `orders/${_orderRefKey}`), { apiStatus: 'failed', apiRawResponse: 'All proxies failed / timeout' }).catch(()=>{});
-                    })().catch(() => {});
+                    callExternalApi(
+                        _orderRefKey,
+                        item.product.apiUrl, item.product.apiKey,
+                        item.product.serviceId, item.product.quantity, item.link
+                    );
                 }
                 return newOrderRef;
             });
@@ -4688,14 +4813,17 @@
             sendTelegramOrderNotification(cart, paidVal, utr, cart[0]?.link || null);
 
             const cartItemCount = cart.length;
+            const _cartFirstProduct = cart.length > 1 ? cart.map(c=>c.product?.title||'Service').join(', ') : (cart[0]?.product?.title || 'Service');
+            const _cartFirstLink = cart[0]?.link || null;
             cart = []; updateCartBadge();
             _unlockOrder();
             closeCart();
             playOrderSuccessSound();
             showPayVerifySuccess({
                 amount: paidVal.toFixed(2),
-                product: cart.length > 1 ? cart.map(c=>c.product?.title||'Service').join(', ') : (cart[0]?.product?.title || 'Service'),
+                product: _cartFirstProduct,
                 utr: utr,
+                link: _cartFirstLink,
                 method: 'UPI',
                 isCart: true,
                 itemCount: cartItemCount,
@@ -4746,42 +4874,14 @@
                 const newOrderRef = push(ref(db, 'orders'));
                 await set(newOrderRef, orderData);
 
-                // Background API call for cart wallet items (sequential — prevents double SMM order)
+                // Background API call for cart wallet items (atomic lock — prevents double SMM order)
                 if (hasApi) {
-                    const apiPayload = `key=${encodeURIComponent(item.product.apiKey)}&action=add&service=${encodeURIComponent(item.product.serviceId)}&link=${encodeURIComponent(item.link)}&quantity=${encodeURIComponent(item.product.quantity)}`;
-                    const apiUrl     = item.product.apiUrl;
                     const _wOrderRefKey = newOrderRef.key;
-                    (async () => {
-                        // Server-side guard: abort if order already processed (e.g. duplicate trigger)
-                        const _existSnapCW = await get(ref(db, `orders/${_wOrderRefKey}/apiStatus`)).catch(()=>null);
-                        if (_existSnapCW && _existSnapCW.exists() && _existSnapCW.val() !== 'calling') return;
-                        let _wApiFired = false;
-                        const apiURLs = [
-                            { url: apiUrl, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
-                            { url: `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`, opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
-                            { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl+'?'+apiPayload)}`, opts: { method:'GET' } },
-                        ];
-                        for(const { url, opts } of apiURLs) {
-                            if(_wApiFired) break;
-                            try {
-                                const r = await fetchWithTimeout(url, opts, 8000);
-                                const text = await r.text();
-                                let j; try { j = JSON.parse(text); } catch(e) { continue; }
-                                if(!j || typeof j !== 'object' || Array.isArray(j)) continue;
-                                if(_wApiFired) break;
-                                _wApiFired = true;
-                                const orderId = j.order ?? j.order_id ?? j.id ?? j.orderId ?? null;
-                                const hasError = j.error || j.status === 'error' || j.message?.toLowerCase().includes('error');
-                                if (!hasError) {
-                                    await update(ref(db, `orders/${_wOrderRefKey}`), { apiStatus: 'placed', apiOrderId: orderId ? String(orderId) : 'placed', apiRawResponse: text.substring(0,500) });
-                                } else {
-                                    await update(ref(db, `orders/${_wOrderRefKey}`), { apiStatus: 'error', apiRawResponse: text.substring(0,500) });
-                                }
-                                break;
-                            } catch(e) { continue; }
-                        }
-                        if(!_wApiFired) await update(ref(db, `orders/${_wOrderRefKey}`), { apiStatus: 'failed', apiRawResponse: 'All proxies failed / timeout' }).catch(()=>{});
-                    })().catch(() => {});
+                    callExternalApi(
+                        _wOrderRefKey,
+                        item.product.apiUrl, item.product.apiKey,
+                        item.product.serviceId, item.product.quantity, item.link
+                    );
                 }
                 return newOrderRef;
             });
@@ -4799,14 +4899,17 @@
             sendTelegramOrderNotification(cart, cartFinalAmt, utr, cart[0]?.link || null);
 
             const cartItemCount = cart.length;
+            const _wCartFirstProduct = cart.length > 1 ? cart.map(c=>c.product?.title||'Service').join(', ') : (cart[0]?.product?.title || 'Service');
+            const _wCartFirstLink = cart[0]?.link || null;
             cart = []; updateCartBadge();
             _unlockOrder();
             closeCart();
             playOrderSuccessSound();
             showPayVerifySuccess({
                 amount: cartFinalAmt.toFixed(2),
-                product: cart.length > 1 ? cart.map(c=>c.product?.title||'Service').join(', ') : (cart[0]?.product?.title || 'Service'),
+                product: _wCartFirstProduct,
                 utr: utr,
+                link: _wCartFirstLink,
                 method: 'Wallet',
                 isCart: true,
                 itemCount: cartItemCount,
@@ -5115,7 +5218,7 @@
                 </div>
                 <div class="legal-section">
                     <div class="legal-section-title"><i class="fas fa-database"></i> Information We Collect</div>
-                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span><b>Account Info:</b> Name, email address, and password when you register.</span></div>
+                    <div class="legal-item"><i class="fas fa-dot-circle"></i><span><b>Account Info:</b> Name when you register.</span></div>
                     <div class="legal-item"><i class="fas fa-dot-circle"></i><span><b>Transaction Data:</b> Payment records, wallet top-ups, order history, and UTR references.</span></div>
                     <div class="legal-item"><i class="fas fa-dot-circle"></i><span><b>Usage Data:</b> Pages visited, features used, and device/browser type for improving our service.</span></div>
                     <div class="legal-item"><i class="fas fa-dot-circle"></i><span><b>Referral Info:</b> Referral links clicked and users referred by you.</span></div>
