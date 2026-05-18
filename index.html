@@ -77,7 +77,7 @@
         }
         .icon-btn:hover { color: var(--accent-cyan); border-color: var(--accent-cyan); background: var(--input-bg); }
 
-        .content-area { flex: 1; padding: 20px; overflow-y: auto; overflow-x: clip; position: relative; }
+        .content-area { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; position: relative; }
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -96,8 +96,7 @@
             background: #ffffff;
             box-shadow: 0 4px 20px rgba(37,99,235,0.13), 0 1px 4px rgba(0,0,0,0.07);
             border: 2px solid #2563eb;
-            min-height: unset;
-            display: none;
+            min-height: 136px;
         }
         .offer-banner.visible { display: block; }
         .offer-banner::before {
@@ -110,8 +109,7 @@
             background: radial-gradient(circle, rgba(37,99,235,0.05) 0%, transparent 70%);
             bottom:-20px; left:10px; pointer-events:none;
         }
-        .offer-content { position:relative; z-index:2; padding:14px 16px; color:#0f172a; width:100%; overflow:visible; padding-right: calc(70px + 14px); }
-        .offer-price-row { display:flex; align-items:center; gap:8px; margin-bottom:7px; flex-wrap:wrap; overflow:visible; }
+        .offer-content { position:relative; z-index:2; padding:14px 82px 14px 16px; color:#0f172a; width:100%; }
         .offer-pill {
             display:inline-flex; align-items:center; gap:5px;
             background: #2563eb;
@@ -120,10 +118,9 @@
             margin-bottom:8px;
         }
         .offer-title { font-size:15px; font-weight:800; margin-bottom:7px; letter-spacing:-0.3px; color:#0f172a; line-height:1.35; }
-        .offer-price-row { display:flex; align-items:baseline; gap:7px; margin-bottom:7px; flex-wrap:wrap; }
-        .offer-price { font-size:22px; font-weight:900; color:#dc2626; letter-spacing:0; overflow:visible; display:inline-block; padding:0 2px; white-space:nowrap; }
-        @media (min-width:380px) { .offer-price { font-size:26px; } }
-        .offer-old-price { text-decoration:line-through; color:#94a3b8; font-size:13px; font-weight:500; }
+        .offer-price-row { display:flex; align-items:baseline; gap:10px; margin-bottom:7px; flex-wrap:wrap; row-gap:2px; }
+        .offer-price { font-size:26px; font-weight:900; color:#dc2626; letter-spacing:0; overflow:visible; white-space:nowrap; }
+        .offer-old-price { text-decoration:line-through; color:#94a3b8; font-size:13px; font-weight:500; white-space:nowrap; }
         .offer-limit-row { font-size:11px; color:#64748b; margin-bottom:9px; display:flex; align-items:center; gap:5px; line-height:1.4; }
         .offer-tg-cta {
             display:inline-flex; align-items:center; gap:6px;
@@ -133,8 +130,8 @@
         }
         .offer-tg-cta:hover { opacity:0.88; }
         .offer-circle-deco {
-            position:absolute; right:12px; top:50%; transform:translateY(-50%);
-            width:58px; height:58px; border-radius:50%;
+            position:absolute; right:14px; top:50%; transform:translateY(-50%);
+            width:62px; height:62px; border-radius:50%;
             border:2px solid #2563eb;
             background:linear-gradient(135deg,#eff6ff,#dbeafe);
             display:flex; align-items:center; justify-content:center;
@@ -197,7 +194,7 @@
 
         /* ── FREE Service Styles ── */
         .free-badge { background: #10b981; color: #fff; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; white-space: nowrap; flex-shrink: 0; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(16,185,129,0.35); }
-        .free-price { font-size: 22px; font-weight: 800; color: #10b981; margin: 0; letter-spacing: 0; flex-shrink: 0; padding: 0 2px; overflow: visible; display: inline-block; white-space: nowrap; }
+        .free-price { font-size: 26px; font-weight: 800; color: #10b981; margin-bottom: 14px; letter-spacing: 0; margin-top: 4px; overflow: visible; }
         .product-list-card.free-service { border-color: rgba(16,185,129,0.3); background: var(--card-solid); }
         .product-list-card.free-service:hover { border-color: #10b981; box-shadow: 0 6px 16px rgba(16,185,129,0.12); }
         .plc-buy.free-btn { background: #10b981; box-shadow: 0 2px 4px rgba(16,185,129,0.3); }
@@ -205,40 +202,7 @@
         .free-daily-info { font-size: 11px; color: #10b981; font-weight: 600; margin-top: 6px; display: flex; align-items: center; gap: 5px; }
         .free-used-info { font-size: 11px; color: #f59e0b; font-weight: 600; margin-top: 6px; display: flex; align-items: center; gap: 5px; }
         .free-section-label { font-size: 11px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-        /* Price row — full width block, no clip, no overlap */
-        .plc-price-row {
-            display: flex;
-            align-items: baseline;
-            gap: 0;
-            margin: 8px 0 14px 0;
-            overflow: visible;
-            width: 100%;
-        }
-        .plc-price-symbol {
-            display: inline-block;
-            font-size: 0.65em;
-            font-weight: 800;
-            vertical-align: super;
-            line-height: 1;
-            padding-right: 1px;
-            flex-shrink: 0;
-        }
-        .plc-price-tag {
-            display: inline-flex;
-            align-items: baseline;
-            font-size: clamp(20px, 5.5vw, 26px);
-            font-weight: 800;
-            color: var(--accent-cyan);
-            letter-spacing: 0;
-            line-height: 1.2;
-            overflow: visible;
-            white-space: nowrap;
-        }
-        .free-price-tag { color: #10b981; }
-        .plc-price-tag .plc-price-symbol { color: var(--accent-cyan); }
-        .free-price-tag .plc-price-symbol { color: #10b981; }
-        .plc-price { font-size: clamp(20px, 5.5vw, 26px); font-weight: 800; color: var(--accent-cyan); margin: 0; letter-spacing: 0; flex-shrink: 0; overflow: visible; display: inline-block; white-space: nowrap; }
-        .free-price { font-size: clamp(20px, 5.5vw, 26px); font-weight: 800; color: #10b981; margin: 0; letter-spacing: 0; flex-shrink: 0; overflow: visible; display: inline-block; white-space: nowrap; }
+        .plc-price { font-size: 26px; font-weight: 800; color: var(--accent-cyan); margin-bottom: 14px; letter-spacing: 0; margin-top: 4px; overflow: visible; }
         .plc-actions { display: flex; gap: 8px; margin-top: auto; }
         .plc-buy { 
             flex: 1; padding: 11px 16px; border-radius: 8px; background: var(--accent-cyan); 
@@ -936,70 +900,36 @@
         .osm-btn-orders { background: #2563eb; color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,0.25); }
         .osm-btn-orders:hover { background: #1d4ed8; }
     
-        /* ══════════════════════════════════════════════
-           DPI / DEVICE PIXEL RATIO RESPONSIVE FIXES
-           Supports 1x (96dpi) to 2.2x (210dpi) screens
-           ══════════════════════════════════════════════ */
-
-        /* 1.5x DPI — ~144dpi (mid-range Android) */
-        @media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
-            .plc-price-tag { font-size: clamp(17px, 4.8vw, 22px) !important; }
-            .offer-price   { font-size: clamp(17px, 4.8vw, 22px) !important; }
-            .plc-name      { font-size: clamp(12px, 3.2vw, 13px) !important; }
-            .offer-title   { font-size: clamp(12px, 3.8vw, 14px); }
-            .service-cat-name { font-size: clamp(9px, 2.5vw, 11px) !important; }
+        /* ── Responsive for all phone DPIs up to 210dpi ── */
+        @media screen and (max-width: 380px) {
+            .plc-price  { font-size: 22px !important; }
+            .free-price { font-size: 22px !important; }
+            .offer-price { font-size: 22px !important; }
+            .offer-content { padding-right: 80px !important; }
+            .offer-circle-deco { width: 56px !important; height: 56px !important; right: 10px !important; }
         }
-
-        /* 2x DPI — ~192dpi (most modern smartphones) */
+        @media screen and (max-width: 340px) {
+            .plc-price  { font-size: 20px !important; }
+            .free-price { font-size: 20px !important; }
+            .offer-price { font-size: 20px !important; }
+            .offer-content { padding-right: 72px !important; }
+            .offer-circle-deco { width: 50px !important; height: 50px !important; }
+            .content-area { padding: 14px 12px !important; }
+        }
         @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-            .content-area  { padding: 14px 14px !important; }
-            .card          { padding: 16px 14px !important; }
-            .product-list-card { padding: 16px 14px !important; }
-            .plc-price-tag { font-size: clamp(15px, 4.3vw, 20px) !important; }
-            .offer-price   { font-size: clamp(15px, 4.3vw, 20px) !important; }
-            .offer-content { padding-right: calc(64px + 12px) !important; }
-            .offer-circle-deco { width: 54px !important; height: 54px !important; right: 10px !important; }
-            .plc-name      { font-size: clamp(11px, 3vw, 13px) !important; }
-            .section-title { font-size: clamp(0.95rem, 4vw, 1.1rem) !important; }
-            .btn           { font-size: clamp(12px, 3.2vw, 14px) !important; padding: 12px !important; }
-            .plc-buy       { font-size: clamp(11px, 2.8vw, 13px) !important; padding: 10px 12px !important; }
-            .services-grid { gap: 10px !important; }
-            .service-cat-card { padding: 14px 6px !important; }
-            .nav-item      { font-size: clamp(9px, 2.2vw, 10px) !important; gap: 4px !important; }
-            .nav-item i    { font-size: clamp(15px, 4.5vw, 19px) !important; }
-            .brand-name    { font-size: clamp(14px, 3.8vw, 17px) !important; }
-            .header        { padding: 12px 16px !important; }
+            .plc-price  { font-size: 22px !important; }
+            .free-price { font-size: 22px !important; }
+            .offer-price { font-size: 22px !important; }
         }
-
-        /* 2.2x DPI — ~210dpi (target: Redmi, Realme budget phones) */
         @media (-webkit-min-device-pixel-ratio: 2.2), (min-resolution: 210dpi) {
-            .content-area  { padding: 12px 12px !important; }
-            .card          { padding: 14px 12px !important; }
-            .product-list-card { padding: 14px 12px !important; }
-            .plc-price-tag { font-size: clamp(14px, 4vw, 18px) !important; }
-            .offer-price   { font-size: clamp(14px, 4vw, 18px) !important; }
-            .offer-old-price { font-size: 11px !important; }
-            .offer-content { padding: 10px calc(58px + 10px) 10px 12px !important; }
-            .offer-circle-deco { width: 50px !important; height: 50px !important; right: 9px !important; font-size: 18px !important; }
-            .offer-title   { font-size: 12px !important; }
-            .offer-pill    { font-size: 9px !important; }
-            .plc-name      { font-size: clamp(11px, 2.8vw, 12px) !important; }
-            .section-title { font-size: clamp(0.9rem, 3.8vw, 1rem) !important; }
-            .btn           { font-size: clamp(11px, 3vw, 13px) !important; padding: 11px !important; }
-            .plc-buy       { font-size: clamp(10px, 2.6vw, 12px) !important; padding: 9px 10px !important; }
-            .services-grid { gap: 8px !important; }
-            .service-cat-card { padding: 12px 5px !important; }
-            .service-cat-card i { font-size: 18px !important; }
-            .service-cat-name { font-size: clamp(9px, 2.2vw, 10px) !important; }
-            .nav-item      { font-size: 9px !important; gap: 3px !important; }
-            .nav-item i    { font-size: 15px !important; }
-            .brand-name    { font-size: clamp(13px, 3.5vw, 15px) !important; }
-            .header        { padding: 10px 14px !important; }
-            .subcategory-name { font-size: clamp(11px, 2.8vw, 13px) !important; }
-            .subcategory-card { padding: 13px 12px !important; }
-            .plc-price-row { margin: 6px 0 10px 0; }
+            .plc-price  { font-size: 20px !important; }
+            .free-price { font-size: 20px !important; }
+            .offer-price { font-size: 20px !important; }
+            .offer-content { padding-right: 76px !important; }
+            .offer-circle-deco { width: 54px !important; height: 54px !important; right: 10px !important; }
+            .content-area { padding: 14px 13px !important; }
+            .product-list-card { padding: 16px 14px !important; }
         }
-
 </style>
 </head>
 <body class="light-mode">
@@ -1457,233 +1387,6 @@
 <!-- ══════════════════════════════════════════════════════════
      PREMIUM ADD FUNDS MODAL — replaces old walletFundModal
      ══════════════════════════════════════════════════════════ -->
-
-
-<div class="modal-overlay" id="walletFundModal">
-    <div class="bottom-sheet">
-
-        <!-- ── Header ── -->
-        <div class="af-header">
-            <button class="af-close-btn" onclick="closeWalletFund()">
-                <i class="fas fa-times"></i>
-            </button>
-            <div class="af-icon-wrap">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
-                </svg>
-            </div>
-            <div class="af-header-text">
-                <div class="af-title">Add Funds</div>
-                <div class="af-subtitle">Balance: <b id="afBalanceDisplay">₹0.00</b></div>
-            </div>
-        </div>
-
-        <!-- ── Step 1: Method + Amount ── -->
-        <div class="af-body" id="afStep1" style="flex:1; display:flex; flex-direction:column;">
-
-            <!-- Payment Method Toggle -->
-            <div class="af-methods">
-                <div class="af-method-card selected" id="afMethodUPI" onclick="afSelectMethod('upi')">
-                    <div class="af-selected-dot"></div>
-                    <div class="af-method-icon" style="background:rgba(37,99,235,0.1);">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="1" y="4" width="22" height="16" rx="3"/><line x1="1" y1="10" x2="23" y2="10"/>
-                        </svg>
-                    </div>
-                    <div class="af-method-name">UPI</div>
-                    <div class="af-method-sub">Instant • No fees</div>
-                </div>
-                <div class="af-method-card" id="afMethodCrypto" onclick="afSelectMethod('crypto')">
-                    <div class="af-selected-dot"></div>
-                    <div class="af-method-icon" style="background:rgba(245,158,11,0.1);">
-                        <svg width="20" height="20" viewBox="0 0 32 32" fill="#f59e0b">
-                            <path d="M16 0C7.163 0 0 7.163 0 16s7.163 16 16 16 16-7.163 16-16S24.837 0 16 0zm3.67 22.11c-.26 1.04-1.04 1.82-2.08 2.08l-.52.13v1.04h-1.04v-1.04h-1.04v1.04h-1.04v-1.04c-1.82-.26-3.12-1.56-3.12-3.38h1.56c0 1.04.78 1.82 1.82 1.82h2.08c1.04 0 1.82-.78 1.82-1.82 0-.78-.52-1.3-1.56-1.56l-3.12-.78c-1.3-.26-2.08-1.3-2.08-2.6 0-1.3.78-2.34 2.08-2.6V12.8h1.04v1.04h1.04V12.8h1.04v1.04c1.56.26 2.6 1.3 2.6 2.86h-1.56c0-.78-.78-1.56-1.82-1.56H14.7c-1.04 0-1.82.78-1.82 1.82 0 .78.52 1.3 1.56 1.56l3.12.78c1.3.26 2.08 1.3 2.08 2.6l-.02.2z"/>
-                        </svg>
-                    </div>
-                    <div class="af-method-name">Crypto</div>
-                    <div class="af-method-sub">100+ coins</div>
-                </div>
-            </div>
-
-            <!-- ── Crypto Section ── -->
-            <div class="af-section" id="afCryptoSection">
-                <div class="af-crypto-box">
-                    <div class="af-crypto-icon">₿</div>
-                    <div class="af-crypto-title">Crypto Deposit</div>
-                    <div class="af-crypto-text">Contact our support team on Telegram to deposit using Bitcoin, USDT, ETH and 100+ other cryptocurrencies. Fast and easy!</div>
-                </div>
-                <button class="af-tg-btn" id="afTelegramBtn" onclick="afOpenTelegram()">
-                    <i class="fab fa-telegram-plane" style="font-size:18px;"></i>
-                    Contact on Telegram
-                </button>
-            </div>
-
-            <!-- ── UPI Section ── -->
-            <div class="af-section visible" id="afUPISection">
-                <div class="af-info-bar">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    Minimum ₹10 &nbsp;•&nbsp; Maximum ₹30,000
-                </div>
-
-                <!-- Deposit breakdown -->
-                <div class="af-deposit-box">
-                    <div class="af-deposit-row">
-                        <span>Deposit amount</span>
-                        <span id="afDepositAmt">₹0</span>
-                    </div>
-                    <div class="af-deposit-row">
-                        <span>Gateway fee</span>
-                        <span style="color:#10b981; font-weight:700;">FREE ✓</span>
-                    </div>
-                    <div class="af-deposit-row total">
-                        <span>You pay</span>
-                        <span class="af-total-val" id="afTotalVal">₹0</span>
-                    </div>
-                </div>
-
-                <!-- Quick amount chips -->
-                <div class="af-chips">
-                    <div class="af-chip" onclick="afSelectChip(this, 50)">₹50</div>
-                    <div class="af-chip" onclick="afSelectChip(this, 100)">₹100</div>
-                    <div class="af-chip" onclick="afSelectChip(this, 250)">₹250</div>
-                    <div class="af-chip" onclick="afSelectChip(this, 500)">₹500</div>
-                    <div class="af-chip" onclick="afSelectChip(this, 1000)">₹1,000</div>
-                </div>
-
-                <!-- Custom amount -->
-                <div class="af-custom-input-wrap">
-                    <span class="af-rupee-prefix">₹</span>
-                    <input type="number" class="af-custom-input" id="wfAmountInput" placeholder="Enter custom amount" min="10" max="30000" oninput="afOnAmountInput(this.value)">
-                </div>
-
-                <!-- Pay button -->
-                <button class="af-pay-btn" id="afPayBtn" onclick="goToWfStep2()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="3"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                    Proceed to Pay
-                </button>
-            </div>
-        </div>
-
-        <!-- ── Step 2: QR / Payment ── -->
-        <div id="wfStep2" style="display:none; flex-direction:column; flex:1; overflow:hidden; min-height:0;">
-            <div class="af-body" style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;">
-                <div class="payment-box">
-                    <div class="secure-badge"><i class="fas fa-shield-check"></i> 100% Safe & Secure</div>
-                    <div style="font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom: 4px;">
-                        Pay exactly <span id="wfPayAmt" style="color:var(--accent-cyan);font-size:20px;font-weight:800;"></span>
-                    </div>
-                    <div class="qr-wrapper">
-                        <div class="qr-corner qr-tl"></div><div class="qr-corner qr-tr"></div>
-                        <div class="qr-corner qr-bl"></div><div class="qr-corner qr-br"></div>
-                        <img id="wf-dynamic-qr" src="" alt="Scan to Pay">
-                    </div>
-                    <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom: 15px; display:flex; justify-content:center; align-items:center; gap:8px;">
-                        <i class="fas fa-qrcode" style="font-size:16px;"></i><span>Scan to pay via Any UPI App</span>
-                    </div>
-                    <div class="upi-text" id="wfUpiId" title="Click to copy" style="font-size: 14px;">Paytmqr6i3w0w@ptys</div>
-                    <div style="font-size:11px; color:var(--text-secondary); margin-bottom: 12px;">Tap UPI ID to copy</div>
-                    <div style="background: rgba(225, 29, 72, 0.05); padding: 10px; border-radius: 8px; border: 1px dashed rgba(225, 29, 72, 0.3);">
-                        Ref ID: <b id="wfOrderIdDisplay" style="color:var(--accent-pink); font-family:monospace; font-size:15px; letter-spacing:1px;"></b>
-                        <div style="font-size:10px; margin-top:4px; color:var(--text-secondary);">* Do not change amount while paying</div>
-                    </div>
-                </div>
-            </div>
-            <!-- Sticky bottom buttons — ALWAYS visible -->
-            <div style="padding:12px 16px 16px; border-top:1px solid var(--border-color); background:var(--card-solid); flex-shrink:0;">
-                <button class="af-pay-btn" onclick="confirmWalletPayment()" style="margin-bottom:10px;">
-                    <i class="fas fa-lock"></i> I Have Paid. Verify Now
-                </button>
-                <button class="btn" style="background:transparent; color:var(--text-secondary); box-shadow:none; border:1px solid var(--border-color); margin-top:0; height:45px;" onclick="goBackWfStep1()">
-                    <i class="fas fa-arrow-left"></i> Back
-                </button>
-            </div>
-        </div>
-
-    </div>
-</div>
-
-<div class="modal-overlay" id="checkoutModal">
-        <div class="bottom-sheet">
-            <div class="sheet-header">
-                <div class="sheet-title">Secure Checkout</div>
-                <button class="icon-btn" onclick="closeCheckout()" style="background:transparent; border:none; box-shadow:none; height: 32px; width: 32px;"><i class="fas fa-times" style="font-size:18px;"></i></button>
-            </div>
-
-            <!-- STEP 1: Details and Promo Code -->
-            <div id="chkStep1">
-                <div class="checkout-summary">
-                    <img id="chkImg" class="checkout-img" src="" alt="Item">
-                    <div style="flex: 1;">
-                        <div id="chkTitle" style="font-weight:600; font-size:14px; margin-bottom:4px; color:var(--text-primary);"></div>
-                        <div id="chkType" style="font-size:12px; color:var(--text-secondary);"></div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div id="chkPrice" style="font-weight:700; color:var(--text-primary); font-size:16px;"></div>
-                    </div>
-                </div>
-
-                <div class="coupon-box">
-                    <input type="text" id="chkCouponInput" placeholder="Enter Promo Code">
-                    <button class="btn-apply" onclick="applyCoupon()">APPLY</button>
-                </div>
-                <div id="chkCouponMsg" style="font-size:12px; margin-bottom:16px; font-weight:500;"></div>
-
-                <div id="chkLinkContainer" style="display:none;">
-                    <div class="input-group"><label id="chkLinkLabel">Target Link</label><input type="text" id="chkLinkInput" placeholder="Paste link here..."></div>
-                    <div id="chkExtraLinksContainer" style="display:none;">
-                        <div class="input-group"><label>Link 2</label><input type="text" id="chkLinkInput2" placeholder="Paste link 2 here..."></div>
-                        <div class="input-group"><label>Link 3</label><input type="text" id="chkLinkInput3" placeholder="Paste link 3 here..."></div>
-                        <div class="input-group"><label>Link 4</label><input type="text" id="chkLinkInput4" placeholder="Paste link 4 here..."></div>
-                        <div class="input-group"><label>Link 5</label><input type="text" id="chkLinkInput5" placeholder="Paste link 5 here..."></div>
-                    </div>
-                    <div class="input-group" id="chkPollContainer" style="display:none;"><label>Poll Vote Option</label><input type="text" id="chkPollInput" placeholder="Enter option to vote for"></div>
-                </div>
-
-                <div style="display:flex; justify-content:space-between; font-weight:700; font-size:16px; border-top:1px solid var(--border-color); padding-top:16px; margin-bottom: 20px; color: var(--text-primary);">
-                    <span>Total Amount</span><span id="chkFinalPrice" style="color:var(--accent-cyan);">₹0</span>
-                </div>
-
-                <button class="btn" onclick="goToStep2()">Proceed to Payment <i class="fas fa-arrow-right"></i></button>
-                <button class="btn" id="chkWalletBtn" style="background:var(--accent-purple); margin-top:10px;" onclick="confirmWalletPurchase()"><i class="fas fa-wallet"></i> Pay via Wallet</button>
-            </div>
-
-            <!-- STEP 2: QR Code and Payment -->
-            <div id="chkStep2" style="display:none;">
-                <div class="payment-box">
-                    <div class="secure-badge"><i class="fas fa-shield-check"></i> 100% Safe & Secure</div>
-                    <div style="font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom: 4px;">Pay exactly <span id="chkPayAmt" style="color:var(--accent-cyan); font-size:18px; font-weight:800;"></span></div>
-
-                    <div class="qr-wrapper">
-                        <div class="qr-corner qr-tl"></div>
-                        <div class="qr-corner qr-tr"></div>
-                        <div class="qr-corner qr-bl"></div>
-                        <div class="qr-corner qr-br"></div>
-                        <img id="dynamic-qr" src="" alt="Scan to Pay">
-                    </div>
-
-                    <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom: 15px; display:flex; justify-content:center; align-items:center; gap:8px;">
-                        <i class="fas fa-qrcode" style="font-size:16px;"></i>
-                        <span>Scan to pay via Any UPI App</span>
-                    </div>
-
-                    <div class="upi-text" id="chkUpiId" title="Click to copy" style="font-size: 14px;">Paytmqr6i3w0w@ptys</div>
-                    <div style="font-size:11px; color:var(--text-secondary); margin-bottom: 12px;">Tap UPI ID to copy</div>
-
-                    <div style="background: rgba(225, 29, 72, 0.05); padding: 10px; border-radius: 8px; border: 1px dashed rgba(225, 29, 72, 0.3);">
-                        Order Ref ID: <b id="chkOrderIdDisplay" style="color:var(--accent-pink); font-family:monospace; font-size:15px; letter-spacing:1px;"></b>
-                        <div style="font-size:10px; margin-top:4px; color:var(--text-secondary);">* Do not change amount while paying</div>
-                    </div>
-                </div>
-
-                <button class="btn" onclick="confirmPurchase()"><i class="fas fa-lock"></i> I Have Paid. Verify Now</button>
-                <button class="btn" style="background:transparent; color:var(--text-secondary); box-shadow:none; border:1px solid var(--border-color); margin-top:10px; height: 45px;" onclick="goBackToStep1()"><i class="fas fa-arrow-left"></i> Back to Details</button>
-            </div>
-
-        </div>
-    </div>
-
-</div>
-
 <style>
 /* ── Add‑Funds Modal Core — Compact Mobile ── */
 #walletFundModal {
@@ -1951,6 +1654,231 @@
 .af-pay-btn:active { transform: scale(0.98); opacity: 0.92; }
 .af-pay-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 </style>
+
+<div class="modal-overlay" id="walletFundModal">
+    <div class="bottom-sheet">
+
+        <!-- ── Header ── -->
+        <div class="af-header">
+            <button class="af-close-btn" onclick="closeWalletFund()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="af-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+            </div>
+            <div class="af-header-text">
+                <div class="af-title">Add Funds</div>
+                <div class="af-subtitle">Balance: <b id="afBalanceDisplay">₹0.00</b></div>
+            </div>
+        </div>
+
+        <!-- ── Step 1: Method + Amount ── -->
+        <div class="af-body" id="afStep1" style="flex:1; display:flex; flex-direction:column;">
+
+            <!-- Payment Method Toggle -->
+            <div class="af-methods">
+                <div class="af-method-card selected" id="afMethodUPI" onclick="afSelectMethod('upi')">
+                    <div class="af-selected-dot"></div>
+                    <div class="af-method-icon" style="background:rgba(37,99,235,0.1);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="4" width="22" height="16" rx="3"/><line x1="1" y1="10" x2="23" y2="10"/>
+                        </svg>
+                    </div>
+                    <div class="af-method-name">UPI</div>
+                    <div class="af-method-sub">Instant • No fees</div>
+                </div>
+                <div class="af-method-card" id="afMethodCrypto" onclick="afSelectMethod('crypto')">
+                    <div class="af-selected-dot"></div>
+                    <div class="af-method-icon" style="background:rgba(245,158,11,0.1);">
+                        <svg width="20" height="20" viewBox="0 0 32 32" fill="#f59e0b">
+                            <path d="M16 0C7.163 0 0 7.163 0 16s7.163 16 16 16 16-7.163 16-16S24.837 0 16 0zm3.67 22.11c-.26 1.04-1.04 1.82-2.08 2.08l-.52.13v1.04h-1.04v-1.04h-1.04v1.04h-1.04v-1.04c-1.82-.26-3.12-1.56-3.12-3.38h1.56c0 1.04.78 1.82 1.82 1.82h2.08c1.04 0 1.82-.78 1.82-1.82 0-.78-.52-1.3-1.56-1.56l-3.12-.78c-1.3-.26-2.08-1.3-2.08-2.6 0-1.3.78-2.34 2.08-2.6V12.8h1.04v1.04h1.04V12.8h1.04v1.04c1.56.26 2.6 1.3 2.6 2.86h-1.56c0-.78-.78-1.56-1.82-1.56H14.7c-1.04 0-1.82.78-1.82 1.82 0 .78.52 1.3 1.56 1.56l3.12.78c1.3.26 2.08 1.3 2.08 2.6l-.02.2z"/>
+                        </svg>
+                    </div>
+                    <div class="af-method-name">Crypto</div>
+                    <div class="af-method-sub">100+ coins</div>
+                </div>
+            </div>
+
+            <!-- ── Crypto Section ── -->
+            <div class="af-section" id="afCryptoSection">
+                <div class="af-crypto-box">
+                    <div class="af-crypto-icon">₿</div>
+                    <div class="af-crypto-title">Crypto Deposit</div>
+                    <div class="af-crypto-text">Contact our support team on Telegram to deposit using Bitcoin, USDT, ETH and 100+ other cryptocurrencies. Fast and easy!</div>
+                </div>
+                <button class="af-tg-btn" id="afTelegramBtn" onclick="afOpenTelegram()">
+                    <i class="fab fa-telegram-plane" style="font-size:18px;"></i>
+                    Contact on Telegram
+                </button>
+            </div>
+
+            <!-- ── UPI Section ── -->
+            <div class="af-section visible" id="afUPISection">
+                <div class="af-info-bar">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Minimum ₹10 &nbsp;•&nbsp; Maximum ₹30,000
+                </div>
+
+                <!-- Deposit breakdown -->
+                <div class="af-deposit-box">
+                    <div class="af-deposit-row">
+                        <span>Deposit amount</span>
+                        <span id="afDepositAmt">₹0</span>
+                    </div>
+                    <div class="af-deposit-row">
+                        <span>Gateway fee</span>
+                        <span style="color:#10b981; font-weight:700;">FREE ✓</span>
+                    </div>
+                    <div class="af-deposit-row total">
+                        <span>You pay</span>
+                        <span class="af-total-val" id="afTotalVal">₹0</span>
+                    </div>
+                </div>
+
+                <!-- Quick amount chips -->
+                <div class="af-chips">
+                    <div class="af-chip" onclick="afSelectChip(this, 50)">₹50</div>
+                    <div class="af-chip" onclick="afSelectChip(this, 100)">₹100</div>
+                    <div class="af-chip" onclick="afSelectChip(this, 250)">₹250</div>
+                    <div class="af-chip" onclick="afSelectChip(this, 500)">₹500</div>
+                    <div class="af-chip" onclick="afSelectChip(this, 1000)">₹1,000</div>
+                </div>
+
+                <!-- Custom amount -->
+                <div class="af-custom-input-wrap">
+                    <span class="af-rupee-prefix">₹</span>
+                    <input type="number" class="af-custom-input" id="wfAmountInput" placeholder="Enter custom amount" min="10" max="30000" oninput="afOnAmountInput(this.value)">
+                </div>
+
+                <!-- Pay button -->
+                <button class="af-pay-btn" id="afPayBtn" onclick="goToWfStep2()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="3"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    Proceed to Pay
+                </button>
+            </div>
+        </div>
+
+        <!-- ── Step 2: QR / Payment ── -->
+        <div id="wfStep2" style="display:none; flex-direction:column; flex:1; overflow:hidden; min-height:0;">
+            <div class="af-body" style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;">
+                <div class="payment-box">
+                    <div class="secure-badge"><i class="fas fa-shield-check"></i> 100% Safe & Secure</div>
+                    <div style="font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom: 4px;">
+                        Pay exactly <span id="wfPayAmt" style="color:var(--accent-cyan);font-size:20px;font-weight:800;"></span>
+                    </div>
+                    <div class="qr-wrapper">
+                        <div class="qr-corner qr-tl"></div><div class="qr-corner qr-tr"></div>
+                        <div class="qr-corner qr-bl"></div><div class="qr-corner qr-br"></div>
+                        <img id="wf-dynamic-qr" src="" alt="Scan to Pay">
+                    </div>
+                    <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom: 15px; display:flex; justify-content:center; align-items:center; gap:8px;">
+                        <i class="fas fa-qrcode" style="font-size:16px;"></i><span>Scan to pay via Any UPI App</span>
+                    </div>
+                    <div class="upi-text" id="wfUpiId" title="Click to copy" style="font-size: 14px;">Paytmqr6i3w0w@ptys</div>
+                    <div style="font-size:11px; color:var(--text-secondary); margin-bottom: 12px;">Tap UPI ID to copy</div>
+                    <div style="background: rgba(225, 29, 72, 0.05); padding: 10px; border-radius: 8px; border: 1px dashed rgba(225, 29, 72, 0.3);">
+                        Ref ID: <b id="wfOrderIdDisplay" style="color:var(--accent-pink); font-family:monospace; font-size:15px; letter-spacing:1px;"></b>
+                        <div style="font-size:10px; margin-top:4px; color:var(--text-secondary);">* Do not change amount while paying</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Sticky bottom buttons — ALWAYS visible -->
+            <div style="padding:12px 16px 16px; border-top:1px solid var(--border-color); background:var(--card-solid); flex-shrink:0;">
+                <button class="af-pay-btn" onclick="confirmWalletPayment()" style="margin-bottom:10px;">
+                    <i class="fas fa-lock"></i> I Have Paid. Verify Now
+                </button>
+                <button class="btn" style="background:transparent; color:var(--text-secondary); box-shadow:none; border:1px solid var(--border-color); margin-top:0; height:45px;" onclick="goBackWfStep1()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal-overlay" id="checkoutModal">
+        <div class="bottom-sheet">
+            <div class="sheet-header">
+                <div class="sheet-title">Secure Checkout</div>
+                <button class="icon-btn" onclick="closeCheckout()" style="background:transparent; border:none; box-shadow:none; height: 32px; width: 32px;"><i class="fas fa-times" style="font-size:18px;"></i></button>
+            </div>
+
+            <!-- STEP 1: Details and Promo Code -->
+            <div id="chkStep1">
+                <div class="checkout-summary">
+                    <img id="chkImg" class="checkout-img" src="" alt="Item">
+                    <div style="flex: 1;">
+                        <div id="chkTitle" style="font-weight:600; font-size:14px; margin-bottom:4px; color:var(--text-primary);"></div>
+                        <div id="chkType" style="font-size:12px; color:var(--text-secondary);"></div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div id="chkPrice" style="font-weight:700; color:var(--text-primary); font-size:16px;"></div>
+                    </div>
+                </div>
+
+                <div class="coupon-box">
+                    <input type="text" id="chkCouponInput" placeholder="Enter Promo Code">
+                    <button class="btn-apply" onclick="applyCoupon()">APPLY</button>
+                </div>
+                <div id="chkCouponMsg" style="font-size:12px; margin-bottom:16px; font-weight:500;"></div>
+
+                <div id="chkLinkContainer" style="display:none;">
+                    <div class="input-group"><label id="chkLinkLabel">Target Link</label><input type="text" id="chkLinkInput" placeholder="Paste link here..."></div>
+                    <div id="chkExtraLinksContainer" style="display:none;">
+                        <div class="input-group"><label>Link 2</label><input type="text" id="chkLinkInput2" placeholder="Paste link 2 here..."></div>
+                        <div class="input-group"><label>Link 3</label><input type="text" id="chkLinkInput3" placeholder="Paste link 3 here..."></div>
+                        <div class="input-group"><label>Link 4</label><input type="text" id="chkLinkInput4" placeholder="Paste link 4 here..."></div>
+                        <div class="input-group"><label>Link 5</label><input type="text" id="chkLinkInput5" placeholder="Paste link 5 here..."></div>
+                    </div>
+                    <div class="input-group" id="chkPollContainer" style="display:none;"><label>Poll Vote Option</label><input type="text" id="chkPollInput" placeholder="Enter option to vote for"></div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; font-weight:700; font-size:16px; border-top:1px solid var(--border-color); padding-top:16px; margin-bottom: 20px; color: var(--text-primary);">
+                    <span>Total Amount</span><span id="chkFinalPrice" style="color:var(--accent-cyan);">₹0</span>
+                </div>
+
+                <button class="btn" onclick="goToStep2()">Proceed to Payment <i class="fas fa-arrow-right"></i></button>
+                <button class="btn" id="chkWalletBtn" style="background:var(--accent-purple); margin-top:10px;" onclick="confirmWalletPurchase()"><i class="fas fa-wallet"></i> Pay via Wallet</button>
+            </div>
+
+            <!-- STEP 2: QR Code and Payment -->
+            <div id="chkStep2" style="display:none;">
+                <div class="payment-box">
+                    <div class="secure-badge"><i class="fas fa-shield-check"></i> 100% Safe & Secure</div>
+                    <div style="font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom: 4px;">Pay exactly <span id="chkPayAmt" style="color:var(--accent-cyan); font-size:18px; font-weight:800;"></span></div>
+
+                    <div class="qr-wrapper">
+                        <div class="qr-corner qr-tl"></div>
+                        <div class="qr-corner qr-tr"></div>
+                        <div class="qr-corner qr-bl"></div>
+                        <div class="qr-corner qr-br"></div>
+                        <img id="dynamic-qr" src="" alt="Scan to Pay">
+                    </div>
+
+                    <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom: 15px; display:flex; justify-content:center; align-items:center; gap:8px;">
+                        <i class="fas fa-qrcode" style="font-size:16px;"></i>
+                        <span>Scan to pay via Any UPI App</span>
+                    </div>
+
+                    <div class="upi-text" id="chkUpiId" title="Click to copy" style="font-size: 14px;">Paytmqr6i3w0w@ptys</div>
+                    <div style="font-size:11px; color:var(--text-secondary); margin-bottom: 12px;">Tap UPI ID to copy</div>
+
+                    <div style="background: rgba(225, 29, 72, 0.05); padding: 10px; border-radius: 8px; border: 1px dashed rgba(225, 29, 72, 0.3);">
+                        Order Ref ID: <b id="chkOrderIdDisplay" style="color:var(--accent-pink); font-family:monospace; font-size:15px; letter-spacing:1px;"></b>
+                        <div style="font-size:10px; margin-top:4px; color:var(--text-secondary);">* Do not change amount while paying</div>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="confirmPurchase()"><i class="fas fa-lock"></i> I Have Paid. Verify Now</button>
+                <button class="btn" style="background:transparent; color:var(--text-secondary); box-shadow:none; border:1px solid var(--border-color); margin-top:10px; height: 45px;" onclick="goBackToStep1()"><i class="fas fa-arrow-left"></i> Back to Details</button>
+            </div>
+
+        </div>
+    </div>
+
+</div>
 
 <!-- GIFT CODE MODAL -->
 <style>
@@ -2848,20 +2776,20 @@
             const badgeHtml = isFree 
                 ? `<span class="free-badge"><i class="fas fa-gift" style="font-size:9px;"></i> FREE</span>`
                 : `<div class="plc-price-badge">${p.subCategory || p.category}</div>`;
+            const priceHtml = isFree 
+                ? `<div class="free-price" style="margin:8px 0 14px 0;display:block;">FREE</div>`
+                : `<div class="plc-price" style="margin:8px 0 14px 0;display:block;">₹${p.discountedPrice}</div>`;
             const buyBtnClass = isFree ? 'plc-buy free-btn' : 'plc-buy';
             const buyBtnTxt = isFree ? '<i class="fas fa-gift"></i> Claim Free' : 'Buy Now';
             const freeInfoHtml = isFree ? `<div class="free-daily-info" id="freeInfo_${id}"><i class="fas fa-clock"></i> Once per day · Free</div>` : '';
-            const priceDisplay = isFree
-                ? `<div class="plc-price-row"><span class="plc-price-tag free-price-tag">FREE</span></div>`
-                : `<div class="plc-price-row"><span class="plc-price-tag"><span class="plc-price-symbol">&#8377;</span>${p.discountedPrice}</span></div>`;
             return `<div class="${cardClass}" id="plc_${id}">
               <div class="plc-header">
                 <div class="plc-info"><div class="plc-name">${p.title}</div></div>
                 ${badgeHtml}
               </div>
-              ${p.description ? `<p style="font-size:12px;color:var(--text-secondary);margin:0 0 10px;line-height:1.6;">${p.description}</p>` : ''}
-              ${(p.features && p.features.length) ? `<ul style="list-style:none;font-size:12px;margin:0 0 10px;padding:0;border-top:1px solid var(--border-color);padding-top:10px;">${p.features.map(f=>`<li style="margin-bottom:6px;display:flex;align-items:center;gap:7px;color:var(--text-primary);"><i class="fas fa-check-circle" style="color:var(--accent-cyan);font-size:11px;flex-shrink:0;"></i>${f}</li>`).join('')}</ul>` : ''}
-              ${priceDisplay}
+              ${p.description ? `<p style="font-size:12px;color:var(--text-secondary);margin:0 0 12px;line-height:1.6;">${p.description}</p>` : ''}
+              ${(p.features && p.features.length) ? `<div style="border-top:1px solid var(--border-color);padding-top:12px;"><ul style="list-style:none;font-size:12px;margin:0;padding:0;">${p.features.map(f=>`<li style="margin-bottom:6px;display:flex;align-items:center;gap:7px;color:var(--text-primary);"><i class="fas fa-check-circle" style="color:var(--accent-cyan);font-size:11px;flex-shrink:0;"></i>${f}</li>`).join('')}</ul></div>` : ''}
+              ${priceHtml}
               ${freeInfoHtml}
               <div class="plc-actions" style="margin-top:10px;">
                 ${isFree ? '' : `<button class="plc-cart-btn" onclick="addToCart('${id}')" title="Add to Cart"><i class="fas fa-cart-plus"></i></button>`}
@@ -4014,7 +3942,7 @@
 
     function loadPublicData() { 
         onValue(ref(db, 'meta/brand'), s => { if(s.exists()){ const d = s.val(); document.getElementById('brandName').textContent = d.name || 'Store'; if(d.logoUrl) { document.getElementById('brandLogo').src = d.logoUrl; document.getElementById('brandLogo').style.display = 'block'; const ol = document.getElementById('offerCircleLogo'); const of_ = document.getElementById('offerCircleFallback'); if(ol){ ol.src = d.logoUrl; ol.style.display = 'block'; if(of_) of_.style.display = 'none'; ol.style.position='absolute'; ol.style.inset='0'; ol.style.width='100%'; ol.style.height='100%'; } } } });
-        onValue(ref(db, 'meta/offers'), s => { if(s.exists()){ const d = s.val(); const banner = document.getElementById('offerBanner'); if(d.name) { banner.classList.add('visible'); document.getElementById('offerTitle').textContent = d.name; document.getElementById('offerDesc').textContent = d.description || 'Limited time offer — don\'t miss out!'; document.getElementById('offerPrice').innerHTML = `<span style='font-size:0.65em;vertical-align:super;font-weight:900;'>&#8377;</span>${d.newRate || 0}`; document.getElementById('offerOldPrice').innerHTML = `&#8377;${d.oldRate || 0}`; const tgLink = document.getElementById('offerTgLink'); if(tgLink) tgLink.href = d.channelLink || (d.contactUsername ? (d.contactUsername.startsWith('http') ? d.contactUsername : `https://t.me/${d.contactUsername.replace('@','')}`) : '#'); document.getElementById('contactLink').href = d.contactUsername ? (d.contactUsername.startsWith('http') ? d.contactUsername : `https://t.me/${d.contactUsername.replace('@','')}`) : '#'; document.getElementById('updatesLink').href = d.channelLink || '#'; } else { banner.classList.remove('visible'); } } });
+        onValue(ref(db, 'meta/offers'), s => { if(s.exists()){ const d = s.val(); const banner = document.getElementById('offerBanner'); if(d.name) { banner.classList.add('visible'); document.getElementById('offerTitle').textContent = d.name; document.getElementById('offerDesc').textContent = d.description || 'Limited time offer — don\'t miss out!'; document.getElementById('offerPrice').textContent = `₹${d.newRate || 0}`; document.getElementById('offerOldPrice').textContent = `₹${d.oldRate || 0}`; const tgLink = document.getElementById('offerTgLink'); if(tgLink) tgLink.href = d.channelLink || (d.contactUsername ? (d.contactUsername.startsWith('http') ? d.contactUsername : `https://t.me/${d.contactUsername.replace('@','')}`) : '#'); document.getElementById('contactLink').href = d.contactUsername ? (d.contactUsername.startsWith('http') ? d.contactUsername : `https://t.me/${d.contactUsername.replace('@','')}`) : '#'; document.getElementById('updatesLink').href = d.channelLink || '#'; } else { banner.classList.remove('visible'); } } });
         onValue(ref(db, 'meta/contact'), s => { if(s.exists() && s.val().socialTelegram){ if(document.getElementById('contactLink').getAttribute('href') === '#') { document.getElementById('contactLink').href = s.val().socialTelegram; } } });
         onValue(ref(db, 'meta/linkMgmt'), s => { linkMgmtRules = s.exists() ? s.val() : {}; });
         let _firstProductLoad = true;
