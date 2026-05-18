@@ -110,7 +110,7 @@
             bottom:-20px; left:10px; pointer-events:none;
         }
         .offer-content { position:relative; z-index:2; padding:14px 86px 14px 16px; color:#0f172a; width:100%; overflow:visible; }
-        .offer-price-row { display:flex; align-items:baseline; gap:7px; margin-bottom:7px; flex-wrap:wrap; }
+        .offer-price-row { display:flex; align-items:center; gap:8px; margin-bottom:7px; flex-wrap:wrap; overflow:visible; }
         .offer-pill {
             display:inline-flex; align-items:center; gap:5px;
             background: #2563eb;
@@ -120,7 +120,7 @@
         }
         .offer-title { font-size:15px; font-weight:800; margin-bottom:7px; letter-spacing:-0.3px; color:#0f172a; line-height:1.35; }
         .offer-price-row { display:flex; align-items:baseline; gap:7px; margin-bottom:7px; flex-wrap:wrap; }
-        .offer-price { font-size:22px; font-weight:900; color:#dc2626; letter-spacing:-0.5px; }
+        .offer-price { font-size:22px; font-weight:900; color:#dc2626; letter-spacing:0; overflow:visible; display:inline-block; padding-left:2px; }
         @media (min-width:380px) { .offer-price { font-size:26px; } }
         .offer-old-price { text-decoration:line-through; color:#94a3b8; font-size:13px; font-weight:500; }
         .offer-limit-row { font-size:11px; color:#64748b; margin-bottom:9px; display:flex; align-items:center; gap:5px; line-height:1.4; }
@@ -196,7 +196,7 @@
 
         /* ── FREE Service Styles ── */
         .free-badge { background: #10b981; color: #fff; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; white-space: nowrap; flex-shrink: 0; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(16,185,129,0.35); }
-        .free-price { font-size: 22px; font-weight: 800; color: #10b981; margin-bottom: 14px; letter-spacing: -0.5px; margin-top: 4px; flex-shrink: 0; }
+        .free-price { font-size: 22px; font-weight: 800; color: #10b981; margin-bottom: 0; letter-spacing: 0; margin-top: 0; flex-shrink: 0; padding: 2px 0 2px 2px; overflow: visible; display: block; }
         .product-list-card.free-service { border-color: rgba(16,185,129,0.3); background: var(--card-solid); }
         .product-list-card.free-service:hover { border-color: #10b981; box-shadow: 0 6px 16px rgba(16,185,129,0.12); }
         .plc-buy.free-btn { background: #10b981; box-shadow: 0 2px 4px rgba(16,185,129,0.3); }
@@ -204,7 +204,7 @@
         .free-daily-info { font-size: 11px; color: #10b981; font-weight: 600; margin-top: 6px; display: flex; align-items: center; gap: 5px; }
         .free-used-info { font-size: 11px; color: #f59e0b; font-weight: 600; margin-top: 6px; display: flex; align-items: center; gap: 5px; }
         .free-section-label { font-size: 11px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-        .plc-price { font-size: 22px; font-weight: 800; color: var(--accent-cyan); margin-bottom: 14px; letter-spacing: -0.5px; margin-top: 4px; flex-shrink: 0; }
+        .plc-price { font-size: 22px; font-weight: 800; color: var(--accent-cyan); margin-bottom: 0; letter-spacing: 0; margin-top: 0; flex-shrink: 0; padding: 2px 0 2px 2px; overflow: visible; display: block; }
         .free-price { font-size: 22px; }
         @media (min-width: 360px) { .plc-price { font-size: 24px; } .free-price { font-size: 24px; } }
         @media (min-width: 400px) { .plc-price { font-size: 26px; } .free-price { font-size: 26px; } }
@@ -2831,8 +2831,8 @@
                 ? `<span class="free-badge"><i class="fas fa-gift" style="font-size:9px;"></i> FREE</span>`
                 : `<div class="plc-price-badge">${p.subCategory || p.category}</div>`;
             const priceHtml = isFree 
-                ? `<div class="free-price" style="margin-bottom:0;flex-shrink:0;align-self:flex-end;">FREE</div>`
-                : `<div class="plc-price" style="margin-bottom:0;flex-shrink:0;align-self:flex-end;">₹${p.discountedPrice}</div>`;
+                ? `<div class="free-price">FREE</div>`
+                : `<div class="plc-price">₹${p.discountedPrice}</div>`;
             const buyBtnClass = isFree ? 'plc-buy free-btn' : 'plc-buy';
             const buyBtnTxt = isFree ? '<i class="fas fa-gift"></i> Claim Free' : 'Buy Now';
             const freeInfoHtml = isFree ? `<div class="free-daily-info" id="freeInfo_${id}"><i class="fas fa-clock"></i> Once per day · Free</div>` : '';
@@ -2842,7 +2842,7 @@
                 ${badgeHtml}
               </div>
               ${p.description ? `<p style="font-size:12px;color:var(--text-secondary);margin:0 0 12px;line-height:1.6;">${p.description}</p>` : ''}
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;${(p.features && p.features.length)?'border-top:1px solid var(--border-color);padding-top:12px;':''}margin-bottom:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;overflow:visible;${(p.features && p.features.length)?'border-top:1px solid var(--border-color);padding-top:12px;':''}margin-bottom:14px;">
                 ${(p.features && p.features.length) ? `<ul style="list-style:none;font-size:12px;margin:0;padding:0;flex:1;min-width:0;">${p.features.map(f=>`<li style="margin-bottom:6px;display:flex;align-items:center;gap:7px;color:var(--text-primary);"><i class="fas fa-check-circle" style="color:var(--accent-cyan);font-size:11px;flex-shrink:0;"></i>${f}</li>`).join('')}</ul>` : '<div style="flex:1;min-width:0;"></div>'}
                 ${priceHtml}
               </div>
