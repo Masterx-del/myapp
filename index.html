@@ -1627,6 +1627,86 @@
 }
 .af-pay-btn:active { transform: scale(0.98); opacity: 0.92; }
 .af-pay-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ══════════════════════════════════════════
+   FULLY RESPONSIVE — ALL PHONE SCREEN SIZES
+   ══════════════════════════════════════════ */
+
+/* Universal fluid fixes */
+.plc-header { flex-wrap: wrap; gap: 8px; }
+.plc-info { flex: 1; min-width: 0; }
+.offer-title { overflow-wrap: break-word; word-break: break-word; }
+.offer-banner { min-height: unset; }
+.offer-content { box-sizing: border-box; max-width: 100%; }
+.subcategory-card { flex-wrap: wrap; gap: 8px; }
+.action-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Fluid font sizing via clamp() */
+.brand-name        { font-size: clamp(14px, 4vw, 18px) !important; }
+.section-title     { font-size: clamp(1rem, 4.5vw, 1.15rem) !important; }
+.plc-price         { font-size: clamp(18px, 5.5vw, 26px) !important; }
+.free-price        { font-size: clamp(18px, 5.5vw, 26px) !important; }
+.offer-price       { font-size: clamp(18px, 6vw, 28px) !important; }
+.plc-name          { font-size: clamp(12px, 3.5vw, 14px) !important; }
+.subcategory-name  { font-size: clamp(12px, 3.5vw, 14px) !important; }
+.btn               { font-size: clamp(13px, 3.5vw, 14px) !important; }
+.plc-buy           { font-size: clamp(11px, 3.2vw, 13px) !important; }
+.nav-item          { font-size: clamp(9px, 2.5vw, 11px) !important; }
+.nav-item i        { font-size: clamp(16px, 5vw, 20px) !important; }
+.service-cat-name  { font-size: clamp(10px, 2.8vw, 11px) !important; }
+
+/* Very small phones (< 320px) */
+@media (max-width: 319px) {
+    .content-area { padding: 12px 10px !important; }
+    .header { padding: 10px 12px !important; }
+    .card { padding: 14px 12px !important; }
+    .services-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+    .service-cat-card { padding: 12px 6px !important; }
+    .offer-content { padding: 12px 68px 12px 12px !important; }
+    .offer-circle-deco { width: 50px !important; height: 50px !important; right: 10px !important; font-size: 20px !important; }
+    .product-list-card { padding: 14px 12px !important; }
+    .bottom-sheet { padding: 16px !important; }
+    .af-body { padding: 12px 12px 16px !important; }
+}
+
+/* Small phones (320px-359px) e.g. iPhone SE */
+@media (min-width: 320px) and (max-width: 359px) {
+    .content-area { padding: 14px 12px !important; }
+    .header { padding: 12px 14px !important; }
+    .card { padding: 16px 14px !important; }
+    .services-grid { gap: 8px !important; }
+    .service-cat-card { padding: 12px 6px !important; }
+    .offer-content { padding: 12px 72px 12px 14px !important; }
+    .offer-circle-deco { width: 54px !important; height: 54px !important; right: 11px !important; }
+    .product-list-card { padding: 16px 14px !important; }
+    .af-body { padding: 12px 13px 16px !important; }
+    .qr-wrapper img { width: 140px !important; height: 140px !important; }
+}
+
+/* Budget phones (360px-389px) */
+@media (min-width: 360px) and (max-width: 389px) {
+    .content-area { padding: 16px 14px !important; }
+    .header { padding: 13px 16px !important; }
+    .card { padding: 18px 16px !important; }
+    .offer-content { padding: 13px 76px 13px 14px !important; }
+    .offer-circle-deco { width: 58px !important; height: 58px !important; }
+    .product-list-card { padding: 17px 15px !important; }
+    .qr-wrapper img { width: 150px !important; height: 150px !important; }
+}
+
+/* Medium phones (390px-429px) e.g. iPhone 14, Pixel 7 */
+@media (min-width: 390px) and (max-width: 429px) {
+    .content-area { padding: 18px 16px !important; }
+    .header { padding: 14px 18px !important; }
+    .offer-content { padding: 14px 82px 14px 16px !important; }
+}
+
+/* Large phones (430px+) e.g. iPhone Pro Max */
+@media (min-width: 430px) {
+    .content-area { padding: 20px !important; }
+    .services-grid { gap: 14px !important; }
+    .service-cat-card { padding: 18px 10px !important; }
+}
 </style>
 
 <div class="modal-overlay" id="walletFundModal">
