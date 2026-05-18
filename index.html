@@ -77,7 +77,7 @@
         }
         .icon-btn:hover { color: var(--accent-cyan); border-color: var(--accent-cyan); background: var(--input-bg); }
 
-        .content-area { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; position: relative; }
+        .content-area { flex: 1; padding: 20px; overflow-y: auto; overflow-x: clip; position: relative; }
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -96,7 +96,8 @@
             background: #ffffff;
             box-shadow: 0 4px 20px rgba(37,99,235,0.13), 0 1px 4px rgba(0,0,0,0.07);
             border: 2px solid #2563eb;
-            min-height: 136px;
+            min-height: unset;
+            display: none;
         }
         .offer-banner.visible { display: block; }
         .offer-banner::before {
@@ -109,7 +110,7 @@
             background: radial-gradient(circle, rgba(37,99,235,0.05) 0%, transparent 70%);
             bottom:-20px; left:10px; pointer-events:none;
         }
-        .offer-content { position:relative; z-index:2; padding:14px 86px 14px 16px; color:#0f172a; width:100%; overflow:visible; }
+        .offer-content { position:relative; z-index:2; padding:14px 16px; color:#0f172a; width:100%; overflow:visible; padding-right: calc(70px + 14px); }
         .offer-price-row { display:flex; align-items:center; gap:8px; margin-bottom:7px; flex-wrap:wrap; overflow:visible; }
         .offer-pill {
             display:inline-flex; align-items:center; gap:5px;
@@ -120,7 +121,7 @@
         }
         .offer-title { font-size:15px; font-weight:800; margin-bottom:7px; letter-spacing:-0.3px; color:#0f172a; line-height:1.35; }
         .offer-price-row { display:flex; align-items:baseline; gap:7px; margin-bottom:7px; flex-wrap:wrap; }
-        .offer-price { font-size:22px; font-weight:900; color:#dc2626; letter-spacing:0; overflow:visible; display:inline-block; padding-left:2px; }
+        .offer-price { font-size:22px; font-weight:900; color:#dc2626; letter-spacing:0; overflow:visible; display:inline-block; padding:0 2px; white-space:nowrap; }
         @media (min-width:380px) { .offer-price { font-size:26px; } }
         .offer-old-price { text-decoration:line-through; color:#94a3b8; font-size:13px; font-weight:500; }
         .offer-limit-row { font-size:11px; color:#64748b; margin-bottom:9px; display:flex; align-items:center; gap:5px; line-height:1.4; }
@@ -132,8 +133,8 @@
         }
         .offer-tg-cta:hover { opacity:0.88; }
         .offer-circle-deco {
-            position:absolute; right:14px; top:50%; transform:translateY(-50%);
-            width:62px; height:62px; border-radius:50%;
+            position:absolute; right:12px; top:50%; transform:translateY(-50%);
+            width:58px; height:58px; border-radius:50%;
             border:2px solid #2563eb;
             background:linear-gradient(135deg,#eff6ff,#dbeafe);
             display:flex; align-items:center; justify-content:center;
@@ -196,7 +197,7 @@
 
         /* ── FREE Service Styles ── */
         .free-badge { background: #10b981; color: #fff; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; white-space: nowrap; flex-shrink: 0; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(16,185,129,0.35); }
-        .free-price { font-size: 22px; font-weight: 800; color: #10b981; margin-bottom: 0; letter-spacing: 0; margin-top: 0; flex-shrink: 0; padding: 2px 0 2px 2px; overflow: visible; display: block; }
+        .free-price { font-size: 22px; font-weight: 800; color: #10b981; margin: 0; letter-spacing: 0; flex-shrink: 0; padding: 0 2px; overflow: visible; display: inline-block; white-space: nowrap; }
         .product-list-card.free-service { border-color: rgba(16,185,129,0.3); background: var(--card-solid); }
         .product-list-card.free-service:hover { border-color: #10b981; box-shadow: 0 6px 16px rgba(16,185,129,0.12); }
         .plc-buy.free-btn { background: #10b981; box-shadow: 0 2px 4px rgba(16,185,129,0.3); }
@@ -204,8 +205,7 @@
         .free-daily-info { font-size: 11px; color: #10b981; font-weight: 600; margin-top: 6px; display: flex; align-items: center; gap: 5px; }
         .free-used-info { font-size: 11px; color: #f59e0b; font-weight: 600; margin-top: 6px; display: flex; align-items: center; gap: 5px; }
         .free-section-label { font-size: 11px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-        .plc-price { font-size: 22px; font-weight: 800; color: var(--accent-cyan); margin-bottom: 0; letter-spacing: 0; margin-top: 0; flex-shrink: 0; padding: 2px 0 2px 2px; overflow: visible; display: block; }
-        .free-price { font-size: 22px; }
+        .plc-price { font-size: 22px; font-weight: 800; color: var(--accent-cyan); margin: 0; letter-spacing: 0; flex-shrink: 0; padding: 0 2px; overflow: visible; display: inline-block; white-space: nowrap; }
         @media (min-width: 360px) { .plc-price { font-size: 24px; } .free-price { font-size: 24px; } }
         @media (min-width: 400px) { .plc-price { font-size: 26px; } .free-price { font-size: 26px; } }
         .plc-actions { display: flex; gap: 8px; margin-top: auto; }
