@@ -3798,15 +3798,97 @@
                 return;
             }
 
-            // Credit wallet
-            const profSnap = await get(ref(db, `users/${uid}/profile`));
-            const curBal = parseFloat(profSnap.exists() ? (profSnap.val().walletBalance || 0) : 0);
-            await update(ref(db, `users/${uid}/profile`), { walletBalance: curBal + paidVal });
-            await push(ref(db, `users/${uid}/walletHistory`), { type: 'credit', amount: paidVal, note: 'Wallet Top-Up (Auto-Resumed)', utrId: utr, createdAt: new Date().toISOString() });
-            await push(ref(db, 'orders'), { userId: uid, userEmail: currentUser.email, utrId: utr, finalAmount: paidVal.toFixed(2), type: 'wallet_topup', status: 'completed', createdAt: new Date().toISOString() });
-            await remove(ref(db, `users/${uid}/pendingVerification`));
+            const pendType = pend.type || 'wallet';
 
-            showToast(`✅ ₹${paidVal.toFixed(2)} credited! (Resumed from last session)`, 'success');
+            if (pendType === 'checkout') {
+                // Resume single-item checkout order
+                const chkProductSnap = await get(ref(db, `products/${pend.productId}`)).catch(()=>null);
+                const chkSubSnap    = await get(ref(db, `subscriptions/${pend.productId}`)).catch(()=>null);
+                const resumedItem   = (chkProductSnap && chkProductSnap.exists()) ? chkProductSnap.val()
+                                    : (chkSubSnap    && chkSubSnap.exists())    ? chkSubSnap.val() : null;
+                if (!resumedItem) {
+                    await remove(ref(db, `users/${uid}/pendingVerification`));
+                    return;
+                }
+                resumedItem.id = pend.productId;
+                resumedItem.purchaseType = pend.purchaseType || 'product';
+                const hasApiConfig = !!(
+                    resumedItem.purchaseType !== 'subscription' &&
+                    resumedItem.apiUrl && resumedItem.apiKey &&
+                    resumedItem.serviceId && resumedItem.quantity && pend.targetLink
+                );
+                const orderData = {
+                    productId: resumedItem.id, productSnapshot: resumedItem,
+                    userId: uid, userEmail: currentUser.email,
+                    finalAmount: paidVal.toFixed(2), utrId: utr,
+                    targetLink: pend.targetLink || null,
+                    targetLink2: pend.targetLink2 || null,
+                    targetLink3: pend.targetLink3 || null,
+                    targetLink4: pend.targetLink4 || null,
+                    targetLink5: pend.targetLink5 || null,
+                    pollOption: pend.pollOption || null,
+                    status: hasApiConfig ? 'progress' : 'pending',
+                    createdAt: new Date().toISOString(),
+                    isSubscription: resumedItem.purchaseType === 'subscription',
+                    apiStatus: hasApiConfig ? 'calling' : null,
+                    resumedFromPending: true,
+                };
+                const newOrderRef = push(ref(db, 'orders'));
+                await set(newOrderRef, orderData);
+                await remove(ref(db, `users/${uid}/pendingVerification`));
+                if (hasApiConfig) callExternalApi(newOrderRef.key, resumedItem.apiUrl, resumedItem.apiKey,
+                    resumedItem.serviceId, resumedItem.quantity, pend.targetLink);
+                get(ref(db, `users/${uid}/profile`)).then(spentSnap => {
+                    const prevSpent = parseFloat(spentSnap.val()?.totalSpent || 0);
+                    update(ref(db, `users/${uid}/profile`), { totalSpent: prevSpent + paidVal });
+                    processReferralReward(uid, paidVal);
+                }).catch(()=>{});
+                showToast(`✅ Order placed! ₹${paidVal.toFixed(2)} (Resumed from last session)`, 'success');
+
+            } else if (pendType === 'cart') {
+                // Resume cart orders
+                const cartItems = pend.cartItems || [];
+                if (cartItems.length === 0) {
+                    await remove(ref(db, `users/${uid}/pendingVerification`));
+                    return;
+                }
+                await Promise.all(cartItems.map(async item => {
+                    const snapResult = await get(ref(db, `products/${item.id}`)).catch(()=>null);
+                    const product = snapResult && snapResult.exists() ? snapResult.val() : {};
+                    const hasApi = !!(product.apiUrl && product.apiKey && product.serviceId && item.link);
+                    const orderData = {
+                        productId: item.id, productSnapshot: product,
+                        userId: uid, userEmail: currentUser.email,
+                        finalAmount: parseFloat(item.price || 0).toFixed(2),
+                        utrId: utr, targetLink: item.link,
+                        status: hasApi ? 'progress' : 'pending',
+                        createdAt: new Date().toISOString(), isSubscription: false,
+                        apiStatus: hasApi ? 'calling' : null,
+                        cartGroup: utr, resumedFromPending: true,
+                    };
+                    const newRef = push(ref(db, 'orders'));
+                    await set(newRef, orderData);
+                    if (hasApi) callExternalApi(newRef.key, product.apiUrl, product.apiKey,
+                        product.serviceId, product.quantity, item.link);
+                }));
+                await remove(ref(db, `users/${uid}/pendingVerification`));
+                get(ref(db, `users/${uid}/profile`)).then(spentSnap => {
+                    const prevSpent = parseFloat(spentSnap.val()?.totalSpent || 0);
+                    update(ref(db, `users/${uid}/profile`), { totalSpent: prevSpent + paidVal });
+                    processReferralReward(uid, paidVal);
+                }).catch(()=>{});
+                showToast(`✅ ${cartItems.length} order(s) placed! (Resumed from last session)`, 'success');
+
+            } else {
+                // Default: wallet top-up
+                const profSnap = await get(ref(db, `users/${uid}/profile`));
+                const curBal = parseFloat(profSnap.exists() ? (profSnap.val().walletBalance || 0) : 0);
+                await update(ref(db, `users/${uid}/profile`), { walletBalance: curBal + paidVal });
+                await push(ref(db, `users/${uid}/walletHistory`), { type: 'credit', amount: paidVal, note: 'Wallet Top-Up (Auto-Resumed)', utrId: utr, createdAt: new Date().toISOString() });
+                await push(ref(db, 'orders'), { userId: uid, userEmail: currentUser.email, utrId: utr, finalAmount: paidVal.toFixed(2), type: 'wallet_topup', status: 'completed', createdAt: new Date().toISOString() });
+                await remove(ref(db, `users/${uid}/pendingVerification`));
+                showToast(`✅ ₹${paidVal.toFixed(2)} credited! (Resumed from last session)`, 'success');
+            }
         } catch(e) {}
     }
 
@@ -4443,6 +4525,18 @@
 
         showPayVerify();
         try {
+            // ── Save pending session before verify (crash-safe recovery) ──
+            await set(ref(db, `users/${currentUser.uid}/pendingVerification`), {
+                type: 'checkout',
+                utr, amount: checkoutFinalAmt,
+                productId: checkoutItem.id,
+                purchaseType: checkoutItem.purchaseType,
+                targetLink, targetLink2: targetLink2||null, targetLink3: targetLink3||null,
+                targetLink4: targetLink4||null, targetLink5: targetLink5||null,
+                pollOption: pollOption||null,
+                savedAt: new Date().toISOString()
+            }).catch(()=>{});
+
             // ── Duplicate check AND payment verify IN PARALLEL ──
             const [utrSnapshot, verifyResult] = await Promise.all([
                 get(query(ref(db, 'orders'), orderByChild('utrId'), equalTo(utr))),
@@ -4451,10 +4545,11 @@
 
             if (utrSnapshot.exists()) {
                 _unlockOrder(); _resetBtn(); hidePayVerify();
+                await remove(ref(db, `users/${currentUser.uid}/pendingVerification`)).catch(()=>{});
                 return showToast('❌ This Order ID has already been used!');
             }
             if (!verifyResult) {
-                // API failed — keep pendingVerification, reset button for manual retry
+                // API failed — pendingVerification kept intact for auto-resume on next open
                 _unlockOrder(); _resetBtn();
                 return showToast('⚠️ Verification server unreachable. Your payment is saved — please retry in a moment.', 'warn');
             }
@@ -4949,14 +5044,26 @@
 
         showPayVerify();
         try {
+            // ── Save pending session before verify (crash-safe recovery) ──
+            await set(ref(db, `users/${currentUser.uid}/pendingVerification`), {
+                type: 'cart',
+                utr, amount: cartFinalAmt,
+                cartItems: cart.map(i => ({ id: i.id, link: i.link, price: parseFloat(i.product.discountedPrice) })),
+                savedAt: new Date().toISOString()
+            }).catch(()=>{});
+
             const [utrSnapshot, verifyResult] = await Promise.all([
                 get(query(ref(db, 'orders'), orderByChild('utrId'), equalTo(utr))),
                 raceFetchWithRetry(verifyURLs, j => j && typeof j.STATUS !== 'undefined'),
             ]);
 
-            if(utrSnapshot.exists()) { _unlockOrder(); hidePayVerify(); return showToast('❌ This Order ID already used!'); }
+            if(utrSnapshot.exists()) {
+                _unlockOrder(); hidePayVerify();
+                await remove(ref(db, `users/${currentUser.uid}/pendingVerification`)).catch(()=>{});
+                return showToast('❌ This Order ID already used!');
+            }
             if(!verifyResult) {
-                // API failed — keep pendingVerification, let user retry
+                // API failed — pendingVerification kept intact for auto-resume on next open
                 _unlockOrder();
                 return showToast('⚠️ Verification server unreachable. Your payment is saved — please retry in a moment.', 'warn');
             }
