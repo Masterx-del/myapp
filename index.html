@@ -3688,9 +3688,9 @@
                 return showToast('❌ This Order ID has already been used!');
             }
             if(!verifyResult) {
-                remove(ref(db, `users/${currentUser.uid}/pendingVerification`)).catch(()=>{});
-                hidePayVerify(); _wfVerifyInProgress = false;
-                return showToast("❌ Payment not verified. Check internet & try again.");
+                // API failed — keep pendingVerification intact so it auto-resumes on next open
+                _wfVerifyInProgress = false;
+                return showToast('⚠️ Verification server unreachable. Your payment is saved — please retry or reopen the app.', 'warn');
             }
 
             const result = verifyResult.json;
@@ -3781,8 +3781,8 @@
             const verifyResult = await raceFetchWithRetry(verifyURLs, j => j && typeof j.STATUS !== 'undefined');
 
             if(!verifyResult) {
-                showToast('⚠️ Could not verify last payment. Please contact support if amount was deducted.', 'warn');
-                await remove(ref(db, `users/${uid}/pendingVerification`));
+                // API unreachable — keep pendingVerification, will retry on next app open
+                showToast('⚠️ Could not reach verification server. Will retry automatically when you reopen the app.', 'warn');
                 return;
             }
 
@@ -4454,8 +4454,9 @@
                 return showToast('❌ This Order ID has already been used!');
             }
             if (!verifyResult) {
-                _unlockOrder(); _resetBtn(); hidePayVerify();
-                return showToast("❌ Could not verify payment. Check internet & try again.");
+                // API failed — keep pendingVerification, reset button for manual retry
+                _unlockOrder(); _resetBtn();
+                return showToast('⚠️ Verification server unreachable. Your payment is saved — please retry in a moment.', 'warn');
             }
 
             const result = verifyResult.json;
@@ -4954,7 +4955,11 @@
             ]);
 
             if(utrSnapshot.exists()) { _unlockOrder(); hidePayVerify(); return showToast('❌ This Order ID already used!'); }
-            if(!verifyResult)        { _unlockOrder(); hidePayVerify(); return showToast("❌ Could not verify payment. Check internet & retry."); }
+            if(!verifyResult) {
+                // API failed — keep pendingVerification, let user retry
+                _unlockOrder();
+                return showToast('⚠️ Verification server unreachable. Your payment is saved — please retry in a moment.', 'warn');
+            }
 
             const result = verifyResult.json;
             if(result.STATUS !== "TXN_SUCCESS" || result.RESPMSG !== "Txn Success") {
