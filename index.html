@@ -2323,21 +2323,10 @@
         });
     });
 
-    // 4-attempt cascade retry — exponential backoff with jitter.
-    // Attempts: immediate → ~600ms → ~1400ms → ~2800ms
+    // Single-shot race — retry cascade removed per instruction.
+    // Was: 4-attempt exponential-backoff retry. Now: one race attempt only.
     const raceFetchWithRetry = async (urls, validateFn) => {
-        const baseDelays = [0, 600, 1400, 2800];
-        for (let i = 0; i < baseDelays.length; i++) {
-            if (baseDelays[i] > 0) {
-                // Add ±15% jitter to avoid thundering-herd on slow networks
-                const jitter = baseDelays[i] * (0.85 + Math.random() * 0.3);
-                await new Promise(r => setTimeout(r, jitter));
-            }
-            const result = await raceFetch(urls, validateFn);
-            if (result) return result;
-            if (i < baseDelays.length - 1) showToast('⚡ Retrying verification...');
-        }
-        return null;
+        return await raceFetch(urls, validateFn);
     };
 
     // Build the full verified proxy list — fastest/most reliable first.
@@ -2358,7 +2347,6 @@
     // handshakes complete BEFORE the user taps "Verify". This cuts ~400ms
     // off the first real verify request on slow mobile connections.
     // Uses GET (not HEAD) — HEAD is blocked on many proxies.
-    // Prewarms all 12 non-direct proxies with 5s hard timeout.
     function prewarmProxies(verifyUrl) {
         const enc = encodeURIComponent(verifyUrl);
         [
@@ -2370,107 +2358,6 @@
             fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(5000) }).catch(() => {});
         });
     }
-
-    // ═══════════════════════════════════════════════════════════════════
-    // ⚡ 4-WAY PARALLEL VERIFY — PEKA + Option01 (anujbots) + Option02 (redoxng) + Direct (no-proxy)
-    //
-    //  PEKA, Option01, Option02 are each PROXY-RACED (same 13-proxy list +
-    //  direct, as PEKA uses) since direct browser fetch can be blocked by
-    //  CORS even when the API claims Access-Control-Allow-Origin: *.
-    //  A 4th racer additionally tries ALL THREE endpoints DIRECTLY
-    //  (no proxy at all) in parallel — if the host's CORS really is open,
-    //  this wins fastest since there's zero proxy hop latency.
-    //  First STATUS-bearing valid response (from any of the 4) wins overall.
-    //  Option01 / Option02 responses are normalized to the same shape as
-    //  PEKA ({STATUS, RESPMSG, TXNAMOUNT}) so every downstream consumer
-    //  (result.STATUS / result.RESPMSG / result.TXNAMOUNT) works unchanged.
-    //  No retry cascade — single-shot race, resolves within ~3-5s typically.
-    // ═══════════════════════════════════════════════════════════════════
-
-    // Option 01 — paytm.anujbots.xyz
-    const OPT01_MID = "MdXwlu49903940058924";
-    const OPT01_KEY = "MdXwlu49903940058924"; // fallback: merchantkey same as merchantid
-
-    // Option 02 — redoxng.in (using same MID as PEKA, per instruction)
-    const OPT02_MID = "MdXwlu49903940058924";
-
-    // Validator for raw (non-normalized) Option01/02 JSON — checks 'status' field exists.
-    const _optRawValid = j => j && typeof j.status !== 'undefined';
-
-    // Normalize a raw Option01/02 JSON payload into PEKA-shaped {STATUS,RESPMSG,TXNAMOUNT}.
-    const _normalizeOpt = j => {
-        if (!j || typeof j.status === 'undefined') return null;
-        const ok = j.success === true && j.status === 'TXN_SUCCESS';
-        return { STATUS: j.status, RESPMSG: ok ? 'Txn Success' : (j.message || j.status), TXNAMOUNT: j.amount };
-    };
-
-    // Fire Option01 verify — proxy-raced via buildVerifyURLs/raceFetch, same as PEKA.
-    const _opt01Verify = (orderid) => {
-        const opt01Url = `https://paytm.anujbots.xyz/verify.php?orderid=${encodeURIComponent(orderid)}&merchantid=${OPT01_MID}&merchantkey=${OPT01_KEY}`;
-        return raceFetch(buildVerifyURLs(opt01Url), _optRawValid).then(res => {
-            const norm = res && _normalizeOpt(res.json);
-            return norm ? { json: norm } : null;
-        }).catch(() => null);
-    };
-
-    // Fire Option02 verify — proxy-raced via buildVerifyURLs/raceFetch, same as PEKA.
-    const _opt02Verify = (orderid) => {
-        const opt02Url = `https://redoxng.in/api/verify.php?orderId=${encodeURIComponent(orderid)}&mid=${OPT02_MID}`;
-        return raceFetch(buildVerifyURLs(opt02Url), _optRawValid).then(res => {
-            const norm = res && _normalizeOpt(res.json);
-            return norm ? { json: norm } : null;
-        }).catch(() => null);
-    };
-
-    // Fire ALL 3 endpoints DIRECTLY (no proxy at all), racing each other.
-    // Useful when a host's CORS genuinely is open — wins fastest with zero
-    // proxy-hop latency. Each direct attempt is normalized to PEKA shape.
-    const _directNoProxyVerify = (orderid, pekaUrl) => {
-        const opt01Url = `https://paytm.anujbots.xyz/verify.php?orderid=${encodeURIComponent(orderid)}&merchantid=${OPT01_MID}&merchantkey=${OPT01_KEY}`;
-        const opt02Url = `https://redoxng.in/api/verify.php?orderId=${encodeURIComponent(orderid)}&mid=${OPT02_MID}`;
-
-        const tryDirect = (url, isPeka) => fetchWithTimeout(url, {}, 5000)
-            .then(r => r.json())
-            .then(j => {
-                if (isPeka) {
-                    return (j && typeof j.STATUS !== 'undefined') ? { json: j } : null;
-                }
-                const norm = _normalizeOpt(j);
-                return norm ? { json: norm } : null;
-            })
-            .catch(() => null);
-
-        return Promise.all([
-            tryDirect(pekaUrl, true),
-            tryDirect(opt01Url, false),
-            tryDirect(opt02Url, false),
-        ]).then(results => results.find(r => r && r.json) || null);
-    };
-
-    // Single-shot 4-way race: PEKA (proxy list) + Option01 (proxy list) +
-    // Option02 (proxy list) + Direct (no-proxy, all 3 endpoints at once).
-    // First validated TXN_SUCCESS-capable response wins; no retry loop.
-    const raceVerify3Way = (orderid, verifyURLs, validateFn) => new Promise(resolve => {
-        let settled = false;
-        let pending = 4;
-        const finishOne = (res) => {
-            if (settled) return;
-            if (res && res.json && validateFn(res.json)) {
-                settled = true;
-                resolve(res);
-                return;
-            }
-            pending--;
-            if (pending === 0 && !settled) { settled = true; resolve(res || null); }
-        };
-        const pekaUrl = (verifyURLs[0] && verifyURLs[0].url) || '';
-        raceFetch(verifyURLs, validateFn).then(finishOne).catch(() => finishOne(null));
-        _opt01Verify(orderid).then(finishOne).catch(() => finishOne(null));
-        _opt02Verify(orderid).then(finishOne).catch(() => finishOne(null));
-        _directNoProxyVerify(orderid, pekaUrl).then(finishOne).catch(() => finishOne(null));
-        // Hard ceiling — kept tight for user retention (individual requests already cap at 5s).
-        setTimeout(() => { if (!settled) { settled = true; resolve(null); } }, 7000);
-    });
 
     // ── SHARED EXTERNAL API CALLER ─────────────────────────────────────────
     // Uses Firebase atomic transaction to prevent double-API-call 100% of the time.
@@ -3929,7 +3816,7 @@
                     utr, amount: wfAmount, initiatedAt: new Date().toISOString()
                 }),
                 get(query(ref(db, 'orders'), orderByChild('utrId'), equalTo(utr))),
-                raceVerify3Way(utr, verifyURLs, j => j && typeof j.STATUS !== 'undefined'),
+                raceFetchWithRetry(verifyURLs, j => j && typeof j.STATUS !== 'undefined'),
             ]);
 
             if(utrSnapshot.exists()) {
@@ -4028,7 +3915,7 @@
             const MERCHANT_ID = "MdXwlu49903940058924";
             const verifyUrl = `https://verify.pikaapis.workers.dev/?trn=${utr}&id=${MERCHANT_ID}`;
             const verifyURLs = buildVerifyURLs(verifyUrl);
-            const verifyResult = await raceVerify3Way(utr, verifyURLs, j => j && typeof j.STATUS !== 'undefined');
+            const verifyResult = await raceFetchWithRetry(verifyURLs, j => j && typeof j.STATUS !== 'undefined');
 
             if(!verifyResult) {
                 showToast('⚠️ Could not verify last payment. Please contact support if amount was deducted.', 'warn');
@@ -4872,7 +4759,7 @@
             try {
                 const [utrSnapshot, verifyResult] = await Promise.all([
                     get(query(ref(db, 'orders'), orderByChild('utrId'), equalTo(utr))),
-                    raceVerify3Way(utr, verifyURLs, j => j && typeof j.STATUS !== 'undefined'),
+                    raceFetchWithRetry(verifyURLs, j => j && typeof j.STATUS !== 'undefined'),
                 ]);
                 if (utrSnapshot.exists()) { _unlockOrder(); _resetBtnEx(); hidePayVerify(); return showToast('❌ This Order ID has already been used!'); }
                 if (!verifyResult) { _unlockOrder(); _resetBtnEx(); hidePayVerify(); return showToast('❌ Could not verify payment. Check internet & try again.'); }
@@ -4937,7 +4824,7 @@
             // ── Duplicate check AND payment verify IN PARALLEL ──
             const [utrSnapshot, verifyResult] = await Promise.all([
                 get(query(ref(db, 'orders'), orderByChild('utrId'), equalTo(utr))),
-                raceVerify3Way(utr, verifyURLs, j => j && typeof j.STATUS !== 'undefined'),
+                raceFetchWithRetry(verifyURLs, j => j && typeof j.STATUS !== 'undefined'),
             ]);
 
             if (utrSnapshot.exists()) {
@@ -5491,7 +5378,7 @@
         try {
             const [utrSnapshot, verifyResult] = await Promise.all([
                 get(query(ref(db, 'orders'), orderByChild('utrId'), equalTo(utr))),
-                raceVerify3Way(utr, verifyURLs, j => j && typeof j.STATUS !== 'undefined'),
+                raceFetchWithRetry(verifyURLs, j => j && typeof j.STATUS !== 'undefined'),
             ]);
 
             if(utrSnapshot.exists()) { _unlockOrder(); hidePayVerify(); return showToast('❌ This Order ID already used!'); }
