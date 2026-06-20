@@ -2417,46 +2417,38 @@
 
             const apiPayload = `key=${encodeURIComponent(apiKey)}&action=add&service=${encodeURIComponent(serviceId)}&link=${encodeURIComponent(targetLink)}&quantity=${encodeURIComponent(quantity)}`;
 
-            // ── SEQUENTIAL, SINGLE-FLIGHT proxy attempts — ONE real request to the SMM panel at a time ──
-            // IMPORTANT: the direct (non-proxied) apiUrl is intentionally NOT included here.
-            // Most SMM panels don't send CORS headers, so a direct browser fetch() almost always
-            // reaches the real server and creates the order, but then throws a CORS error client-side
-            // (response unreadable) — making the app think it "failed" while a real order already exists.
-            // Combined with ANY other proxy succeeding, that alone guaranteed 2 real orders every time.
-            // Only CORS proxies are used below, and they are tried ONE AT A TIME — the next one is only
-            // attempted if the previous one truly failed (network error/timeout) BEFORE getting a usable
-            // response. This guarantees at most one in-flight request to the real SMM endpoint at any
-            // moment, eliminating the duplicate-order race. This entire call already runs in the
-            // background (fire-and-forget) for every flow — cart, single order, exclusive pack, free
-            // order, wallet — so going sequential here does NOT slow down payment verification or the
-            // success message shown to the user.
-            const apiURLs = [
-                { url: `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`,
-                  opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
-                { url: `https://corsproxy.org/?${encodeURIComponent(apiUrl)}`,
-                  opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
-                { url: `https://proxy.cors.sh/${apiUrl}`,
-                  opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded','x-cors-api-key':'temp_'}, body: apiPayload } },
-                { url: `https://thingproxy.freeboard.io/fetch/${apiUrl}`,
-                  opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
-            ];
+            // ── EXACTLY ONE REQUEST to the SMM panel — no fallback, no retry ──
+            // We learned the hard way that even "sequential fallback" is unsafe for this call:
+            // if Proxy A successfully forwards the order to the real SMM server but then fails to
+            // relay the RESPONSE back to us (free proxies do this often — timeout/crash/garbled body),
+            // our code can't tell that apart from Proxy A never reaching the server at all. Falling
+            // back to Proxy B in that case creates a SECOND real order on the panel — which is exactly
+            // what happened (two orders, ~1s apart, same link/qty).
+            // So now: only ONE proxy is tried, period. If it fails for any reason, we do NOT try another
+            // proxy — we mark the order apiStatus:'failed' and notify Telegram so it can be checked/
+            // retried manually. This guarantees this code can never put more than one real request on
+            // the wire to the SMM panel for a given order. This call already runs in the background
+            // (fire-and-forget) for every flow — cart, single order, exclusive pack, free order, wallet —
+            // so this has zero effect on payment verification speed or the success message shown to the user.
+            const SMM_PROXY_URL  = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+            const SMM_PROXY_OPTS = { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload };
 
             let raceResult = { ok: false, text: 'No response' };
-            for (const { url, opts } of apiURLs) {
+            {
                 const _ctrl = new AbortController();
                 const _tid = setTimeout(() => { try { _ctrl.abort(); } catch(_) {} }, 18000);
                 try {
-                    const r = await fetch(url, { ...opts, signal: _ctrl.signal, cache: 'no-store' });
+                    const r = await fetch(SMM_PROXY_URL, { ...SMM_PROXY_OPTS, signal: _ctrl.signal, cache: 'no-store' });
                     const text = await r.text();
-                    let j;
-                    try { j = JSON.parse(text); } catch(e) { raceResult = { ok:false, text: 'Invalid JSON: ' + text.substring(0,80) }; continue; }
-                    if (!j || typeof j !== 'object' || Array.isArray(j)) { raceResult = { ok:false, text: 'Non-object JSON' }; continue; }
-                    // Got a usable JSON response (success OR API-level error — both mean the request landed) — STOP here, do not try any more proxies
-                    raceResult = { ok: true, j, text };
-                    break;
+                    let j = null;
+                    try { j = JSON.parse(text); } catch(e) { /* leave j as null */ }
+                    if (j && typeof j === 'object' && !Array.isArray(j)) {
+                        raceResult = { ok: true, j, text };
+                    } else {
+                        raceResult = { ok: false, text: (j === null ? 'Invalid JSON: ' : 'Non-object JSON: ') + text.substring(0,80) };
+                    }
                 } catch(e) {
                     raceResult = { ok:false, text: (e && e.name === 'AbortError') ? 'timeout' : (e.message || 'network error') };
-                    // Genuine failure before any response — safe to try the next proxy
                 } finally {
                     clearTimeout(_tid);
                 }
@@ -2465,7 +2457,7 @@
             if (!raceResult.ok) {
                 await update(ref(db, `orders/${orderKey}`), {
                     apiStatus:      'failed',
-                    apiRawResponse: 'All proxies failed: ' + raceResult.text,
+                    apiRawResponse: 'Proxy request failed (no retry, to avoid duplicate orders): ' + raceResult.text,
                     apiCalledAt:    new Date().toISOString(),
                 }).catch(() => {});
                 _apiCallInProgress.delete(orderKey);
