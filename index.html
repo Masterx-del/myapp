@@ -2331,7 +2331,7 @@
 
     // Build the full verified proxy list — fastest/most reliable first.
     // All fire in parallel; only the fastest valid response is used.
-    // 13 proxies total for maximum coverage on Indian mobile networks.
+    // 4 confirmed-working proxies only — dead ones removed after testing.
     const buildVerifyURLs = (verifyUrl) => {
         const enc = encodeURIComponent(verifyUrl);
         return [
@@ -2339,7 +2339,6 @@
             { url: `https://corsproxy.io/?${enc}`,                                               opts: {} },
             { url: `https://proxy.corsfix.com/?${verifyUrl}`,                                    opts: {} },
             { url: `https://corsproxy.io/?url=${enc}`,                                            opts: {} },
-            { url: `https://test.cors.workers.dev/?${verifyUrl}`,                                 opts: {} },
         ];
     };
 
@@ -2353,7 +2352,6 @@
             `https://corsproxy.io/?${enc}`,
             `https://proxy.corsfix.com/?${verifyUrl}`,
             `https://corsproxy.io/?url=${enc}`,
-            `https://test.cors.workers.dev/?${verifyUrl}`,
         ].forEach(url => {
             fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(5000) }).catch(() => {});
         });
@@ -4142,6 +4140,7 @@
         document.getElementById('chkStep2').style.display = 'none';
 
         currentOrderId = generateUTR(12);
+        try { localStorage.setItem('lastOrderId', currentOrderId); } catch(_) {}
         updateQRCode(checkoutFinalAmt, currentOrderId);
         const MERCHANT_ID_PW = "MdXwlu49903940058924";
         prewarmProxies(`https://verify.pikaapis.workers.dev/?trn=PREWARM&id=${MERCHANT_ID_PW}`);
@@ -4669,6 +4668,7 @@
         document.getElementById('chkStep2').style.display = 'none';
 
         currentOrderId = generateUTR(12);
+        try { localStorage.setItem('lastOrderId', currentOrderId); } catch(_) {}
         if(!isFreeService) {
             updateQRCode(checkoutFinalAmt, currentOrderId);
             const MERCHANT_ID_PW = "MdXwlu49903940058924";
@@ -4743,7 +4743,7 @@
             if(verifyBtn) { verifyBtn.disabled = true; verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...'; }
             const _resetBtnEx = () => { if(verifyBtn) { verifyBtn.disabled = false; verifyBtn.innerHTML = '<i class="fas fa-lock"></i> I Have Paid. Verify Now'; } };
             if (_guardOrder()) { _resetBtnEx(); return; }
-            const utr = currentOrderId;
+            const utr = currentOrderId || (() => { try { return localStorage.getItem('lastOrderId') || ''; } catch(_) { return ''; } })();
             if (!utr) { _unlockOrder(); _resetBtnEx(); return showToast('❌ Invalid Order ID'); }
             const reelLink = document.getElementById('chkLinkInput').value.trim();
             if (!reelLink) { _unlockOrder(); _resetBtnEx(); return showToast('Please enter the Reels link'); }
@@ -4800,7 +4800,7 @@
         const _resetBtn = () => { if(verifyBtn) { verifyBtn.disabled = false; verifyBtn.innerHTML = '<i class="fas fa-lock"></i> I Have Paid. Verify Now'; } };
 
         if (_guardOrder()) { _resetBtn(); return; }
-        const utr = currentOrderId;
+        const utr = currentOrderId || (() => { try { return localStorage.getItem('lastOrderId') || ''; } catch(_) { return ''; } })();
         if(!utr) { _unlockOrder(); _resetBtn(); return showToast('❌ Invalid Order ID'); }
 
         const targetLink  = document.getElementById('chkLinkInput').value.trim();
