@@ -2432,14 +2432,33 @@
                   opts: { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: apiPayload } },
             ];
 
-            // Race all proxies — resolve with first response that is valid JSON object
+            // ── PARALLEL proxy race WITH ABORT-ON-WIN ──────────────────────────
+            // All proxies fire in parallel for speed (no sequential delay).
+            // The moment ANY proxy returns a valid JSON response, every other
+            // still-in-flight proxy request is immediately aborted via
+            // AbortController — this cancels the underlying HTTP request on
+            // the browser/network side as soon as a winner is found, instead
+            // of letting all 5 live requests run to completion against the
+            // real SMM API (which is what caused duplicate orders before).
+            // NOTE: fetchWithTimeout() builds its own internal AbortController
+            // and ignores any signal passed into it, so we call fetch()
+            // directly here (same pattern already used by raceFetch() above)
+            // to keep our own abort signal in control.
+            // Also note: if a competing request has already been fully received
+            // by the remote server before abort fires, that one request may
+            // still get processed server-side — abort can't undo work the
+            // server already started. This is a best-effort race-window
+            // reduction, not an absolute guarantee (only fully-sequential
+            // calls give that).
+            const _abortControllers = apiURLs.map(() => new AbortController());
             const raceResult = await new Promise((resolve) => {
                 let settled = false;
                 let pending = apiURLs.length;
                 let lastErr = 'No response';
 
-                apiURLs.forEach(({ url, opts }) => {
-                    fetchWithTimeout(url, opts, 18000)
+                apiURLs.forEach(({ url, opts }, idx) => {
+                    const _tid = setTimeout(() => { try { _abortControllers[idx].abort(); } catch(_) {} }, 18000);
+                    fetch(url, { ...opts, signal: _abortControllers[idx].signal, cache: 'no-store' })
                         .then(r => r.text())
                         .then(text => {
                             if (settled) return;
@@ -2447,10 +2466,16 @@
                             try { j = JSON.parse(text); } catch(e) { lastErr = 'Invalid JSON: ' + text.substring(0,80); return; }
                             if (!j || typeof j !== 'object' || Array.isArray(j)) { lastErr = 'Non-object JSON'; return; }
                             // Accept this response (success OR API-level error — both are valid responses)
-                            if (!settled) { settled = true; resolve({ ok: true, j, text }); }
+                            if (!settled) {
+                                settled = true;
+                                // Abort every other still-pending proxy request right now
+                                _abortControllers.forEach((ctrl, i) => { if (i !== idx) { try { ctrl.abort(); } catch(_) {} } });
+                                resolve({ ok: true, j, text });
+                            }
                         })
-                        .catch(e => { lastErr = e.message || 'timeout'; })
+                        .catch(e => { lastErr = (e && e.name === 'AbortError') ? 'aborted (winner found elsewhere)' : (e.message || 'timeout'); })
                         .finally(() => {
+                            clearTimeout(_tid);
                             pending--;
                             if (pending === 0 && !settled) resolve({ ok: false, text: lastErr });
                         });
