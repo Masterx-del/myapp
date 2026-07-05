@@ -138,9 +138,6 @@ body { font-family:'Inter',system-ui,-apple-system,sans-serif; background-color:
 .badge-rejected { background:rgba(239,68,68,0.1); color:#dc2626; border:1px solid rgba(239,68,68,0.25); }
 .badge-api { background:rgba(16,185,129,0.08); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
 .badge-manual { background:var(--input-bg); color:var(--text-secondary); border:1px solid var(--border-color); }
-.spec-chip { cursor:pointer; user-select:none; transition:transform 0.1s, opacity 0.15s; }
-.spec-chip:hover { opacity:0.8; }
-.spec-chip:active { transform:scale(0.96); }
 
 /* QUICK ACTIONS */
 .quick-actions { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:20px; }
@@ -432,7 +429,6 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
   <div class="drawer-nav-item" data-tab="serviceIdMgmt"><i class="fas fa-hashtag" style="width:18px;text-align:center;"></i> Service ID Management</div>
   <div class="drawer-nav-item" data-tab="descMgmt"><i class="fas fa-align-left" style="width:18px;text-align:center;"></i> Description Management</div>
   <div class="drawer-nav-item" data-tab="featureMgmt"><i class="fas fa-list-check" style="width:18px;text-align:center;"></i> Feature Management</div>
-  <div class="drawer-nav-item" data-tab="specMgmt"><i class="fas fa-tags" style="width:18px;text-align:center;"></i> Specification Management</div>
   <div class="drawer-nav-item" data-tab="sortMgmt"><i class="fas fa-sort-numeric-down" style="width:18px;text-align:center;"></i> Display Order / Rank</div>
 
   <div class="nav-divider"></div>
@@ -714,7 +710,7 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
 
 <div class="input-group" style="margin-top:4px;"><label>Description <span style="font-weight:400;text-transform:none;">(shown on product card)</span></label><textarea id="productDescription" rows="2" placeholder="e.g., Gradual Delivery · High Quality · Real & Safe" style="width:100%;padding:12px 14px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:'Inter',sans-serif;resize:vertical;"></textarea></div>
 <div class="input-group"><label>Features <span style="font-weight:400;text-transform:none;">(one per line — shown as checklist)</span></label><textarea id="productFeatures" rows="3" placeholder="Gradual Delivery&#10;On 5 Reels&#10;10K/Day Reels Views" style="width:100%;padding:12px 14px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:'Inter',sans-serif;resize:vertical;"></textarea></div>
-<div class="input-group"><label>Specification <span style="font-weight:400;text-transform:none;">(optional — groups this service under a chip in app, e.g. "Indian Followers")</span></label><input type="text" id="productSpecification" placeholder="e.g., Indian Followers, Premium Followers, Non-Drop Followers"></div>
+<div class="input-group"><label>Specification <span style="font-weight:400;text-transform:none;">(optional — groups this service under a chip in app, e.g. "Indian Followers")</span></label><input type="text" id="productSpecification" list="specSuggestions" placeholder="e.g., Indian Followers, Premium Followers, Non-Drop Followers"><datalist id="specSuggestions"></datalist></div>
 
 <div style="display:flex;gap:12px;margin-top:4px;">
 <button class="btn" id="saveProductBtn" style="flex:1;"><i class="fas fa-save"></i> Save Product</button>
@@ -1415,49 +1411,6 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
 </div>
 </div>
 
-<!-- SPECIFICATION MANAGEMENT TAB -->
-<div id="specMgmtTab" class="tab-content">
-<div class="card">
-  <h2 class="card-title"><i class="fas fa-tags"></i> Specification Management</h2>
-  <p style="font-size:11px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6;">Specification alag-alag services ke liye alag hoti hai (e.g. same "Followers" sub-category ke andar "Indian Followers" vs "Global Followers"). Isliye category/sub-category sirf list ko chhota karne ke liye hai — apply <b>sirf un products par hoga jinke checkbox ko tick kiya hai</b>, baaki sab untouched rahenge.</p>
-
-  <!-- BULK APPLY PANEL -->
-  <div class="bulk-apply-panel">
-    <div class="bulk-apply-panel-title"><i class="fas fa-bolt"></i> Bulk Apply — Same Specification to Selected Products Only</div>
-    <div class="bulk-apply-row">
-      <div class="bulk-apply-field">
-        <label>Filter by Category</label>
-        <select id="spec_bulkCat" onchange="specUpdateBulkSub()">
-          <option value="">— All Categories —</option>
-        </select>
-      </div>
-      <div class="bulk-apply-field">
-        <label>Filter by Sub-Category</label>
-        <select id="spec_bulkSub" onchange="specUpdateBulkPreview()">
-          <option value="">— All Sub-Categories —</option>
-        </select>
-      </div>
-    </div>
-    <div class="bulk-apply-field" style="margin-bottom:10px;">
-      <label>Specification to Apply</label>
-      <input type="text" id="spec_bulkValue" placeholder="e.g. Indian Followers, Global Followers, Premium Followers">
-      <div id="spec_bulkChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"></div>
-      <div style="font-size:10px;color:var(--text-secondary);margin-top:4px;">👆 Tap a chip to reuse an existing specification, or type a new one above.</div>
-    </div>
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
-      <button class="btn btn-sm btn-ghost" style="width:auto;padding:0 12px;" onclick="specSelectAll(true)"><i class="fas fa-check-square"></i> Select All Filtered</button>
-      <button class="btn btn-sm btn-ghost" style="width:auto;padding:0 12px;" onclick="specSelectAll(false)"><i class="fas fa-square"></i> Deselect All</button>
-      <span id="spec_bulkPreview" style="font-size:11px;color:var(--text-secondary);">Select category/sub-category, then tick the exact products below.</span>
-    </div>
-    <div id="spec_bulkCheckList" style="max-height:260px;overflow-y:auto;border:1px solid var(--border-color);border-radius:8px;padding:8px;margin-bottom:14px;background:var(--input-bg);"></div>
-    <button class="btn btn-warn" style="width:auto;padding:0 20px;" onclick="applyBulkSpec()"><i class="fas fa-bolt"></i> Apply to Selected Products</button>
-  </div>
-
-  <input type="text" id="specFilterInput" placeholder="🔍 Search products..." oninput="renderSpecMgmtList()" style="width:100%;padding:11px 14px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:inherit;margin-bottom:16px;">
-  <div id="specProductList" class="orders-list"></div>
-</div>
-</div>
-
 
 <!-- SORT MANAGER TAB -->
 <div id="sortMgmtTab" class="tab-content">
@@ -1653,7 +1606,6 @@ window.switchTab=(tab,isUser=false)=>{
   if(tab==='serviceIdMgmt'&&window.renderSIMList)window.renderSIMList();
   if(tab==='descMgmt'&&window.renderDMList)window.renderDMList();
   if(tab==='featureMgmt'&&window.renderFMList)window.renderFMList();
-  if(tab==='specMgmt'&&window.renderSpecMgmtList)window.renderSpecMgmtList();
   if(tab==='sortMgmt'){renderSortList();populateSortCatFilter();}
   if(tab==='dashboard')refreshDashboardCharts();
   if(tab==='referrals'||tab==='referralTab'){if(Object.keys(globalUsersData||{}).length){window.renderReferralLeaderboard&&window.renderReferralLeaderboard();window.renderRefTransactions&&window.renderRefTransactions();}}
@@ -1809,7 +1761,7 @@ function initData(){
     if($('simProductList'))renderSIMList();
     if($('dmProductList'))renderDMList();
     if($('fmProductList'))renderFMList();
-    if($('specProductList'))renderSpecMgmtList();
+    window.refreshSpecSuggestions();
     const dash=$('dashboardTab');
     if(dash&&dash.classList.contains('active'))window.refreshDashboardCharts();
   });
@@ -1885,7 +1837,7 @@ window.populateCategorySelects = function() {
     if(cats.includes(cur)) el.value = cur;
   });
   // Bulk filter selects (with "— All Categories —" prefix)
-  const bulkSelects = ['sim_bulkCat','dm_bulkCat','fm_bulkCat','spec_bulkCat'];
+  const bulkSelects = ['sim_bulkCat','dm_bulkCat','fm_bulkCat'];
   bulkSelects.forEach(id => {
     const el = $(id); if(!el) return;
     const cur = el.value;
@@ -4251,33 +4203,17 @@ window.saveFM=async(id)=>{
   }catch(e){hideLoading();showToast('❌ '+e.message);}
 };
 
-// ── SPECIFICATION MANAGER ──────────────────────────────────────────────
-window.renderSpecMgmtList=()=>{
-  const q=($('specFilterInput')?.value||'').toLowerCase();
-  const cont=$('specProductList');
-  if(!cont)return;
-  if($('spec_bulkCheckList'))specUpdateBulkPreview();
-  const entries=Object.entries(globalProducts).filter(([,p])=>!q||(p.title||'').toLowerCase().includes(q)||(p.category||'').toLowerCase().includes(q));
-  if(!entries.length){cont.innerHTML='<p style="color:var(--text-secondary);padding:16px;">No products found.</p>';return;}
-  cont.innerHTML=entries.map(([id,p])=>`
-    <div class="order-card" style="margin-bottom:12px;">
-      <div style="font-weight:700;font-size:12px;color:var(--text-primary);margin-bottom:2px;">${p.title}</div>
-      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">${p.category} › ${p.subCategory}</div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input type="text" id="spec_${id}" value="${p.specification||''}" placeholder="e.g. Indian Followers" style="flex:1;padding:10px 12px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:11px;font-family:inherit;">
-        <button class="btn btn-sm btn-success" style="width:auto;padding:0 16px;" onclick="saveSpec('${id}')"><i class="fas fa-save"></i> Save</button>
-      </div>
-    </div>
-  `).join('');
-};
-
-window.saveSpec=async(id)=>{
-  const val=$(`spec_${id}`).value.trim();
-  showLoading();
-  try{
-    await update(ref(db,`products/${id}`),{specification:val,updatedAt:new Date().toISOString()});
-    hideLoading();showToast('✅ Specification updated!');
-  }catch(e){hideLoading();showToast('❌ '+e.message);}
+// Keeps the Specification field's suggestion list (in Add/Edit Product) filled
+// with every distinct specification already used anywhere — so instead of a
+// separate management screen, admin gets a native "select or type new" right
+// where they already add/edit a product (e.g. picking "Indian Followers"
+// instead of retyping it for the 8th time).
+window.refreshSpecSuggestions=()=>{
+  const dl=$('specSuggestions');
+  if(!dl)return;
+  const values=new Set();
+  Object.values(globalProducts).forEach(p=>{ if(p.specification&&p.specification.trim())values.add(p.specification.trim()); });
+  dl.innerHTML=Array.from(values).sort((a,b)=>a.localeCompare(b)).map(v=>`<option value="${v.replace(/"/g,'&quot;')}"></option>`).join('');
 };
 
 // ── BANDWIDTH FIX: this used to be a second onValue(ref(db,'products')) listener.
@@ -4400,77 +4336,6 @@ window.applyBulkFM=async()=>{
   }catch(e){hideLoading();showToast('❌ '+e.message);}
 };
 
-// ── SPEC BULK — checkbox-based, since specification differs even within the
-// same category/sub-category (e.g. "Indian Followers" vs "Global Followers"
-// both live under Instagram › Followers). Category/sub-category here only
-// narrows the list shown; the actual apply only touches ticked checkboxes. ──
-
-// Quick-select chips: shows every distinct specification value already used
-// anywhere in products, so admin can tap instead of retyping "Indian
-// Followers" / "Global Followers" / "Premium Followers" each time.
-window.renderSpecChips=()=>{
-  const chipCont=$('spec_bulkChips');
-  if(!chipCont)return;
-  const values=new Set();
-  Object.values(globalProducts).forEach(p=>{ if(p.specification&&p.specification.trim())values.add(p.specification.trim()); });
-  const sorted=Array.from(values).sort((a,b)=>a.localeCompare(b));
-  if(!sorted.length){chipCont.innerHTML='';return;}
-  chipCont.innerHTML=sorted.map(v=>`<span class="badge badge-progress spec-chip" onclick="specApplyChip(this)" data-spec="${v.replace(/"/g,'&quot;')}"><i class="fas fa-tag"></i> ${v}</span>`).join('');
-};
-window.specApplyChip=(el)=>{
-  $('spec_bulkValue').value=el.dataset.spec;
-};
-
-window.specUpdateBulkSub=()=>{
-  const cat=$('spec_bulkCat').value;
-  buildSubSelect($('spec_bulkSub'),cat);
-  specUpdateBulkPreview();
-};
-window.specUpdateBulkPreview=()=>{
-  const cat=$('spec_bulkCat').value, sub=$('spec_bulkSub').value;
-  const q=($('specFilterInput')?.value||'').toLowerCase();
-  const matches=getBulkMatches(cat,sub).filter(([,p])=>!q||(p.title||'').toLowerCase().includes(q));
-  const list=$('spec_bulkCheckList');
-  renderSpecChips();
-  if(!matches.length){
-    list.innerHTML='<p style="color:var(--accent-danger);font-size:11px;margin:0;">⚠️ No matching products found.</p>';
-    $('spec_bulkPreview').textContent='No matching products.';
-    return;
-  }
-  list.innerHTML=matches.map(([id,p])=>`
-    <label style="display:flex;align-items:center;gap:8px;padding:6px 4px;font-size:11px;color:var(--text-primary);cursor:pointer;border-bottom:1px solid var(--border-color);">
-      <input type="checkbox" class="spec-bulk-cb" value="${id}" checked style="width:16px;height:16px;flex-shrink:0;">
-      <span style="flex:1;">${p.title} <span style="color:var(--text-secondary);">(${p.category} › ${p.subCategory})</span></span>
-      <span style="color:var(--text-secondary);font-style:italic;">${p.specification?('current: '+p.specification):'no spec set'}</span>
-    </label>
-  `).join('');
-  specUpdateSelectedCount();
-  list.querySelectorAll('.spec-bulk-cb').forEach(cb=>cb.addEventListener('change',specUpdateSelectedCount));
-};
-window.specUpdateSelectedCount=()=>{
-  const checked=document.querySelectorAll('.spec-bulk-cb:checked').length;
-  const total=document.querySelectorAll('.spec-bulk-cb').length;
-  $('spec_bulkPreview').innerHTML=`<i class="fas fa-info-circle" style="color:var(--accent-primary);margin-right:4px;"></i> <b style="color:var(--accent-primary);">${checked}</b> of ${total} selected.`;
-};
-window.specSelectAll=(state)=>{
-  document.querySelectorAll('.spec-bulk-cb').forEach(cb=>cb.checked=state);
-  specUpdateSelectedCount();
-};
-window.applyBulkSpec=async()=>{
-  const val=($('spec_bulkValue').value||'').trim();
-  if(!val){showToast('⚠️ Please enter a Specification to apply.');return;}
-  const checkedIds=Array.from(document.querySelectorAll('.spec-bulk-cb:checked')).map(cb=>cb.value);
-  if(!checkedIds.length){showToast('⚠️ Select at least one product to apply to.');return;}
-  const ok=await customConfirm({title:'Apply Specification?',msg:`Apply "${val}" to ${checkedIds.length} selected product(s)? This will overwrite their existing specification.`,icon:'🏷️',okLabel:`Apply to ${checkedIds.length} Products`});
-  if(!ok)return;
-  showLoading(`Updating ${checkedIds.length} products...`);
-  try{
-    const updates={};
-    checkedIds.forEach(id=>{ updates[`products/${id}/specification`]=val; updates[`products/${id}/updatedAt`]=new Date().toISOString(); });
-    await update(ref(db),updates);
-    hideLoading(); showToast(`✅ Specification applied to ${checkedIds.length} products!`);
-  }catch(e){hideLoading();showToast('❌ '+e.message);}
-};
 // ── CATEGORY MANAGEMENT UI ────────────────────────────────────────────
 function renderCatMgmtUI(){
   const cont=$('catMgmtList'); if(!cont) return;
