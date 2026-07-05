@@ -138,6 +138,9 @@ body { font-family:'Inter',system-ui,-apple-system,sans-serif; background-color:
 .badge-rejected { background:rgba(239,68,68,0.1); color:#dc2626; border:1px solid rgba(239,68,68,0.25); }
 .badge-api { background:rgba(16,185,129,0.08); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
 .badge-manual { background:var(--input-bg); color:var(--text-secondary); border:1px solid var(--border-color); }
+.spec-chip { cursor:pointer; user-select:none; transition:transform 0.1s, opacity 0.15s; }
+.spec-chip:hover { opacity:0.8; }
+.spec-chip:active { transform:scale(0.96); }
 
 /* QUICK ACTIONS */
 .quick-actions { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:20px; }
@@ -1438,6 +1441,8 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
     <div class="bulk-apply-field" style="margin-bottom:10px;">
       <label>Specification to Apply</label>
       <input type="text" id="spec_bulkValue" placeholder="e.g. Indian Followers, Global Followers, Premium Followers">
+      <div id="spec_bulkChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"></div>
+      <div style="font-size:10px;color:var(--text-secondary);margin-top:4px;">👆 Tap a chip to reuse an existing specification, or type a new one above.</div>
     </div>
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
       <button class="btn btn-sm btn-ghost" style="width:auto;padding:0 12px;" onclick="specSelectAll(true)"><i class="fas fa-check-square"></i> Select All Filtered</button>
@@ -1880,7 +1885,7 @@ window.populateCategorySelects = function() {
     if(cats.includes(cur)) el.value = cur;
   });
   // Bulk filter selects (with "— All Categories —" prefix)
-  const bulkSelects = ['sim_bulkCat','dm_bulkCat','fm_bulkCat'];
+  const bulkSelects = ['sim_bulkCat','dm_bulkCat','fm_bulkCat','spec_bulkCat'];
   bulkSelects.forEach(id => {
     const el = $(id); if(!el) return;
     const cur = el.value;
@@ -4251,6 +4256,7 @@ window.renderSpecMgmtList=()=>{
   const q=($('specFilterInput')?.value||'').toLowerCase();
   const cont=$('specProductList');
   if(!cont)return;
+  if($('spec_bulkCheckList'))specUpdateBulkPreview();
   const entries=Object.entries(globalProducts).filter(([,p])=>!q||(p.title||'').toLowerCase().includes(q)||(p.category||'').toLowerCase().includes(q));
   if(!entries.length){cont.innerHTML='<p style="color:var(--text-secondary);padding:16px;">No products found.</p>';return;}
   cont.innerHTML=entries.map(([id,p])=>`
@@ -4398,6 +4404,23 @@ window.applyBulkFM=async()=>{
 // same category/sub-category (e.g. "Indian Followers" vs "Global Followers"
 // both live under Instagram › Followers). Category/sub-category here only
 // narrows the list shown; the actual apply only touches ticked checkboxes. ──
+
+// Quick-select chips: shows every distinct specification value already used
+// anywhere in products, so admin can tap instead of retyping "Indian
+// Followers" / "Global Followers" / "Premium Followers" each time.
+window.renderSpecChips=()=>{
+  const chipCont=$('spec_bulkChips');
+  if(!chipCont)return;
+  const values=new Set();
+  Object.values(globalProducts).forEach(p=>{ if(p.specification&&p.specification.trim())values.add(p.specification.trim()); });
+  const sorted=Array.from(values).sort((a,b)=>a.localeCompare(b));
+  if(!sorted.length){chipCont.innerHTML='';return;}
+  chipCont.innerHTML=sorted.map(v=>`<span class="badge badge-progress spec-chip" onclick="specApplyChip(this)" data-spec="${v.replace(/"/g,'&quot;')}"><i class="fas fa-tag"></i> ${v}</span>`).join('');
+};
+window.specApplyChip=(el)=>{
+  $('spec_bulkValue').value=el.dataset.spec;
+};
+
 window.specUpdateBulkSub=()=>{
   const cat=$('spec_bulkCat').value;
   buildSubSelect($('spec_bulkSub'),cat);
@@ -4408,6 +4431,7 @@ window.specUpdateBulkPreview=()=>{
   const q=($('specFilterInput')?.value||'').toLowerCase();
   const matches=getBulkMatches(cat,sub).filter(([,p])=>!q||(p.title||'').toLowerCase().includes(q));
   const list=$('spec_bulkCheckList');
+  renderSpecChips();
   if(!matches.length){
     list.innerHTML='<p style="color:var(--accent-danger);font-size:11px;margin:0;">⚠️ No matching products found.</p>';
     $('spec_bulkPreview').textContent='No matching products.';
