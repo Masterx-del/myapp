@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1555,8 +1554,16 @@ let allServicesCache=[];
 let serviceModalTarget=''; // 'product' | 'bulk'
 setTimeout(()=>isInitialLoad=false,3000);
 
-onChildAdded(ref(db,'orders'),(snap)=>{if(!isInitialLoad)showToast('🔔 New Order Placed!');});
-onChildChanged(ref(db,'chats'),(snap)=>{if(!isInitialLoad){const info=snap.val()?.info;if(info)showToast(`💬 New Message: ${info.userName||'User'}`);}});
+// ── BANDWIDTH FIX: onChildAdded(ref(db,'orders')) and onChildChanged(ref(db,'chats'))
+// used to be their own listeners. Attaching a listener anywhere on a path makes the
+// SDK do a full initial sync of that path independently — so 'orders' and 'chats' were
+// each being fully downloaded a SECOND time at startup just to power these two toasts,
+// on top of the onValue('orders')/onValue('chats') listeners in initData(). Both toasts
+// are now derived from the data initData()'s listeners already receive (see
+// _prevOrdersKeys / _prevChatsData usage below) — same toast text, same timing,
+// same 3s initial-load suppression, zero extra network reads. ──
+let _prevOrdersKeys = null;
+let _prevChatsData = null;
 
 // ── DRAWER ───────────────────────────────────────────────────────────
 const drawer=$('drawer'),overlay=$('drawerOverlay'),menuToggle=$('menuToggle');
@@ -1727,7 +1734,19 @@ function scheduleAutoComplete(ordersData) {
   });
 }
 
+// ── BANDWIDTH FIX: initData() attaches ~14 onValue listeners (products, orders,
+// users, chats, coupons, exclusivePacks, and every meta/* node). It's called from
+// inside onAuthStateChanged, which the Firebase SDK can fire more than once per
+// page load (e.g. token refresh edge cases, or an admin signing out and back in
+// without a reload). Previously, every extra firing stacked a whole new set of
+// listeners on top of the old ones — each additional set multiplying every
+// future write's bandwidth cost by one more full-tree download. This guard makes
+// initData() a no-op after the first successful run, so listeners are attached
+// exactly once per page load no matter how many times auth state changes. ──
+let _initDataAttached=false;
 function initData(){
+  if(_initDataAttached) return;
+  _initDataAttached=true;
   // Load category map first so all selects are correct
   get(ref(db,'meta/categoryMap')).then(s=>{
     if(s.exists()&&s.val()&&typeof s.val()==='object'){
@@ -1736,12 +1755,39 @@ function initData(){
     window.populateCategorySelects();
     renderCatMgmtUI();
   }).catch(()=>{ window.populateCategorySelects(); renderCatMgmtUI(); });
-  onValue(ref(db,'products'),s=>{renderProducts(s.val());buildCategoryChart(globalProducts);});
-  onValue(ref(db,'orders'),s=>{globalOrdersData=s.val();renderOrders(globalOrdersData);buildOrdersRevenueChart(globalOrdersData);scheduleAutoComplete(globalOrdersData);});
+  onValue(ref(db,'products'),s=>{
+    renderProducts(s.val());buildCategoryChart(globalProducts);
+    // (merged from former duplicate 'products' listener — see BANDWIDTH FIX note below)
+    if($('simProductList'))renderSIMList();
+    if($('dmProductList'))renderDMList();
+    if($('fmProductList'))renderFMList();
+    const dash=$('dashboardTab');
+    if(dash&&dash.classList.contains('active'))window.refreshDashboardCharts();
+  });
+  onValue(ref(db,'orders'),s=>{
+    globalOrdersData=s.val();
+    if(!isInitialLoad&&globalOrdersData&&_prevOrdersKeys){
+      Object.keys(globalOrdersData).forEach(id=>{ if(!_prevOrdersKeys.has(id)) showToast('🔔 New Order Placed!'); });
+    }
+    _prevOrdersKeys=new Set(Object.keys(globalOrdersData||{}));
+    renderOrders(globalOrdersData);buildOrdersRevenueChart(globalOrdersData);scheduleAutoComplete(globalOrdersData);
+  });
   onValue(ref(db,'coupons'),s=>renderCoupons(s.val()));
   onValue(ref(db,'exclusivePacks'),s=>{ window._globalExclusivePacks = s.val()||{}; renderExclusivePacks(window._globalExclusivePacks); const count=Object.keys(window._globalExclusivePacks).length; if($('dashTotalSubscriptions')) $('dashTotalSubscriptions').textContent=count; });
   onValue(ref(db,'users'),s=>renderUsers(s.val()));
-  onValue(ref(db,'chats'),s=>renderChatUsers(s.val()));
+  onValue(ref(db,'chats'),s=>{
+    const chatsData=s.val()||{};
+    if(!isInitialLoad&&_prevChatsData){
+      Object.keys(chatsData).forEach(uid=>{
+        if(_prevChatsData.hasOwnProperty(uid)&&JSON.stringify(chatsData[uid])!==JSON.stringify(_prevChatsData[uid])){
+          const info=chatsData[uid]?.info;
+          if(info)showToast(`💬 New Message: ${info.userName||'User'}`);
+        }
+      });
+    }
+    _prevChatsData=chatsData;
+    renderChatUsers(chatsData);
+  });
   onValue(ref(db,'meta/brand'),s=>{if(s.exists()){const d=s.val();$('brandName').value=d.name||'';$('brandLogoUrl').value=d.logoUrl||'';if(d.logoUrl){$('drawerLogo').src=d.logoUrl;$('drawerLogo').style.display='block';}if(d.name)$('drawerBrandName').textContent=d.name;}});
   onValue(ref(db,'meta/contact'),s=>{if(s.exists()){const d=s.val();$('contactEmail').value=d.email||'';$('contactTelegram').value=d.socialTelegram||'';}});
   onValue(ref(db,'meta/offers'),s=>{if(s.exists()){const d=s.val();$('offerName').value=d.name||'';$('offerImageUrl').value=d.imageUrl||'';$('offerNewRate').value=d.newRate||'';$('offerOldRate').value=d.oldRate||'';$('offerDescription').value=d.description||'';$('offerContactUsername').value=d.contactUsername||'';$('offerChannelLink').value=d.channelLink||'';}});
@@ -2039,8 +2085,13 @@ $('clearProductBtn').addEventListener('click',()=>{
 window.downloadProductCSVTemplate = async () => {
   showLoading('Exporting products...');
   try {
-    const snap = await get(ref(db, 'products'));
-    const data = snap.exists() ? snap.val() : {};
+    // ── BANDWIDTH FIX: was a fresh get(ref(db,'products')) — a full re-download of
+    // every product on every export click. globalProducts is kept perfectly in sync
+    // by the live onValue('products') listener in initData(), which is guaranteed to
+    // have already fired at least once by the time an admin can see this button
+    // (it's only reachable after the admin dashboard has loaded). Same data, zero
+    // extra network read. ──
+    const data = globalProducts || {};
     const headers = ['title','category','subCategory','discountedPrice','avgTime','displayOrder','serviceId','apiUrl','apiKey','linkLabel','description','features','specification'];
 
     const escapeCell = (val) => {
@@ -2907,6 +2958,7 @@ let globalUsersData = {};
 let globalDepositRequests = {};
 window.renderUsers = function renderUsers(data){
   globalUsersData = data || {};
+  window.updateReferralDashboardStats(globalUsersData);
   const searchQ = ($('userSearchInput')?.value||'').toLowerCase();
   const users = globalUsersData; let html=''; let count=Object.keys(users).length; $('dashTotalUsers').textContent=count;
 
@@ -2976,7 +3028,11 @@ window.applyInlineWallet=async(uid,currentBal)=>{
     await update(ref(db,`users/${uid}/profile`),{walletBalance:finalBal});
     await push(ref(db,`users/${uid}/walletHistory`),{type,amount:amt,note,utrId:'ADMIN_'+Date.now(),createdAt:new Date().toISOString()});
     hideLoading();showToast(`✅ ${type==='credit'?'Added':'Deducted'} ₹${amt.toFixed(2)} → Balance: ₹${finalBal.toFixed(2)}`);
-    const uSnap=await get(ref(db,'users'));if(uSnap.exists())renderUsers(uSnap.val());
+    // ── BANDWIDTH FIX: removed a manual get(ref(db,'users')) here that re-downloaded
+    // the ENTIRE users tree on every wallet adjustment. The update() call above already
+    // triggers the live onValue('users') listener (initData()), which calls renderUsers()
+    // with the fresh data automatically — this extra read produced an identical,
+    // redundant re-render. ──
   }catch(e){hideLoading();showToast('❌ '+e.message);}
 };
 window.filterUsers = () => { renderUsers(globalUsersData); };
@@ -3195,9 +3251,16 @@ window.acceptDepositRequest = async(id) => {
 
     // Find the "pending" marker the user portal wrote to walletHistory at submit time,
     // so accepting doesn't leave a stale PENDING entry sitting next to the real credit
+    // ── BANDWIDTH FIX: was get(ref(db,`users/${uid}/walletHistory`)) — downloading a
+    // user's ENTIRE wallet history (which only grows over time) just to find one entry
+    // matching this transaction's utrId. Querying by utrId returns only matching
+    // entries over the wire; the type check still runs on that (tiny) result set, so
+    // the outcome — which key gets found and removed — is identical. Recommend adding
+    // `"walletHistory": {".indexOn": "utrId"}` to the RTDB rules for users/$uid so this
+    // query is also fast on the server side, not just cheap on the wire. ──
     let pendingKey = null;
     try {
-      const whSnap = await get(ref(db,`users/${uid}/walletHistory`));
+      const whSnap = await get(query(ref(db,`users/${uid}/walletHistory`), orderByChild('utrId'), equalTo(req.txnId)));
       if (whSnap.exists()) {
         whSnap.forEach(c => {
           const v = c.val();
@@ -3235,7 +3298,9 @@ window.rejectDepositRequest = async(id) => {
     // Flip the matching pending marker in the user's wallet history to "rejected"
     // instead of leaving it stuck showing PENDING forever
     try {
-      const whSnap = await get(ref(db,`users/${uid}/walletHistory`));
+      // ── BANDWIDTH FIX: same targeted-query fix as acceptDepositRequest above,
+      // instead of downloading the user's entire wallet history. ──
+      const whSnap = await get(query(ref(db,`users/${uid}/walletHistory`), orderByChild('utrId'), equalTo(req.txnId)));
       if (whSnap.exists()) {
         const flips = [];
         whSnap.forEach(c => {
@@ -3299,9 +3364,9 @@ window.submitWalletAdjust=async()=>{
     hideLoading();
     closeWalletModal();
     showToast(`✅ ${type==='credit'?'Added':'Deducted'} ₹${amt.toFixed(2)} — New Balance: ₹${finalBal.toFixed(2)}`);
-    // Refresh users list
-    const uSnap=await get(ref(db,'users'));
-    if(uSnap.exists()) renderUsers(uSnap.val());
+    // ── BANDWIDTH FIX: removed a manual get(ref(db,'users')) here — see identical
+    // note in window.applyInlineWallet above. The live onValue('users') listener
+    // already refreshes the users list after the update() call above. ──
   }catch(e){
     hideLoading();
     if(e.code==='PERMISSION_DENIED'||e.message.includes('permission')){
@@ -3322,6 +3387,15 @@ $('clearAllOrdersBtn').addEventListener('click',async()=>{const ok=await customC
 $('clearAllDataBtn').addEventListener('click',async()=>{const ok=await customConfirm({title:'⚠️ Factory Reset?',msg:'EVERYTHING will be wiped — products, orders, users, settings. Absolutely cannot be undone!',icon:'💀',okLabel:'WIPE EVERYTHING',danger:true});if(ok){showLoading();await set(ref(db,'/'),null);hideLoading();window.location.reload();}});
 
 // ── CHAT ──────────────────────────────────────────────────────────────
+// ── BANDWIDTH FIX: this loop used to call get(ref(db,`users/${uid}/profile`))
+// for every chat needing a name fix, and it ran again on EVERY single chats
+// update (i.e. every message sent anywhere), re-downloading the same profiles
+// over and over. A tiny in-memory cache means each profile is fetched at most
+// once — after that, the already-known name is reused, and note the code also
+// writes the fixed name back into chats/{uid}/info, so on the very next update
+// it no longer even qualifies for a lookup. Same names shown, same DB writes,
+// same fallback behavior on error. ──
+window._chatUserNameCache = window._chatUserNameCache || {};
 window.renderChatUsers=async(data)=>{
   const l=$('chatUsersList');if(!l)return;l.innerHTML='';
   let totalUnread=0;
@@ -3337,13 +3411,18 @@ window.renderChatUsers=async(data)=>{
     // Fetch real name from users profile
     let userName = chatData.info?.userName || '';
     if(!userName || userName.length < 3 || /^[A-Za-z0-9+/=]{8,}$/.test(userName)) {
-      try {
-        const profileSnap = await get(ref(db,`users/${uid}/profile`));
-        if(profileSnap.exists()) userName = profileSnap.val().name || profileSnap.val().email || uid.substring(0,8);
-        else userName = uid.substring(0,8);
-        // Also fix it in Firebase for future
-        if(chatData.info) update(ref(db,`chats/${uid}/info`),{userName});
-      } catch(e){ userName = uid.substring(0,8); }
+      if(window._chatUserNameCache[uid]) {
+        userName = window._chatUserNameCache[uid];
+      } else {
+        try {
+          const profileSnap = await get(ref(db,`users/${uid}/profile`));
+          if(profileSnap.exists()) userName = profileSnap.val().name || profileSnap.val().email || uid.substring(0,8);
+          else userName = uid.substring(0,8);
+          window._chatUserNameCache[uid] = userName;
+          // Also fix it in Firebase for future
+          if(chatData.info) update(ref(db,`chats/${uid}/info`),{userName});
+        } catch(e){ userName = uid.substring(0,8); }
+      }
     }
     
     const badge=unread>0?`<div class="unread-badge">${unread}</div>`:'';
@@ -3378,15 +3457,27 @@ window.filterSupportList = () => {
 };
 
 let currentChatUid=null;
+// ── BANDWIDTH FIX: openChatModal used to call onValue(ref(db,`chats/${uid}/messages`))
+// EVERY time it was opened, with no cleanup. Opening 10 different users' chats over
+// a session left 10 permanent listeners running — each one re-downloading that user's
+// full message history forever, even after the modal was closed and the admin moved
+// on to something else. We now keep a single handle and detach the previous listener
+// before attaching a new one (and on close). Same live-updating chat UI while the
+// modal is open, same content, same order — just no orphaned listeners left behind. ──
+let _chatMessagesUnsub=null;
 window.openChatModal=(uid,userName='')=>{
   currentChatUid=uid;$('chatModalTitle').innerText=userName||uid.substring(0,8);$('chatModal').classList.add('active');
   update(ref(db,`chats/${uid}/info`),{adminUnread:0});
-  onValue(ref(db,`chats/${uid}/messages`),(s)=>{
+  if(_chatMessagesUnsub){_chatMessagesUnsub();_chatMessagesUnsub=null;}
+  _chatMessagesUnsub=onValue(ref(db,`chats/${uid}/messages`),(s)=>{
     const c=$('chatMessagesContainer');c.innerHTML='';
     if(s.exists()){Object.values(s.val()).forEach(m=>{const div=document.createElement('div');div.className='chat-msg '+(m.sender==='admin'?'admin':'user');const timeStr=m.timestamp?new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';const ticks=m.sender==='admin'?`<span style="font-size:12px;margin-left:6px;color:#93c5fd;">✓✓</span>`:'';div.innerHTML=`<div>${m.message||''}</div><div style="font-size:10px;margin-top:6px;text-align:right;opacity:0.85;">${timeStr}${ticks}</div>`;c.appendChild(div);});c.scrollTop=c.scrollHeight;}
   });
 };
-window.closeChatModal=()=>{$('chatModal').classList.remove('active');currentChatUid=null;};
+window.closeChatModal=()=>{
+  $('chatModal').classList.remove('active');currentChatUid=null;
+  if(_chatMessagesUnsub){_chatMessagesUnsub();_chatMessagesUnsub=null;}
+};
 $('chatSendBtn')?.addEventListener('click',async()=>{
   const txt=$('chatInput').value.trim();if(!txt||!currentChatUid)return;
   await set(push(ref(db,`chats/${currentChatUid}/messages`)),{message:txt,sender:'admin',timestamp:new Date().toISOString()});
@@ -4111,16 +4202,11 @@ window.saveFM=async(id)=>{
   }catch(e){hideLoading();showToast('❌ '+e.message);}
 };
 
-// Re-render all 3 managers whenever products update
-const _origRenderProducts=window.filterProducts;
-onValue(ref(db,'products'),s=>{
-  if($('simProductList'))renderSIMList();
-  if($('dmProductList'))renderDMList();
-  if($('fmProductList'))renderFMList();
-  // Refresh charts if dashboard is visible
-  const dash=$('dashboardTab');
-  if(dash&&dash.classList.contains('active'))window.refreshDashboardCharts();
-});
+// ── BANDWIDTH FIX: this used to be a second onValue(ref(db,'products')) listener.
+// Every product create/update/delete anywhere was downloading the entire
+// products tree TWICE (this listener + the one in initData()). Its logic has
+// been merged into the single products listener inside initData(). Nothing
+// else changed — same functions run, in the same order, on the same event. ──
 
 // ── BULK APPLY HELPERS ─────────────────────────────────────────────────
 function getSubCategories(cat){
@@ -4575,37 +4661,39 @@ window.viewUserReferrals = (uid, name) => {
 
 // Referral tab render handled in main switchTab
 
-// ── Update referral dashboard stats whenever users data loads ──
-onValue(ref(db, 'users'), s => {
-  const data = s.val() || {};
-  // Patch globalUsersData if it's stale (for dashboard stats)
-  if(Object.keys(data).length) {
-    globalUsersData = data;
-    // Re-compute referral dashboard stats
-    let totalReferrals = 0, totalPaidOut = 0, activeReferrers = 0;
-    const refCounted = {};
-    Object.entries(data).forEach(([id, u]) => {
-      const p = u.profile||{};
-      if(p.referredBy) { totalReferrals++; refCounted[p.referredBy] = true; }
-      totalPaidOut += parseFloat(p.referralEarned||0);
-    });
-    activeReferrers = Object.keys(refCounted).length;
-    const el1=$('dashTotalReferrals'), el2=$('dashTotalRefEarned'), el3=$('dashActiveReferrers');
-    if(el1) el1.textContent = totalReferrals;
-    if(el2) el2.textContent = '₹'+totalPaidOut.toFixed(0);
-    if(el3) el3.textContent = activeReferrers;
-    // Auto re-render referral tab if it's currently active
-    const refTab = $('referralTab') || $('referral');
-    if(refTab && refTab.classList.contains('active')) {
-      window.renderReferralLeaderboard();
-      window.renderRefTransactions();
-    }
-    // Rebuild user growth chart on dashboard
-    if(document.getElementById('userGrowthChart')) {
-      buildUserGrowthChart(data);
-    }
+// ── BANDWIDTH FIX: this used to be its own onValue(ref(db,'users')) listener,
+// which meant every single write anywhere under 'users' downloaded the ENTIRE
+// users tree TWICE (once here, once for the listener at initData()).
+// Converted to a plain function, invoked once from inside the single
+// remaining 'users' listener (see window.renderUsers). Same computation,
+// same output, same triggers — just one network read instead of two. ──
+window.updateReferralDashboardStats = function updateReferralDashboardStats(data) {
+  data = data || {};
+  if(!Object.keys(data).length) return;
+  // Re-compute referral dashboard stats
+  let totalReferrals = 0, totalPaidOut = 0, activeReferrers = 0;
+  const refCounted = {};
+  Object.entries(data).forEach(([id, u]) => {
+    const p = u.profile||{};
+    if(p.referredBy) { totalReferrals++; refCounted[p.referredBy] = true; }
+    totalPaidOut += parseFloat(p.referralEarned||0);
+  });
+  activeReferrers = Object.keys(refCounted).length;
+  const el1=$('dashTotalReferrals'), el2=$('dashTotalRefEarned'), el3=$('dashActiveReferrers');
+  if(el1) el1.textContent = totalReferrals;
+  if(el2) el2.textContent = '₹'+totalPaidOut.toFixed(0);
+  if(el3) el3.textContent = activeReferrers;
+  // Auto re-render referral tab if it's currently active
+  const refTab = $('referralTab') || $('referral');
+  if(refTab && refTab.classList.contains('active')) {
+    window.renderReferralLeaderboard();
+    window.renderRefTransactions();
   }
-});
+  // Rebuild user growth chart on dashboard
+  if(document.getElementById('userGrowthChart')) {
+    buildUserGrowthChart(data);
+  }
+};
 
 
 </script>
