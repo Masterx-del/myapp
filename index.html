@@ -436,7 +436,6 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
   <div class="nav-section-label">API & Automation</div>
   <div class="drawer-nav-item" data-tab="apiconfig"><i class="fas fa-robot" style="width:18px;text-align:center;"></i> API Config</div>
   <div class="drawer-nav-item" data-tab="telegramBot"><i class="fab fa-telegram" style="width:18px;text-align:center;"></i> Telegram Bot</div>
-  <div class="drawer-nav-item" data-tab="paymentGateway"><i class="fas fa-credit-card" style="width:18px;text-align:center;color:#0070ba;"></i> Payment Gateway</div>
 
   <div class="nav-divider"></div>
   <!-- USERS & SUPPORT -->
@@ -445,7 +444,6 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
   <div class="drawer-nav-item" data-tab="referrals"><i class="fas fa-user-plus" style="width:18px;text-align:center;color:#f59e0b;"></i> Referrals</div>
   <div class="drawer-nav-item" data-tab="walletManageTab"><i class="fas fa-wallet" style="width:18px;text-align:center;color:#10b981;"></i> Wallet Manage</div>
   <div class="drawer-nav-item" data-tab="walletHistoryTab"><i class="fas fa-history" style="width:18px;text-align:center;color:#8b5cf6;"></i> Wallet History</div>
-  <div class="drawer-nav-item" data-tab="depositRequests"><i class="fas fa-money-check-alt" style="width:18px;text-align:center;color:#f59e0b;"></i> Deposit Requests <span class="drawer-nav-badge" id="navDepositBadge" style="display:none;">0</span></div>
   <div class="drawer-nav-item" data-tab="support"><i class="fas fa-headset" style="width:18px;text-align:center;"></i> Support <span class="drawer-nav-badge" id="navChatBadge" style="display:none;">0</span></div>
 
   <div class="nav-divider"></div>
@@ -710,7 +708,7 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
 
 <div class="input-group" style="margin-top:4px;"><label>Description <span style="font-weight:400;text-transform:none;">(shown on product card)</span></label><textarea id="productDescription" rows="2" placeholder="e.g., Gradual Delivery · High Quality · Real & Safe" style="width:100%;padding:12px 14px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:'Inter',sans-serif;resize:vertical;"></textarea></div>
 <div class="input-group"><label>Features <span style="font-weight:400;text-transform:none;">(one per line — shown as checklist)</span></label><textarea id="productFeatures" rows="3" placeholder="Gradual Delivery&#10;On 5 Reels&#10;10K/Day Reels Views" style="width:100%;padding:12px 14px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:'Inter',sans-serif;resize:vertical;"></textarea></div>
-<div class="input-group"><label>Specification <span style="font-weight:400;text-transform:none;">(optional — groups this service under a chip in app, e.g. "Indian Followers")</span></label><input type="text" id="productSpecification" list="specSuggestions" placeholder="e.g., Indian Followers, Premium Followers, Non-Drop Followers"><datalist id="specSuggestions"></datalist></div>
+<div class="input-group"><label>Specification <span style="font-weight:400;text-transform:none;">(optional — groups this service under a chip in app, e.g. "Indian Followers")</span></label><input type="text" id="productSpecification" placeholder="e.g., Indian Followers, Premium Followers, Non-Drop Followers"></div>
 
 <div style="display:flex;gap:12px;margin-top:4px;">
 <button class="btn" id="saveProductBtn" style="flex:1;"><i class="fas fa-save"></i> Save Product</button>
@@ -745,7 +743,7 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
   <input type="text" id="orderSearchInput" placeholder="🔍 Search by email, UTR, product, order ID..." oninput="window.reRenderOrders()">
   <select id="orderFilterSelect" onchange="window.reRenderOrders()">
     <option value="all">All Orders</option>
-    <option value="paid">💳 Paid Orders</option>
+    <option value="paid">💰 Paid Orders</option>
     <option value="free">🆓 Free Orders</option>
     <option value="pending">⏳ Pending</option>
     <option value="progress">⚙️ In Progress</option>
@@ -1001,25 +999,6 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
 </div>
 </div>
 
-<!-- PAYMENT GATEWAY TAB -->
-<div id="paymentGatewayTab" class="tab-content">
-<div class="card">
-<h2 class="card-title"><i class="fab fa-paypal" style="color:#003087;"></i> PayPal Deposit Details</h2>
-<p style="font-size:11px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6;">Yeh details user portal ke PayPal deposit screen par dikhengi. User yahan manual payment karke Transaction ID submit karega.</p>
-<div class="input-group"><label>PayPal Handle / Email / PayPal.me Link</label><input type="text" id="pgPaypalHandle" placeholder="e.g. yourname@example.com or paypal.me/yourname"></div>
-<div class="input-group"><label>PayPal QR Code Image URL</label><input type="text" id="pgPaypalQrUrl" placeholder="https://..."></div>
-<button class="btn" id="savePaypalGatewayBtn" style="width:100%;"><i class="fas fa-save"></i> Save PayPal Details</button>
-</div>
-
-<div class="card">
-<h2 class="card-title"><i class="fas fa-coins" style="color:#f3ba2f;"></i> Binance Deposit Details</h2>
-<p style="font-size:11px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6;">Yeh details user portal ke Binance deposit screen par dikhengi. User yahan manual payment karke Order ID submit karega.</p>
-<div class="input-group"><label>Binance ID / Pay ID</label><input type="text" id="pgBinanceId" placeholder="e.g. 123456789"></div>
-<div class="input-group"><label>Binance QR Code Image URL</label><input type="text" id="pgBinanceQrUrl" placeholder="https://..."></div>
-<button class="btn" id="saveBinanceGatewayBtn" style="width:100%;"><i class="fas fa-save"></i> Save Binance Details</button>
-</div>
-</div>
-
 <!-- USERS TAB -->
 <div id="usersTab" class="tab-content">
 <div class="card">
@@ -1052,7 +1031,7 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
   <input type="text" id="whSearchInput" placeholder="🔍 Search by name, email, UTR..." oninput="renderWalletHistory()" style="flex:1;min-width:180px;padding:11px 14px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:inherit;">
   <select id="whTypeFilter" onchange="renderWalletHistory()" style="padding:11px 14px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:11px;font-family:inherit;">
     <option value="all">All Types</option>
-    <option value="wallet_topup">💳 Top-Up</option>
+    <option value="wallet_topup">💰 Top-Up</option>
     <option value="credit">➕ Credit</option>
     <option value="debit">➖ Debit</option>
     <option value="referral">🎁 Referral</option>
@@ -1065,29 +1044,6 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
   <div class="stat-card warn"><div class="stat-value" id="whTotalRefund">₹0</div><div class="stat-label">Total Refunds</div></div>
 </div>
 <div id="walletHistoryList" class="orders-list"></div>
-</div>
-</div>
-
-<!-- DEPOSIT REQUESTS TAB -->
-<div id="depositRequestsTab" class="tab-content">
-<div class="card">
-<h2 class="card-title"><i class="fas fa-money-check-alt" style="color:#f59e0b;"></i> Manual Deposit Requests — PayPal & Binance</h2>
-<p style="font-size:11px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6;">User ne PayPal/Binance se manual payment karke Transaction/Order ID submit ki hai. Payment verify karke Accept ya Reject karo — Accept karte hi user ke wallet mein paisa add ho jayega.</p>
-<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
-  <input type="text" id="drSearchInput" placeholder="🔍 Search by name, email, TXN/Order ID..." oninput="renderDepositRequests()" style="flex:1;min-width:180px;padding:11px 14px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:inherit;">
-  <select id="drStatusFilter" onchange="renderDepositRequests()" style="padding:11px 14px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:11px;font-family:inherit;">
-    <option value="pending">⏳ Pending</option>
-    <option value="approved">✅ Approved</option>
-    <option value="rejected">❌ Rejected</option>
-    <option value="all">All</option>
-  </select>
-  <select id="drMethodFilter" onchange="renderDepositRequests()" style="padding:11px 14px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:11px;font-family:inherit;">
-    <option value="all">All Methods</option>
-    <option value="paypal">PayPal</option>
-    <option value="binance">Binance</option>
-  </select>
-</div>
-<div id="depositRequestsList" class="orders-list"></div>
 </div>
 </div>
 
@@ -1481,7 +1437,7 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, updateProfile } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
-import { getDatabase, ref, set, get, push, remove, onValue, update, onChildAdded, onChildChanged, query, orderByChild, equalTo } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
+import { getDatabase, ref, set, get, push, remove, onValue, update, onChildAdded, onChildChanged } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
 
 const firebaseConfig = window.__APP_CONFIG__;
 if (!firebaseConfig || !firebaseConfig.apiKey) {
@@ -1554,16 +1510,8 @@ let allServicesCache=[];
 let serviceModalTarget=''; // 'product' | 'bulk'
 setTimeout(()=>isInitialLoad=false,3000);
 
-// ── BANDWIDTH FIX: onChildAdded(ref(db,'orders')) and onChildChanged(ref(db,'chats'))
-// used to be their own listeners. Attaching a listener anywhere on a path makes the
-// SDK do a full initial sync of that path independently — so 'orders' and 'chats' were
-// each being fully downloaded a SECOND time at startup just to power these two toasts,
-// on top of the onValue('orders')/onValue('chats') listeners in initData(). Both toasts
-// are now derived from the data initData()'s listeners already receive (see
-// _prevOrdersKeys / _prevChatsData usage below) — same toast text, same timing,
-// same 3s initial-load suppression, zero extra network reads. ──
-let _prevOrdersKeys = null;
-let _prevChatsData = null;
+onChildAdded(ref(db,'orders'),(snap)=>{if(!isInitialLoad)showToast('🔔 New Order Placed!');});
+onChildChanged(ref(db,'chats'),(snap)=>{if(!isInitialLoad){const info=snap.val()?.info;if(info)showToast(`💬 New Message: ${info.userName||'User'}`);}});
 
 // ── DRAWER ───────────────────────────────────────────────────────────
 const drawer=$('drawer'),overlay=$('drawerOverlay'),menuToggle=$('menuToggle');
@@ -1610,7 +1558,6 @@ window.switchTab=(tab,isUser=false)=>{
   if(tab==='dashboard')refreshDashboardCharts();
   if(tab==='referrals'||tab==='referralTab'){if(Object.keys(globalUsersData||{}).length){window.renderReferralLeaderboard&&window.renderReferralLeaderboard();window.renderRefTransactions&&window.renderRefTransactions();}}
   if(tab==='walletManageTab')window.renderWalletManageList&&window.renderWalletManageList();
-  if(tab==='depositRequests')window.renderDepositRequests&&window.renderDepositRequests();
   if(tab==='subscriptions'){renderExclusiveProductPicker();updateExclusiveSelectedPreview();}
 };
 
@@ -1734,19 +1681,7 @@ function scheduleAutoComplete(ordersData) {
   });
 }
 
-// ── BANDWIDTH FIX: initData() attaches ~14 onValue listeners (products, orders,
-// users, chats, coupons, exclusivePacks, and every meta/* node). It's called from
-// inside onAuthStateChanged, which the Firebase SDK can fire more than once per
-// page load (e.g. token refresh edge cases, or an admin signing out and back in
-// without a reload). Previously, every extra firing stacked a whole new set of
-// listeners on top of the old ones — each additional set multiplying every
-// future write's bandwidth cost by one more full-tree download. This guard makes
-// initData() a no-op after the first successful run, so listeners are attached
-// exactly once per page load no matter how many times auth state changes. ──
-let _initDataAttached=false;
 function initData(){
-  if(_initDataAttached) return;
-  _initDataAttached=true;
   // Load category map first so all selects are correct
   get(ref(db,'meta/categoryMap')).then(s=>{
     if(s.exists()&&s.val()&&typeof s.val()==='object'){
@@ -1755,40 +1690,12 @@ function initData(){
     window.populateCategorySelects();
     renderCatMgmtUI();
   }).catch(()=>{ window.populateCategorySelects(); renderCatMgmtUI(); });
-  onValue(ref(db,'products'),s=>{
-    renderProducts(s.val());buildCategoryChart(globalProducts);
-    // (merged from former duplicate 'products' listener — see BANDWIDTH FIX note below)
-    if($('simProductList'))renderSIMList();
-    if($('dmProductList'))renderDMList();
-    if($('fmProductList'))renderFMList();
-    window.refreshSpecSuggestions();
-    const dash=$('dashboardTab');
-    if(dash&&dash.classList.contains('active'))window.refreshDashboardCharts();
-  });
-  onValue(ref(db,'orders'),s=>{
-    globalOrdersData=s.val();
-    if(!isInitialLoad&&globalOrdersData&&_prevOrdersKeys){
-      Object.keys(globalOrdersData).forEach(id=>{ if(!_prevOrdersKeys.has(id)) showToast('🔔 New Order Placed!'); });
-    }
-    _prevOrdersKeys=new Set(Object.keys(globalOrdersData||{}));
-    renderOrders(globalOrdersData);buildOrdersRevenueChart(globalOrdersData);scheduleAutoComplete(globalOrdersData);
-  });
+  onValue(ref(db,'products'),s=>{renderProducts(s.val());buildCategoryChart(globalProducts);});
+  onValue(ref(db,'orders'),s=>{globalOrdersData=s.val();renderOrders(globalOrdersData);buildOrdersRevenueChart(globalOrdersData);scheduleAutoComplete(globalOrdersData);});
   onValue(ref(db,'coupons'),s=>renderCoupons(s.val()));
   onValue(ref(db,'exclusivePacks'),s=>{ window._globalExclusivePacks = s.val()||{}; renderExclusivePacks(window._globalExclusivePacks); const count=Object.keys(window._globalExclusivePacks).length; if($('dashTotalSubscriptions')) $('dashTotalSubscriptions').textContent=count; });
   onValue(ref(db,'users'),s=>renderUsers(s.val()));
-  onValue(ref(db,'chats'),s=>{
-    const chatsData=s.val()||{};
-    if(!isInitialLoad&&_prevChatsData){
-      Object.keys(chatsData).forEach(uid=>{
-        if(_prevChatsData.hasOwnProperty(uid)&&JSON.stringify(chatsData[uid])!==JSON.stringify(_prevChatsData[uid])){
-          const info=chatsData[uid]?.info;
-          if(info)showToast(`💬 New Message: ${info.userName||'User'}`);
-        }
-      });
-    }
-    _prevChatsData=chatsData;
-    renderChatUsers(chatsData);
-  });
+  onValue(ref(db,'chats'),s=>renderChatUsers(s.val()));
   onValue(ref(db,'meta/brand'),s=>{if(s.exists()){const d=s.val();$('brandName').value=d.name||'';$('brandLogoUrl').value=d.logoUrl||'';if(d.logoUrl){$('drawerLogo').src=d.logoUrl;$('drawerLogo').style.display='block';}if(d.name)$('drawerBrandName').textContent=d.name;}});
   onValue(ref(db,'meta/contact'),s=>{if(s.exists()){const d=s.val();$('contactEmail').value=d.email||'';$('contactTelegram').value=d.socialTelegram||'';}});
   onValue(ref(db,'meta/offers'),s=>{if(s.exists()){const d=s.val();$('offerName').value=d.name||'';$('offerImageUrl').value=d.imageUrl||'';$('offerNewRate').value=d.newRate||'';$('offerOldRate').value=d.oldRate||'';$('offerDescription').value=d.description||'';$('offerContactUsername').value=d.contactUsername||'';$('offerChannelLink').value=d.channelLink||'';}});
@@ -1796,21 +1703,6 @@ function initData(){
   onValue(ref(db,'meta/savedApis'),s=>{savedApiConfigs=s.exists()?s.val():{};renderSavedApisList();renderBulkApiSelect();});
   onValue(ref(db,'meta/telegramBot'),s=>{if(s.exists()){const d=s.val();$('tgBotToken').value=d.token||'';$('tgChatId').value=d.chatId||'';$('tgGiftCodeChatId').value=d.giftCodeChatId||'';$('tgTopUpChatId').value=d.topUpChatId||'';$('tgSupportChatId').value=d.supportChatId||'';}});
   onValue(ref(db,'meta/announcement'),s=>{if(s.exists())applyAnnouncementDisplay(s.val());});
-  onValue(ref(db,'meta/paymentGateway'),s=>{
-    const d=s.exists()?s.val():{};
-    const pp=d.paypal||{}, bn=d.binance||{};
-    if($('pgPaypalHandle'))$('pgPaypalHandle').value=pp.handle||'';
-    if($('pgPaypalQrUrl'))$('pgPaypalQrUrl').value=pp.qrUrl||'';
-    if($('pgBinanceId'))$('pgBinanceId').value=bn.binanceId||'';
-    if($('pgBinanceQrUrl'))$('pgBinanceQrUrl').value=bn.qrUrl||'';
-  });
-  onValue(ref(db,'depositRequests'),s=>{
-    globalDepositRequests = s.val()||{};
-    if($('depositRequestsList')) window.renderDepositRequests&&window.renderDepositRequests();
-    const pending=Object.values(globalDepositRequests).filter(r=>r.status==='pending').length;
-    const badge=$('navDepositBadge');
-    if(badge){badge.textContent=pending;badge.style.display=pending>0?'flex':'none';}
-  });
 }
 
 // ── CATEGORY MAP — SINGLE SOURCE OF TRUTH ───────────────────────────────
@@ -2086,13 +1978,8 @@ $('clearProductBtn').addEventListener('click',()=>{
 window.downloadProductCSVTemplate = async () => {
   showLoading('Exporting products...');
   try {
-    // ── BANDWIDTH FIX: was a fresh get(ref(db,'products')) — a full re-download of
-    // every product on every export click. globalProducts is kept perfectly in sync
-    // by the live onValue('products') listener in initData(), which is guaranteed to
-    // have already fired at least once by the time an admin can see this button
-    // (it's only reachable after the admin dashboard has loaded). Same data, zero
-    // extra network read. ──
-    const data = globalProducts || {};
+    const snap = await get(ref(db, 'products'));
+    const data = snap.exists() ? snap.val() : {};
     const headers = ['title','category','subCategory','discountedPrice','avgTime','displayOrder','serviceId','apiUrl','apiKey','linkLabel','description','features','specification'];
 
     const escapeCell = (val) => {
@@ -2399,7 +2286,7 @@ window.saveEstTime=async(id)=>{
 (function startAutoCompletePoller(){
   async function runAutoComplete(){
     try{
-      const snap=await get(query(ref(db,'orders'),orderByChild('status'),equalTo('progress')));
+      const snap=await get(ref(db,'orders'));
       if(!snap.exists())return;
       const now=Date.now();
       const updates={};
@@ -2669,7 +2556,7 @@ window.updateStatus=async(id,s)=>{
             await update(ref(db,`orders/${id}`),{walletRefunded:true,refundAmount:refundAmt,_refundHistKey:histRef.key});
             // Show undo toast for 8 seconds
             const _uid=order.userId, _amt=refundAmt, _histKey=histRef.key, _prevBal=curBal;
-            showUndoToast(`❌ Rejected · 💳 ₹${refundAmt.toFixed(2)} refund diya`, async function(){
+            showUndoToast(`❌ Rejected · 💰 ₹${refundAmt.toFixed(2)} refund diya`, async function(){
               try{
                 // Reverse: set order back to pending, deduct refund from wallet, remove history entry
                 await update(ref(db,`orders/${id}`),{status:'pending',walletRefunded:false,refundAmount:null,_refundHistKey:null});
@@ -2956,10 +2843,8 @@ window.deleteExclusivePack = async (id) => {
 
 // ── USERS ─────────────────────────────────────────────────────────────
 let globalUsersData = {};
-let globalDepositRequests = {};
 window.renderUsers = function renderUsers(data){
   globalUsersData = data || {};
-  window.updateReferralDashboardStats(globalUsersData);
   const searchQ = ($('userSearchInput')?.value||'').toLowerCase();
   const users = globalUsersData; let html=''; let count=Object.keys(users).length; $('dashTotalUsers').textContent=count;
 
@@ -2990,7 +2875,7 @@ window.renderUsers = function renderUsers(data){
       </div>
       <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">${email}</div>
       <div style="font-size:12px;display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
-        <span style="background:rgba(37,99,235,0.08);color:var(--accent-primary);padding:3px 8px;border-radius:6px;font-weight:600;">💳 ₹${wallet}</span>
+        <span style="background:rgba(37,99,235,0.08);color:var(--accent-primary);padding:3px 8px;border-radius:6px;font-weight:600;">💰 ₹${wallet}</span>
         <span style="background:rgba(16,185,129,0.08);color:#10b981;padding:3px 8px;border-radius:6px;font-weight:600;">🛒 ₹${spent}</span>
         ${refBadge}${refEarnedBadge}
       </div>
@@ -3029,11 +2914,7 @@ window.applyInlineWallet=async(uid,currentBal)=>{
     await update(ref(db,`users/${uid}/profile`),{walletBalance:finalBal});
     await push(ref(db,`users/${uid}/walletHistory`),{type,amount:amt,note,utrId:'ADMIN_'+Date.now(),createdAt:new Date().toISOString()});
     hideLoading();showToast(`✅ ${type==='credit'?'Added':'Deducted'} ₹${amt.toFixed(2)} → Balance: ₹${finalBal.toFixed(2)}`);
-    // ── BANDWIDTH FIX: removed a manual get(ref(db,'users')) here that re-downloaded
-    // the ENTIRE users tree on every wallet adjustment. The update() call above already
-    // triggers the live onValue('users') listener (initData()), which calls renderUsers()
-    // with the fresh data automatically — this extra read produced an identical,
-    // redundant re-render. ──
+    const uSnap=await get(ref(db,'users'));if(uSnap.exists())renderUsers(uSnap.val());
   }catch(e){hideLoading();showToast('❌ '+e.message);}
 };
 window.filterUsers = () => { renderUsers(globalUsersData); };
@@ -3143,7 +3024,7 @@ window.renderWalletHistory = function() {
   if(!filtered.length){cont.innerHTML='<p style="color:var(--text-secondary);text-align:center;padding:24px;">No transactions found.</p>';return;}
 
   const typeLabel = {
-    'wallet_topup':'💳 Top-Up','wallet_add':'💳 Top-Up','credit':'➕ Credit',
+    'wallet_topup':'💰 Top-Up','wallet_add':'💰 Top-Up','credit':'➕ Credit',
     'debit':'➖ Debit','referral':'🎁 Referral','admin_credit':'🛡️ Admin Credit'
   };
   const typeColor = {
@@ -3162,7 +3043,7 @@ window.renderWalletHistory = function() {
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
             <span style="font-weight:700;font-size:11px;color:var(--text-primary);">${tx.userName}</span>
-            <span style="font-size:10px;background:${isTopup?'rgba(16,185,129,0.12)':'rgba(37,99,235,0.08)'};color:${tColor};border:1px solid ${tColor}33;border-radius:4px;padding:1px 7px;font-weight:700;">${isTopup?'💳 Top-Up':tLabel}</span>
+            <span style="font-size:10px;background:${isTopup?'rgba(16,185,129,0.12)':'rgba(37,99,235,0.08)'};color:${tColor};border:1px solid ${tColor}33;border-radius:4px;padding:1px 7px;font-weight:700;">${isTopup?'💰 Top-Up':tLabel}</span>
           </div>
           <div style="font-size:11px;color:var(--text-secondary);">${tx.userEmail}</div>
           <div style="font-size:11px;color:var(--text-secondary);margin-top:3px;">${tx.note||'—'}</div>
@@ -3175,147 +3056,6 @@ window.renderWalletHistory = function() {
       </div>
     </div>`;
   }).join('') + (filtered.length>100?`<div style="text-align:center;font-size:12px;color:var(--text-secondary);padding:10px;">Top 100 of ${filtered.length} transactions shown</div>`:'');
-};
-
-// ── DEPOSIT REQUESTS TAB (PayPal / Binance manual verification) ────────
-window.renderDepositRequests = function() {
-  const cont = $('depositRequestsList'); if(!cont) return;
-  const q = ($('drSearchInput')?.value||'').toLowerCase().trim();
-  const statusFilter = $('drStatusFilter')?.value || 'pending';
-  const methodFilter = $('drMethodFilter')?.value || 'all';
-
-  let entries = Object.entries(globalDepositRequests||{});
-  entries = entries.filter(([,r]) => {
-    const matchQ = !q || (r.userEmail||'').toLowerCase().includes(q) || (r.userName||'').toLowerCase().includes(q) || (r.txnId||'').toLowerCase().includes(q);
-    const matchStatus = statusFilter==='all' || (r.status||'pending')===statusFilter;
-    const matchMethod = methodFilter==='all' || r.method===methodFilter;
-    return matchQ && matchStatus && matchMethod;
-  });
-  entries.sort((a,b)=>new Date(b[1].createdAt||0)-new Date(a[1].createdAt||0));
-
-  if(!entries.length){cont.innerHTML='<p style="color:var(--text-secondary);text-align:center;padding:24px;">No deposit requests found.</p>';return;}
-
-  const methodMeta = {
-    paypal:  {label:'PayPal',  icon:'fab fa-paypal', color:'#003087'},
-    binance: {label:'Binance', icon:'fas fa-coins',  color:'#f3ba2f'}
-  };
-  const statusMeta = {
-    pending:  {label:'⏳ Pending',  color:'#f59e0b'},
-    approved: {label:'✅ Approved', color:'#10b981'},
-    rejected: {label:'❌ Rejected', color:'#ef4444'}
-  };
-
-  cont.innerHTML = entries.map(([id,r]) => {
-    const m = methodMeta[r.method] || {label:r.method, icon:'fas fa-money-bill', color:'#6b7280'};
-    const st = statusMeta[r.status||'pending'];
-    const dateStr = r.createdAt ? new Date(r.createdAt).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}) : '—';
-    const usdLine = r.usdAmount ? `<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">≈ ${r.usdAmount} USD${r.eurAmount?` / ${r.eurAmount} EUR`:''}</div>` : '';
-    const actions = (r.status||'pending')==='pending' ? `
-      <div style="display:flex;gap:8px;margin-top:10px;">
-        <button class="btn btn-sm btn-success" style="flex:1;" onclick="acceptDepositRequest('${id}')"><i class="fas fa-check"></i> Accept</button>
-        <button class="btn btn-sm btn-danger" style="flex:1;" onclick="rejectDepositRequest('${id}')"><i class="fas fa-times"></i> Reject</button>
-      </div>` : '';
-    return `<div class="order-card" style="padding:14px;margin-bottom:10px;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
-            <i class="${m.icon}" style="color:${m.color};"></i>
-            <span style="font-weight:700;font-size:11px;color:var(--text-primary);">${r.userName||'User'}</span>
-            <span style="font-size:10px;background:${st.color}1a;color:${st.color};border:1px solid ${st.color}33;border-radius:4px;padding:1px 7px;font-weight:700;">${st.label}</span>
-          </div>
-          <div style="font-size:11px;color:var(--text-secondary);">${r.userEmail||''}</div>
-          <div style="font-size:10px;color:var(--accent-primary);margin-top:3px;font-family:monospace;">${r.method==='binance'?'Order ID':'TXN ID'}: ${r.txnId||'—'}</div>
-          ${usdLine}
-          <div style="font-size:10px;color:var(--text-secondary);margin-top:3px;">${dateStr}</div>
-        </div>
-        <div style="font-size:13px;font-weight:800;color:#10b981;flex-shrink:0;">₹${parseFloat(r.inrAmount||0).toFixed(2)}</div>
-      </div>
-      ${actions}
-    </div>`;
-  }).join('');
-};
-
-window.acceptDepositRequest = async(id) => {
-  const req = globalDepositRequests[id];
-  if(!req) return showToast('❌ Request not found');
-  if(req.status && req.status!=='pending') return showToast('⚠️ Already processed');
-  const ok = await customConfirm({title:'Accept Deposit?',msg:`₹${parseFloat(req.inrAmount||0).toFixed(2)} will be added to ${req.userEmail}'s wallet.`,icon:'💳',okLabel:'Accept & Credit'});
-  if(!ok) return;
-  showLoading();
-  try{
-    const uid = req.userId;
-    const snap = await get(ref(db,`users/${uid}/profile`));
-    const currentBal = snap.exists()?parseFloat(snap.val().walletBalance||0):0;
-    const inrAmt = parseFloat(req.inrAmount||0);
-    const finalBal = currentBal + inrAmt;
-    const methodLabel = req.method==='binance'?'Binance':'PayPal';
-
-    // Find the "pending" marker the user portal wrote to walletHistory at submit time,
-    // so accepting doesn't leave a stale PENDING entry sitting next to the real credit
-    // ── BANDWIDTH FIX: was get(ref(db,`users/${uid}/walletHistory`)) — downloading a
-    // user's ENTIRE wallet history (which only grows over time) just to find one entry
-    // matching this transaction's utrId. Querying by utrId returns only matching
-    // entries over the wire; the type check still runs on that (tiny) result set, so
-    // the outcome — which key gets found and removed — is identical. Recommend adding
-    // `"walletHistory": {".indexOn": "utrId"}` to the RTDB rules for users/$uid so this
-    // query is also fast on the server side, not just cheap on the wire. ──
-    let pendingKey = null;
-    try {
-      const whSnap = await get(query(ref(db,`users/${uid}/walletHistory`), orderByChild('utrId'), equalTo(req.txnId)));
-      if (whSnap.exists()) {
-        whSnap.forEach(c => {
-          const v = c.val();
-          if (v.type === 'pending_deposit' && v.utrId === req.txnId) pendingKey = c.key;
-        });
-      }
-    } catch(_) {}
-
-    const ops = [
-      update(ref(db,`users/${uid}/profile`),{walletBalance:finalBal}),
-      push(ref(db,`users/${uid}/walletHistory`),{
-        type:'wallet_topup', amount:inrAmt,
-        note:`Wallet Top-Up (${methodLabel})`,
-        utrId:req.txnId||('DEP_'+Date.now()),
-        method:methodLabel,
-        createdAt:new Date().toISOString()
-      }),
-      update(ref(db,`depositRequests/${id}`),{status:'approved',approvedAt:new Date().toISOString(),approvedBy:currentAdminUid||''})
-    ];
-    if (pendingKey) ops.push(remove(ref(db,`users/${uid}/walletHistory/${pendingKey}`)));
-    await Promise.all(ops);
-    hideLoading();showToast(`✅ ₹${inrAmt.toFixed(2)} added → Balance: ₹${finalBal.toFixed(2)}`);
-  }catch(e){hideLoading();showToast('❌ '+e.message);}
-};
-
-window.rejectDepositRequest = async(id) => {
-  const req = globalDepositRequests[id];
-  if(!req) return showToast('❌ Request not found');
-  if(req.status && req.status!=='pending') return showToast('⚠️ Already processed');
-  const ok = await customConfirm({title:'Reject Deposit?',msg:'This deposit request will be marked as rejected.',icon:'❌',okLabel:'Reject',danger:true});
-  if(!ok) return;
-  showLoading();
-  try{
-    const uid = req.userId;
-    // Flip the matching pending marker in the user's wallet history to "rejected"
-    // instead of leaving it stuck showing PENDING forever
-    try {
-      // ── BANDWIDTH FIX: same targeted-query fix as acceptDepositRequest above,
-      // instead of downloading the user's entire wallet history. ──
-      const whSnap = await get(query(ref(db,`users/${uid}/walletHistory`), orderByChild('utrId'), equalTo(req.txnId)));
-      if (whSnap.exists()) {
-        const flips = [];
-        whSnap.forEach(c => {
-          const v = c.val();
-          if (v.type === 'pending_deposit' && v.utrId === req.txnId) {
-            flips.push(update(ref(db,`users/${uid}/walletHistory/${c.key}`), { type: 'rejected_deposit' }));
-          }
-        });
-        if (flips.length) await Promise.all(flips);
-      }
-    } catch(_) {}
-    await update(ref(db,`depositRequests/${id}`),{status:'rejected',rejectedAt:new Date().toISOString(),rejectedBy:currentAdminUid||''});
-    hideLoading();showToast('❌ Deposit request rejected');
-  }catch(e){hideLoading();showToast('❌ '+e.message);}
 };
 
 // Auto-render wallet tabs when switched
@@ -3365,9 +3105,9 @@ window.submitWalletAdjust=async()=>{
     hideLoading();
     closeWalletModal();
     showToast(`✅ ${type==='credit'?'Added':'Deducted'} ₹${amt.toFixed(2)} — New Balance: ₹${finalBal.toFixed(2)}`);
-    // ── BANDWIDTH FIX: removed a manual get(ref(db,'users')) here — see identical
-    // note in window.applyInlineWallet above. The live onValue('users') listener
-    // already refreshes the users list after the update() call above. ──
+    // Refresh users list
+    const uSnap=await get(ref(db,'users'));
+    if(uSnap.exists()) renderUsers(uSnap.val());
   }catch(e){
     hideLoading();
     if(e.code==='PERMISSION_DENIED'||e.message.includes('permission')){
@@ -3388,15 +3128,6 @@ $('clearAllOrdersBtn').addEventListener('click',async()=>{const ok=await customC
 $('clearAllDataBtn').addEventListener('click',async()=>{const ok=await customConfirm({title:'⚠️ Factory Reset?',msg:'EVERYTHING will be wiped — products, orders, users, settings. Absolutely cannot be undone!',icon:'💀',okLabel:'WIPE EVERYTHING',danger:true});if(ok){showLoading();await set(ref(db,'/'),null);hideLoading();window.location.reload();}});
 
 // ── CHAT ──────────────────────────────────────────────────────────────
-// ── BANDWIDTH FIX: this loop used to call get(ref(db,`users/${uid}/profile`))
-// for every chat needing a name fix, and it ran again on EVERY single chats
-// update (i.e. every message sent anywhere), re-downloading the same profiles
-// over and over. A tiny in-memory cache means each profile is fetched at most
-// once — after that, the already-known name is reused, and note the code also
-// writes the fixed name back into chats/{uid}/info, so on the very next update
-// it no longer even qualifies for a lookup. Same names shown, same DB writes,
-// same fallback behavior on error. ──
-window._chatUserNameCache = window._chatUserNameCache || {};
 window.renderChatUsers=async(data)=>{
   const l=$('chatUsersList');if(!l)return;l.innerHTML='';
   let totalUnread=0;
@@ -3412,18 +3143,13 @@ window.renderChatUsers=async(data)=>{
     // Fetch real name from users profile
     let userName = chatData.info?.userName || '';
     if(!userName || userName.length < 3 || /^[A-Za-z0-9+/=]{8,}$/.test(userName)) {
-      if(window._chatUserNameCache[uid]) {
-        userName = window._chatUserNameCache[uid];
-      } else {
-        try {
-          const profileSnap = await get(ref(db,`users/${uid}/profile`));
-          if(profileSnap.exists()) userName = profileSnap.val().name || profileSnap.val().email || uid.substring(0,8);
-          else userName = uid.substring(0,8);
-          window._chatUserNameCache[uid] = userName;
-          // Also fix it in Firebase for future
-          if(chatData.info) update(ref(db,`chats/${uid}/info`),{userName});
-        } catch(e){ userName = uid.substring(0,8); }
-      }
+      try {
+        const profileSnap = await get(ref(db,`users/${uid}/profile`));
+        if(profileSnap.exists()) userName = profileSnap.val().name || profileSnap.val().email || uid.substring(0,8);
+        else userName = uid.substring(0,8);
+        // Also fix it in Firebase for future
+        if(chatData.info) update(ref(db,`chats/${uid}/info`),{userName});
+      } catch(e){ userName = uid.substring(0,8); }
     }
     
     const badge=unread>0?`<div class="unread-badge">${unread}</div>`:'';
@@ -3458,27 +3184,15 @@ window.filterSupportList = () => {
 };
 
 let currentChatUid=null;
-// ── BANDWIDTH FIX: openChatModal used to call onValue(ref(db,`chats/${uid}/messages`))
-// EVERY time it was opened, with no cleanup. Opening 10 different users' chats over
-// a session left 10 permanent listeners running — each one re-downloading that user's
-// full message history forever, even after the modal was closed and the admin moved
-// on to something else. We now keep a single handle and detach the previous listener
-// before attaching a new one (and on close). Same live-updating chat UI while the
-// modal is open, same content, same order — just no orphaned listeners left behind. ──
-let _chatMessagesUnsub=null;
 window.openChatModal=(uid,userName='')=>{
   currentChatUid=uid;$('chatModalTitle').innerText=userName||uid.substring(0,8);$('chatModal').classList.add('active');
   update(ref(db,`chats/${uid}/info`),{adminUnread:0});
-  if(_chatMessagesUnsub){_chatMessagesUnsub();_chatMessagesUnsub=null;}
-  _chatMessagesUnsub=onValue(ref(db,`chats/${uid}/messages`),(s)=>{
+  onValue(ref(db,`chats/${uid}/messages`),(s)=>{
     const c=$('chatMessagesContainer');c.innerHTML='';
     if(s.exists()){Object.values(s.val()).forEach(m=>{const div=document.createElement('div');div.className='chat-msg '+(m.sender==='admin'?'admin':'user');const timeStr=m.timestamp?new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';const ticks=m.sender==='admin'?`<span style="font-size:12px;margin-left:6px;color:#93c5fd;">✓✓</span>`:'';div.innerHTML=`<div>${m.message||''}</div><div style="font-size:10px;margin-top:6px;text-align:right;opacity:0.85;">${timeStr}${ticks}</div>`;c.appendChild(div);});c.scrollTop=c.scrollHeight;}
   });
 };
-window.closeChatModal=()=>{
-  $('chatModal').classList.remove('active');currentChatUid=null;
-  if(_chatMessagesUnsub){_chatMessagesUnsub();_chatMessagesUnsub=null;}
-};
+window.closeChatModal=()=>{$('chatModal').classList.remove('active');currentChatUid=null;};
 $('chatSendBtn')?.addEventListener('click',async()=>{
   const txt=$('chatInput').value.trim();if(!txt||!currentChatUid)return;
   await set(push(ref(db,`chats/${currentChatUid}/messages`)),{message:txt,sender:'admin',timestamp:new Date().toISOString()});
@@ -3894,24 +3608,6 @@ $('saveTgBotBtn').addEventListener('click',async()=>{
   hideLoading();showToast('✅ Telegram Bot config saved!');
 });
 
-$('savePaypalGatewayBtn').addEventListener('click',async()=>{
-  const handle=$('pgPaypalHandle').value.trim();
-  const qrUrl=$('pgPaypalQrUrl').value.trim();
-  if(!handle) return showToast('⚠️ PayPal handle daalo');
-  showLoading();
-  await update(ref(db,'meta/paymentGateway/paypal'),{handle,qrUrl});
-  hideLoading();showToast('✅ PayPal details saved!');
-});
-
-$('saveBinanceGatewayBtn').addEventListener('click',async()=>{
-  const binanceId=$('pgBinanceId').value.trim();
-  const qrUrl=$('pgBinanceQrUrl').value.trim();
-  if(!binanceId) return showToast('⚠️ Binance ID daalo');
-  showLoading();
-  await update(ref(db,'meta/paymentGateway/binance'),{binanceId,qrUrl});
-  hideLoading();showToast('✅ Binance details saved!');
-});
-
 // Helper: send to a specific channel
 window._tgSend = async(chatId, text) => {
   const token = $('tgBotToken').value.trim();
@@ -3926,7 +3622,7 @@ window.testTgBotChannel = async(type) => {
   const token=$('tgBotToken').value.trim();
   if(!token) return showToast('⚠️ Bot Token daalo pehle');
   const map={orders:$('tgChatId'),giftcode:$('tgGiftCodeChatId'),topup:$('tgTopUpChatId'),support:$('tgSupportChatId')};
-  const labels={orders:'📦 Orders',giftcode:'🎁 Gift Code Redeem',topup:'💳 Wallet Top-Up',support:'🎧 Support Message'};
+  const labels={orders:'📦 Orders',giftcode:'🎁 Gift Code Redeem',topup:'💰 Wallet Top-Up',support:'🎧 Support Message'};
   const el=map[type]; if(!el) return;
   const chatId=el.value.trim(); if(!chatId) return showToast('⚠️ Pehle Chat ID daalo');
   showLoading('Sending test...');
@@ -4203,24 +3899,16 @@ window.saveFM=async(id)=>{
   }catch(e){hideLoading();showToast('❌ '+e.message);}
 };
 
-// Keeps the Specification field's suggestion list (in Add/Edit Product) filled
-// with every distinct specification already used anywhere — so instead of a
-// separate management screen, admin gets a native "select or type new" right
-// where they already add/edit a product (e.g. picking "Indian Followers"
-// instead of retyping it for the 8th time).
-window.refreshSpecSuggestions=()=>{
-  const dl=$('specSuggestions');
-  if(!dl)return;
-  const values=new Set();
-  Object.values(globalProducts).forEach(p=>{ if(p.specification&&p.specification.trim())values.add(p.specification.trim()); });
-  dl.innerHTML=Array.from(values).sort((a,b)=>a.localeCompare(b)).map(v=>`<option value="${v.replace(/"/g,'&quot;')}"></option>`).join('');
-};
-
-// ── BANDWIDTH FIX: this used to be a second onValue(ref(db,'products')) listener.
-// Every product create/update/delete anywhere was downloading the entire
-// products tree TWICE (this listener + the one in initData()). Its logic has
-// been merged into the single products listener inside initData(). Nothing
-// else changed — same functions run, in the same order, on the same event. ──
+// Re-render all 3 managers whenever products update
+const _origRenderProducts=window.filterProducts;
+onValue(ref(db,'products'),s=>{
+  if($('simProductList'))renderSIMList();
+  if($('dmProductList'))renderDMList();
+  if($('fmProductList'))renderFMList();
+  // Refresh charts if dashboard is visible
+  const dash=$('dashboardTab');
+  if(dash&&dash.classList.contains('active'))window.refreshDashboardCharts();
+});
 
 // ── BULK APPLY HELPERS ─────────────────────────────────────────────────
 function getSubCategories(cat){
@@ -4335,7 +4023,6 @@ window.applyBulkFM=async()=>{
     hideLoading(); showToast(`✅ Features applied to ${matches.length} products!`);
   }catch(e){hideLoading();showToast('❌ '+e.message);}
 };
-
 // ── CATEGORY MANAGEMENT UI ────────────────────────────────────────────
 function renderCatMgmtUI(){
   const cont=$('catMgmtList'); if(!cont) return;
@@ -4631,7 +4318,7 @@ window.renderRefTransactions = function() {
   cont.innerHTML = transactions.slice(0,50).map(tx => {
     const dateStr = tx.createdAt ? new Date(tx.createdAt).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}) : '—';
     const subtype = tx.subtype || '';
-    const subtypeBadge = subtype === 'signup' ? '<span style="font-size:10px;background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.3);border-radius:4px;padding:1px 6px;font-weight:700;">🎉 Signup</span>' : subtype === 'spend' ? '<span style="font-size:10px;background:rgba(37,99,235,0.1);color:#2563eb;border:1px solid rgba(37,99,235,0.25);border-radius:4px;padding:1px 6px;font-weight:700;">💳 Spend %</span>' : subtype === 'manual' ? '<span style="font-size:10px;background:rgba(245,158,11,0.1);color:#d97706;border:1px solid rgba(245,158,11,0.3);border-radius:4px;padding:1px 6px;font-weight:700;">🎁 Manual</span>' : '';
+    const subtypeBadge = subtype === 'signup' ? '<span style="font-size:10px;background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.3);border-radius:4px;padding:1px 6px;font-weight:700;">🎉 Signup</span>' : subtype === 'spend' ? '<span style="font-size:10px;background:rgba(37,99,235,0.1);color:#2563eb;border:1px solid rgba(37,99,235,0.25);border-radius:4px;padding:1px 6px;font-weight:700;">💰 Spend %</span>' : subtype === 'manual' ? '<span style="font-size:10px;background:rgba(245,158,11,0.1);color:#d97706;border:1px solid rgba(245,158,11,0.3);border-radius:4px;padding:1px 6px;font-weight:700;">🎁 Manual</span>' : '';
     return `<div class="order-card" style="padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
       <div style="flex:1;min-width:0;">
         <div style="font-weight:700;font-size:11px;display:flex;align-items:center;gap:6px;">${tx.userName} ${subtypeBadge}</div>
@@ -4676,39 +4363,37 @@ window.viewUserReferrals = (uid, name) => {
 
 // Referral tab render handled in main switchTab
 
-// ── BANDWIDTH FIX: this used to be its own onValue(ref(db,'users')) listener,
-// which meant every single write anywhere under 'users' downloaded the ENTIRE
-// users tree TWICE (once here, once for the listener at initData()).
-// Converted to a plain function, invoked once from inside the single
-// remaining 'users' listener (see window.renderUsers). Same computation,
-// same output, same triggers — just one network read instead of two. ──
-window.updateReferralDashboardStats = function updateReferralDashboardStats(data) {
-  data = data || {};
-  if(!Object.keys(data).length) return;
-  // Re-compute referral dashboard stats
-  let totalReferrals = 0, totalPaidOut = 0, activeReferrers = 0;
-  const refCounted = {};
-  Object.entries(data).forEach(([id, u]) => {
-    const p = u.profile||{};
-    if(p.referredBy) { totalReferrals++; refCounted[p.referredBy] = true; }
-    totalPaidOut += parseFloat(p.referralEarned||0);
-  });
-  activeReferrers = Object.keys(refCounted).length;
-  const el1=$('dashTotalReferrals'), el2=$('dashTotalRefEarned'), el3=$('dashActiveReferrers');
-  if(el1) el1.textContent = totalReferrals;
-  if(el2) el2.textContent = '₹'+totalPaidOut.toFixed(0);
-  if(el3) el3.textContent = activeReferrers;
-  // Auto re-render referral tab if it's currently active
-  const refTab = $('referralTab') || $('referral');
-  if(refTab && refTab.classList.contains('active')) {
-    window.renderReferralLeaderboard();
-    window.renderRefTransactions();
+// ── Update referral dashboard stats whenever users data loads ──
+onValue(ref(db, 'users'), s => {
+  const data = s.val() || {};
+  // Patch globalUsersData if it's stale (for dashboard stats)
+  if(Object.keys(data).length) {
+    globalUsersData = data;
+    // Re-compute referral dashboard stats
+    let totalReferrals = 0, totalPaidOut = 0, activeReferrers = 0;
+    const refCounted = {};
+    Object.entries(data).forEach(([id, u]) => {
+      const p = u.profile||{};
+      if(p.referredBy) { totalReferrals++; refCounted[p.referredBy] = true; }
+      totalPaidOut += parseFloat(p.referralEarned||0);
+    });
+    activeReferrers = Object.keys(refCounted).length;
+    const el1=$('dashTotalReferrals'), el2=$('dashTotalRefEarned'), el3=$('dashActiveReferrers');
+    if(el1) el1.textContent = totalReferrals;
+    if(el2) el2.textContent = '₹'+totalPaidOut.toFixed(0);
+    if(el3) el3.textContent = activeReferrers;
+    // Auto re-render referral tab if it's currently active
+    const refTab = $('referralTab') || $('referral');
+    if(refTab && refTab.classList.contains('active')) {
+      window.renderReferralLeaderboard();
+      window.renderRefTransactions();
+    }
+    // Rebuild user growth chart on dashboard
+    if(document.getElementById('userGrowthChart')) {
+      buildUserGrowthChart(data);
+    }
   }
-  // Rebuild user growth chart on dashboard
-  if(document.getElementById('userGrowthChart')) {
-    buildUserGrowthChart(data);
-  }
-};
+});
 
 
 </script>
