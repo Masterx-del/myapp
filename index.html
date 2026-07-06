@@ -2324,10 +2324,36 @@ window.saveEstTime=async(id)=>{
   setInterval(runAutoComplete,60000);
 })();
 
+// ── SAFE ORDER TIME (fixes sorting when createdAt is missing/invalid) ──
+// Purane/manual orders mein kabhi kabhi createdAt field nahi hota — us case
+// mein new Date(undefined) "Invalid Date" deta hai jo sort mein sabse upar
+// chala jaata hai (galat). Yahaan Firebase push-ID se hi real creation time
+// decode kar lete hain (push IDs hamesha chronological hote hain), taaki
+// sorting/date-display hamesha sahi rahe.
+const _PUSH_CHARS='-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz';
+function _decodePushTimestamp(id){
+  if(!id||id.length<8)return null;
+  let ts=0;
+  for(let i=0;i<8;i++){
+    const idx=_PUSH_CHARS.indexOf(id.charAt(i));
+    if(idx===-1)return null;
+    ts=ts*64+idx;
+  }
+  return ts>0?ts:null;
+}
+function safeOrderTime(id,o){
+  if(o&&o.createdAt){
+    const t=new Date(o.createdAt).getTime();
+    if(!isNaN(t))return t;
+  }
+  const decoded=_decodePushTimestamp(id);
+  return decoded!==null?decoded:0;
+}
+
 // ── ORDER CARD HTML BUILDER ───────────────────────────────────────────
 function buildOrderCardHTML(id, o) {
   const price=parseFloat(o.finalAmount||0);
-  const oDate=new Date(o.createdAt);
+  const oDate=new Date(safeOrderTime(id,o));
   const status=o.status||'pending';
   const productName=o.productSnapshot?.title||o.productSnapshot?.planName||'N/A';
   const isFreeOrder=price<=0;
@@ -2396,9 +2422,9 @@ function _getFilteredOrders(data) {
   const weekStart=new Date(todayStart-6*86400000);
   if(!data) return [];
   return Object.entries(data)
-    .sort((a,b)=>new Date(b[1].createdAt)-new Date(a[1].createdAt))
+    .sort((a,b)=>safeOrderTime(b[0],b[1])-safeOrderTime(a[0],a[1]))
     .filter(([id,o])=>{
-      const oDate=new Date(o.createdAt);
+      const oDate=new Date(safeOrderTime(id,o));
       const status=o.status||'pending';
       const price=parseFloat(o.finalAmount||0);
       if(mode==='today'&&oDate<todayStart)return false;
@@ -2459,11 +2485,11 @@ function renderOrders(data){
   const productSales={};
   // Stats pass — pure JS, no DOM touch
   if(data){
-    // Pehle createdAt ke hisaab se latest-first sort karo
-    const sorted=Object.entries(data).sort((a,b)=>new Date(b[1].createdAt)-new Date(a[1].createdAt));
+    // Pehle createdAt ke hisaab se latest-first sort karo (safeOrderTime => missing/invalid createdAt wale legacy orders ab galat se top pe nahi jaate)
+    const sorted=Object.entries(data).sort((a,b)=>safeOrderTime(b[0],b[1])-safeOrderTime(a[0],a[1]));
     sorted.forEach(([id,o])=>{
       const price=parseFloat(o.finalAmount||0);
-      const oDate=new Date(o.createdAt);
+      const oDate=new Date(safeOrderTime(id,o));
       const status=o.status||'pending';
       const isToday=oDate.toDateString()===tStr;
       total++;if(isToday)today++;if(status==='pending')pending++;
