@@ -704,6 +704,16 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
     </div>
     <div class="input-group" style="margin-bottom:0;"><label>Link Label <span style="font-weight:400;text-transform:none;">(e.g. "Profile Link")</span></label><input type="text" id="productLinkLabel" placeholder="e.g. Profile Link, Video URL"></div>
   </div>
+  <div class="input-group" style="margin-bottom:0;margin-top:12px;">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-weight:600;">
+      <input type="checkbox" id="productCustomComments" style="width:16px;height:16px;">
+      Custom Comments Service <span style="font-weight:400;">(user pastes link + their own comments, one per line, instead of quantity)</span>
+    </label>
+  </div>
+  <div class="input-group" id="productCommentRatesBox" style="display:none;margin-bottom:0;margin-top:10px;">
+    <label>Comment Rate Tiers <span style="font-weight:400;text-transform:none;">(count:price per line — price auto-scales between/beyond these points as user types)</span></label>
+    <textarea id="productCommentRates" rows="6" placeholder="20:6&#10;50:12&#10;100:20&#10;500:60&#10;1000:100&#10;2000:180" style="width:100%;padding:8px 10px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:'Inter',sans-serif;resize:vertical;"></textarea>
+  </div>
 </div>
 
 <div class="input-group" style="margin-top:4px;"><label>Description <span style="font-weight:400;text-transform:none;">(shown on product card)</span></label><textarea id="productDescription" rows="2" placeholder="e.g., Gradual Delivery · High Quality · Real & Safe" style="width:100%;padding:12px 14px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:'Inter',sans-serif;resize:vertical;"></textarea></div>
@@ -1950,6 +1960,14 @@ window.applyBulkApi=async()=>{
   }catch(e){hideLoading();showToast('❌ Error: '+e.message);}
 };
 
+// ── CUSTOM COMMENTS — show/hide rate tiers box + prefill defaults ─────
+$('productCustomComments').addEventListener('change',function(){
+  $('productCommentRatesBox').style.display=this.checked?'block':'none';
+  if(this.checked && !$('productCommentRates').value.trim()){
+    $('productCommentRates').value='20:6\n50:12\n100:20\n500:60\n1000:100\n2000:180';
+  }
+});
+
 // ── PRODUCTS ─────────────────────────────────────────────────────────
 $('saveProductBtn').addEventListener('click',async()=>{
   const title=$('productTitle').value.trim(),cat=$('productCategory').value,sub=$('productSubCategory').value,price=$('productDiscountPrice').value,avgTime=$('productAvgTime').value.trim();
@@ -1959,10 +1977,15 @@ $('saveProductBtn').addEventListener('click',async()=>{
   const features=$('productFeatures').value.trim().split('\n').map(f=>f.trim()).filter(f=>f.length>0);
   const specification=$('productSpecification').value.trim();
   const displayOrder=parseInt($('productDisplayOrder').value)||0;
+  const customComments=$('productCustomComments').checked;
+  const commentRateTiers=customComments?$('productCommentRates').value.trim().split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{
+    const parts=l.split(':');const count=parseFloat(parts[0]);const p=parseFloat(parts[1]);
+    return {count,price:p};
+  }).filter(t=>t.count>0 && !isNaN(t.price)):[];
   const editId=$('editProductId').value;
   if(!title || price === '') return showToast('⚠️ Title and price are required');
   showLoading();
-  const pData={title,category:cat,subCategory:sub,discountedPrice:price,avgTime:avgTime||'',description:description||'',features,specification:specification||'',apiUrl:apiUrl||'',apiKey:apiKey||'',serviceId:serviceId||'',linkLabel:linkLabel||'',displayOrder,updatedAt:new Date().toISOString()};
+  const pData={title,category:cat,subCategory:sub,discountedPrice:price,avgTime:avgTime||'',description:description||'',features,specification:specification||'',apiUrl:apiUrl||'',apiKey:apiKey||'',serviceId:serviceId||'',linkLabel:linkLabel||'',customComments,commentRateTiers,displayOrder,updatedAt:new Date().toISOString()};
   try{
     if(editId){await update(ref(db,`products/${editId}`),pData);}
     else{pData.createdAt=new Date().toISOString();await push(ref(db,'products'),pData);}
@@ -1971,7 +1994,9 @@ $('saveProductBtn').addEventListener('click',async()=>{
 });
 
 $('clearProductBtn').addEventListener('click',()=>{
-  $('editProductId').value='';$('productFormTitle').textContent='Add Product';['productTitle','productDiscountPrice','productAvgTime','productApiUrl','productApiKey','productServiceId','productLinkLabel','productDescription','productFeatures','productSpecification','productDisplayOrder'].forEach(id=>$(id).value='');
+  $('editProductId').value='';$('productFormTitle').textContent='Add Product';['productTitle','productDiscountPrice','productAvgTime','productApiUrl','productApiKey','productServiceId','productLinkLabel','productDescription','productFeatures','productSpecification','productDisplayOrder','productCommentRates'].forEach(id=>$(id).value='');
+  $('productCustomComments').checked=false;
+  $('productCommentRatesBox').style.display='none';
 });
 
 // ── CSV EXPORT — ALL EXISTING PRODUCTS FROM FIREBASE ─────────────────
@@ -2201,6 +2226,9 @@ window.editProduct=(id)=>{
   $('productFeatures').value=(p.features&&p.features.length)?p.features.join('\n'):'';
   $('productApiUrl').value=p.apiUrl||'';$('productApiKey').value=p.apiKey||'';
   $('productServiceId').value=p.serviceId||'';$('productLinkLabel').value=p.linkLabel||'';
+  $('productCustomComments').checked=!!p.customComments;
+  $('productCommentRatesBox').style.display=p.customComments?'block':'none';
+  $('productCommentRates').value=(p.commentRateTiers&&p.commentRateTiers.length)?p.commentRateTiers.map(t=>`${t.count}:${t.price}`).join('\n'):'';
   $('productSpecification').value=p.specification||'';
   switchTab('products');window.scrollTo(0,0);
 };
@@ -2385,6 +2413,7 @@ function buildOrderCardHTML(id, o) {
   ${o.targetLink4?`<div style="grid-column:1/-1"><span class="order-field">Link 4</span><span onclick="copyToClip('${o.targetLink4}')" class="order-value" style="color:var(--accent-primary);text-decoration:underline;cursor:pointer;word-break:break-all;">${o.targetLink4}</span></div>`:''}
   ${o.targetLink5?`<div style="grid-column:1/-1"><span class="order-field">Link 5</span><span onclick="copyToClip('${o.targetLink5}')" class="order-value" style="color:var(--accent-primary);text-decoration:underline;cursor:pointer;word-break:break-all;">${o.targetLink5}</span></div>`:''}
   ${o.pollOption?`<div style="grid-column:1/-1"><span class="order-field">Poll Vote</span><span class="order-value">${o.pollOption}</span></div>`:''}
+  ${o.customComments?`<div style="grid-column:1/-1"><span class="order-field">Custom Comments</span><span class="order-value" style="white-space:pre-line;">${o.customComments}</span></div>`:''}
   ${o.apiOrderId?`<div style="grid-column:1/-1"><span class="order-field" style="color:#10b981;"><i class="fas fa-robot"></i> API Order ID</span><span class="order-value" style="color:#10b981;font-family:monospace;">${o.apiOrderId}</span></div>`:''}
   ${(o.apiStatus==='error'&&o.apiRawResponse)?`<div style="grid-column:1/-1"><span class="order-field" style="color:var(--accent-danger);"><i class="fas fa-exclamation-circle"></i> API Error</span><span class="order-value" style="color:var(--accent-danger);font-family:monospace;font-size:11px;word-break:break-all;">${o.apiRawResponse}</span></div>`:''}
 </div>
@@ -2622,10 +2651,12 @@ window.updateStatus=async(id,s)=>{
       if(s==='progress'&&!order.isSubscription){
         const snap=order.productSnapshot||{};
         const apiUrl=snap.apiUrl||globalApiConfig.url;const apiKey=snap.apiKey||globalApiConfig.key;
-        const serviceId=snap.serviceId||'';const quantity=snap.quantity||'';
-        if(apiUrl&&apiKey&&serviceId&&quantity&&order.targetLink){
+        const serviceId=snap.serviceId||'';const quantity=snap.quantity||'';const comments=order.customComments||'';
+        if(apiUrl&&apiKey&&serviceId&&(quantity||comments)&&order.targetLink){
           try{
-            const payload=`key=${encodeURIComponent(apiKey)}&action=add&service=${encodeURIComponent(serviceId)}&link=${encodeURIComponent(order.targetLink)}&quantity=${encodeURIComponent(quantity)}`;
+            const payload=comments
+              ? `key=${encodeURIComponent(apiKey)}&action=add&service=${encodeURIComponent(serviceId)}&link=${encodeURIComponent(order.targetLink)}&comments=${encodeURIComponent(comments)}`
+              : `key=${encodeURIComponent(apiKey)}&action=add&service=${encodeURIComponent(serviceId)}&link=${encodeURIComponent(order.targetLink)}&quantity=${encodeURIComponent(quantity)}`;
             const proxies=[
               {url:apiUrl,method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:payload},
               {url:`https://corsproxy.io/?${encodeURIComponent(apiUrl)}`,method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:payload},
