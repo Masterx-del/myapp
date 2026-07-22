@@ -2648,6 +2648,11 @@ window.updateStatus=async(id,s)=>{
         if(s==='completed'){const dur=parseInt(order.productSnapshot?.duration)||0;const st=new Date();const exp=new Date(st.getTime()+dur*86400000);await update(subDbRef,{planName:order.productSnapshot?.planName||'Premium Plan',duration:dur,startDate:st.toISOString(),expiryDate:exp.toISOString(),status:'active',orderId:id});}
         else{await remove(subDbRef);}
       }
+      // ── DISABLED: Auto API order placement on status->progress ──────────
+      // Pehle yahan status 'progress' hote hi provider API pe order place ho
+      // jaata tha. Master ki request pe band kar diya — ab sirf admin dashboard
+      // mein status update hoga, koi API call nahi jaayegi.
+      /*
       if(s==='progress'&&!order.isSubscription){
         const snap=order.productSnapshot||{};
         const apiUrl=snap.apiUrl||globalApiConfig.url;const apiKey=snap.apiKey||globalApiConfig.key;
@@ -2669,6 +2674,7 @@ window.updateStatus=async(id,s)=>{
           }catch(apiErr){showToast('⚠️ API failed: '+apiErr.message);}
         }
       }
+      */
     }
     if(s!=='rejected') showToast('✅ Status updated');
   }catch(e){showToast('❌ '+e.message);}
