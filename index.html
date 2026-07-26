@@ -1250,10 +1250,77 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
     <div style="display:flex;gap:10px;align-items:flex-end;">
       <div class="input-group" style="margin-bottom:0;flex:1;">
         <label>Category Name</label>
-        <input type="text" id="newCatName" placeholder="e.g. Snapchat, Pinterest..." style="font-family:inherit;">
+        <select id="newCatSelect" onchange="window.toggleCustomCatInput()" style="font-family:inherit;width:100%;padding:9px 12px;border:1px solid var(--border-color);border-radius:6px;background:var(--card-bg);color:var(--text-primary);font-size:12px;height:44px;">
+          <option value="">— Select a platform —</option>
+          <optgroup label="Social Media">
+            <option value="Instagram">Instagram</option>
+            <option value="Facebook">Facebook</option>
+            <option value="YouTube">YouTube</option>
+            <option value="TikTok">TikTok</option>
+            <option value="Twitter">Twitter</option>
+            <option value="X">X (Twitter)</option>
+            <option value="Snapchat">Snapchat</option>
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="Pinterest">Pinterest</option>
+            <option value="Reddit">Reddit</option>
+            <option value="Threads">Threads</option>
+            <option value="VK">VK</option>
+            <option value="Weibo">Weibo</option>
+          </optgroup>
+          <optgroup label="Messaging">
+            <option value="Telegram">Telegram</option>
+            <option value="WhatsApp">WhatsApp</option>
+            <option value="Discord">Discord</option>
+            <option value="Skype">Skype</option>
+            <option value="Viber">Viber</option>
+            <option value="WeChat">WeChat</option>
+            <option value="Line">Line</option>
+            <option value="Clubhouse">Clubhouse</option>
+          </optgroup>
+          <optgroup label="Video &amp; Streaming">
+            <option value="Twitch">Twitch</option>
+            <option value="Vimeo">Vimeo</option>
+            <option value="Netflix">Netflix</option>
+            <option value="Likee">Likee</option>
+            <option value="Kwai">Kwai</option>
+            <option value="Bigo Live">Bigo Live</option>
+          </optgroup>
+          <optgroup label="Music &amp; Audio">
+            <option value="Spotify">Spotify</option>
+            <option value="SoundCloud">SoundCloud</option>
+            <option value="Apple Music">Apple Music</option>
+          </optgroup>
+          <optgroup label="Reviews &amp; E-commerce">
+            <option value="Google">Google</option>
+            <option value="Google Play">Google Play</option>
+            <option value="App Store">App Store</option>
+            <option value="Amazon">Amazon</option>
+            <option value="Trustpilot">Trustpilot</option>
+            <option value="Shopify">Shopify</option>
+            <option value="Etsy">Etsy</option>
+            <option value="OnlyFans">OnlyFans</option>
+          </optgroup>
+          <optgroup label="Dev &amp; Creative">
+            <option value="GitHub">GitHub</option>
+            <option value="Behance">Behance</option>
+            <option value="Dribbble">Dribbble</option>
+            <option value="Medium">Medium</option>
+            <option value="WordPress">WordPress</option>
+          </optgroup>
+          <optgroup label="Other">
+            <option value="PayPal">PayPal</option>
+            <option value="Accounts">Accounts</option>
+            <option value="Website Traffic">Website Traffic</option>
+            <option value="SMS">SMS</option>
+            <option value="Email">Email</option>
+          </optgroup>
+          <option value="__custom__">+ Custom (type manually)</option>
+        </select>
+        <input type="text" id="newCatName" placeholder="Type custom category name..." style="font-family:inherit;margin-top:8px;display:none;">
       </div>
       <button class="btn btn-sm btn-success" onclick="addNewCategory()" style="height:44px;white-space:nowrap;"><i class="fas fa-plus"></i> Add Category</button>
     </div>
+    <p style="font-size:11px;color:var(--text-secondary);margin-top:8px;line-height:1.5;"><i class="fas fa-info-circle"></i> Dropdown ke naam user app ke logo se exactly match karte hain — spelling mistake ka chance nahi rehta. Naya/niche platform ho to "+ Custom" chuno.</p>
   </div>
 
   <div style="margin-top:12px;display:flex;gap:10px;">
@@ -1261,6 +1328,18 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
     <button class="btn btn-ghost" onclick="resetCategoryMap()" style="flex:1;"><i class="fas fa-undo"></i> Reset to Default</button>
   </div>
   <p style="font-size:12px;color:var(--text-secondary);margin-top:10px;text-align:center;"><i class="fas fa-info-circle"></i> Changes apply instantly everywhere after saving.</p>
+</div>
+
+<!-- USER APP GRID ORDER CARD -->
+<div class="card" style="border-color:var(--accent-secondary);">
+  <h2 class="card-title"><i class="fas fa-arrows-alt-v" style="color:var(--accent-secondary);"></i> User App — Home Grid Order</h2>
+  <p style="font-size:11px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6;">Control the position of each category tile on the user app's home screen. Use the arrows to move a tile up or down, then Save. This only reorders existing tiles — it does not add or remove any.</p>
+  <div id="gridOrderList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>
+  <div style="display:flex;gap:10px;">
+    <button class="btn btn-success" onclick="saveGridOrder()" style="flex:1;"><i class="fas fa-save"></i> Save Grid Order</button>
+    <button class="btn btn-ghost" onclick="resetGridOrder()" style="flex:1;"><i class="fas fa-undo"></i> Reset to Default</button>
+  </div>
+  <p style="font-size:12px;color:var(--text-secondary);margin-top:10px;text-align:center;"><i class="fas fa-info-circle"></i> Reflects in the user app instantly after saving.</p>
 </div>
 
 <div class="card" style="border-color:var(--accent-danger);"><h2 class="card-title" style="color:var(--accent-danger);"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h2>
@@ -1692,14 +1771,32 @@ function scheduleAutoComplete(ordersData) {
 }
 
 function initData(){
-  // Load category map first so all selects are correct
+  // Load category map + explicit order first so all selects are correct
   get(ref(db,'meta/categoryMap')).then(s=>{
     if(s.exists()&&s.val()&&typeof s.val()==='object'){
       window.CATEGORY_MAP = s.val();
     }
+    return get(ref(db,'meta/categoryOrder'));
+  }).then(orderSnap=>{
+    if(orderSnap && orderSnap.exists && orderSnap.exists() && Array.isArray(orderSnap.val())){
+      window.CATEGORY_ORDER = orderSnap.val();
+    } else {
+      window.CATEGORY_ORDER = Object.keys(window.CATEGORY_MAP);
+    }
+    // Reconcile: drop stale names no longer in the map, append any missing ones at the end
+    window.CATEGORY_ORDER = window.CATEGORY_ORDER.filter(c=>window.CATEGORY_MAP.hasOwnProperty(c));
+    Object.keys(window.CATEGORY_MAP).forEach(c=>{ if(!window.CATEGORY_ORDER.includes(c)) window.CATEGORY_ORDER.push(c); });
     window.populateCategorySelects();
     renderCatMgmtUI();
-  }).catch(()=>{ window.populateCategorySelects(); renderCatMgmtUI(); });
+  }).catch(()=>{ window.CATEGORY_ORDER = Object.keys(window.CATEGORY_MAP); window.populateCategorySelects(); renderCatMgmtUI(); });
+  get(ref(db,'meta/gridOrder')).then(s=>{
+    if(s.exists() && Array.isArray(s.val()) && s.val().length){
+      // Only keep names that still exist in DEFAULT_GRID_ORDER (the static tiles), append any missing default ones at the end
+      window.GRID_ORDER = s.val().filter(c=>DEFAULT_GRID_ORDER.includes(c));
+      DEFAULT_GRID_ORDER.forEach(c=>{ if(!window.GRID_ORDER.includes(c)) window.GRID_ORDER.push(c); });
+    }
+    renderGridOrderUI();
+  }).catch(()=>{ renderGridOrderUI(); });
   onValue(ref(db,'products'),s=>{renderProducts(s.val());buildCategoryChart(globalProducts);});
   onValue(ref(db,'orders'),s=>{globalOrdersData=s.val();renderOrders(globalOrdersData);buildOrdersRevenueChart(globalOrdersData);scheduleAutoComplete(globalOrdersData);});
   onValue(ref(db,'coupons'),s=>renderCoupons(s.val()));
@@ -1717,11 +1814,11 @@ function initData(){
 
 // ── CATEGORY MAP — SINGLE SOURCE OF TRUTH ───────────────────────────────
 const DEFAULT_CATEGORY_MAP = {
-  "Instagram":["Followers","Likes","Reels Views","Comment Likes","Channel Members","Post Views","Story Views","Story Poll Votes","Comments","Reposts","Saves","Shares"],
-  "YouTube":["Subscribers","Views","Likes","Dislikes","Comments","Watch Time Hours","Shares"],
+  "Instagram":["Followers","Likes","Reels Likes","Comment Likes","Subscribers","Post Views","Story Views","Story Poll Votes","Comments","Reposts","Saves","Shares"],
   "Facebook":["Page Likes","Page Followers","Post Likes","Post Shares","Post Comments","Views","Group Members","Profile Followers","Emoji Reactions"],
-  "WhatsApp":["Channel Followers","Channel Reaction"],
   "Telegram":["Channel Members","Group Members","Post Views","Post Reactions","Poll Votes"],
+  "WhatsApp":["Channel Followers","Channel Reaction"],
+  "YouTube":["Subscribers","Views","Likes","Dislikes","Comments","Watch Time Hours","Shares"],
   "TikTok":["Followers","Likes","Views","Comments","Shares"],
   "Twitter":["Followers","Likes","Retweets","Views","Comments"],
   "Snapchat":["Followers","Views","Score"],
@@ -1729,10 +1826,16 @@ const DEFAULT_CATEGORY_MAP = {
   "Other":["Other"]
 };
 window.CATEGORY_MAP = JSON.parse(JSON.stringify(DEFAULT_CATEGORY_MAP));
+// Explicit display order — Firebase Realtime DB does NOT preserve insertion order for
+// object keys (it returns them alphabetically), so order is tracked separately to make sure
+// newly added categories always land at the END instead of jumping around alphabetically.
+window.CATEGORY_ORDER = Object.keys(DEFAULT_CATEGORY_MAP);
 
 // Populate all category <select> elements from CATEGORY_MAP
 window.populateCategorySelects = function() {
-  const cats = Object.keys(window.CATEGORY_MAP);
+  const cats = (window.CATEGORY_ORDER && window.CATEGORY_ORDER.length)
+    ? window.CATEGORY_ORDER.filter(c => window.CATEGORY_MAP.hasOwnProperty(c))
+    : Object.keys(window.CATEGORY_MAP);
   // IDs that need category options (with "All Categories" prefix)
   const filterSelects = ['productCatFilter','qmCatFilter','sortCatFilter'];
   filterSelects.forEach(id => {
@@ -4092,7 +4195,9 @@ window.applyBulkFM=async()=>{
 // ── CATEGORY MANAGEMENT UI ────────────────────────────────────────────
 function renderCatMgmtUI(){
   const cont=$('catMgmtList'); if(!cont) return;
-  const cats = Object.keys(window.CATEGORY_MAP);
+  const cats = (window.CATEGORY_ORDER && window.CATEGORY_ORDER.length)
+    ? window.CATEGORY_ORDER.filter(c => window.CATEGORY_MAP.hasOwnProperty(c))
+    : Object.keys(window.CATEGORY_MAP);
   if(!cats.length){ cont.innerHTML='<p style="color:var(--text-secondary);font-size:11px;">No categories.</p>'; return; }
   cont.innerHTML = cats.map(cat => {
     const subs = window.CATEGORY_MAP[cat];
@@ -4112,21 +4217,34 @@ function renderCatMgmtUI(){
   }).join('');
 }
 
+window.toggleCustomCatInput = () => {
+  const sel = $('newCatSelect'); const inp = $('newCatName');
+  if(!sel || !inp) return;
+  if(sel.value === '__custom__'){ inp.style.display='block'; inp.focus(); }
+  else{ inp.style.display='none'; inp.value=''; }
+};
+
 window.addNewCategory = () => {
-  const name = ($('newCatName').value||'').trim();
-  if(!name) return showToast('⚠️ Enter a category name');
+  const sel = $('newCatSelect');
+  const isCustom = sel && sel.value === '__custom__';
+  const name = (isCustom ? ($('newCatName').value||'') : (sel ? sel.value : ($('newCatName').value||''))).trim();
+  if(!name) return showToast('⚠️ Select a platform or enter a category name');
   if(window.CATEGORY_MAP[name]) return showToast('⚠️ Category already exists');
   window.CATEGORY_MAP[name] = ['Other'];
-  $('newCatName').value = '';
+  if(!window.CATEGORY_ORDER) window.CATEGORY_ORDER = [];
+  window.CATEGORY_ORDER.push(name); // always appended at the end — never reordered alphabetically
+  if(sel) sel.value = '';
+  const customInput = $('newCatName'); if(customInput){ customInput.value=''; customInput.style.display='none'; }
   renderCatMgmtUI();
   window.populateCategorySelects();
-  showToast('✅ Category added — click Save to persist');
+  showToast('✅ Category added at the end — click Save to persist');
 };
 
 window.deleteCategory = async (cat) => {
   const ok = await customConfirm({title:`Remove "${cat}"?`,msg:'All sub-categories will also be removed. Existing products will NOT be deleted.',icon:'🗂️',okLabel:'Remove',danger:true});
   if(!ok) return;
   delete window.CATEGORY_MAP[cat];
+  window.CATEGORY_ORDER = (window.CATEGORY_ORDER||[]).filter(c=>c!==cat);
   renderCatMgmtUI();
   window.populateCategorySelects();
   showToast('✅ Category removed — click Save to persist');
@@ -4155,7 +4273,11 @@ window.deleteSubCategory = (cat, sub) => {
 window.saveCategoryMap = async () => {
   showLoading('Saving categories...');
   try{
+    // Keep CATEGORY_ORDER in sync (drop stale names, append anything missing) before saving
+    window.CATEGORY_ORDER = (window.CATEGORY_ORDER||[]).filter(c=>window.CATEGORY_MAP.hasOwnProperty(c));
+    Object.keys(window.CATEGORY_MAP).forEach(c=>{ if(!window.CATEGORY_ORDER.includes(c)) window.CATEGORY_ORDER.push(c); });
     await set(ref(db,'meta/categoryMap'), window.CATEGORY_MAP);
+    await set(ref(db,'meta/categoryOrder'), window.CATEGORY_ORDER);
     hideLoading(); showToast('✅ Category map saved! All sections updated.');
     window.populateCategorySelects();
   }catch(e){hideLoading();showToast('❌ '+e.message);}
@@ -4165,9 +4287,48 @@ window.resetCategoryMap = async () => {
   const ok = await customConfirm({title:'Reset to Default?',msg:'All custom categories will be removed and defaults will be restored.',icon:'🔄',okLabel:'Reset',danger:true});
   if(!ok) return;
   window.CATEGORY_MAP = JSON.parse(JSON.stringify(DEFAULT_CATEGORY_MAP));
+  window.CATEGORY_ORDER = Object.keys(DEFAULT_CATEGORY_MAP);
   renderCatMgmtUI();
   window.populateCategorySelects();
   showToast('✅ Reset to defaults — click Save to persist');
+};
+
+// ── USER APP HOME GRID ORDER — matches the static tiles in user.html ──
+const DEFAULT_GRID_ORDER = ['Instagram','Facebook','Telegram','WhatsApp','YouTube','TikTok','Twitter','Snapchat','Accounts'];
+window.GRID_ORDER = [...DEFAULT_GRID_ORDER];
+
+function renderGridOrderUI(){
+  const cont = $('gridOrderList'); if(!cont) return;
+  cont.innerHTML = window.GRID_ORDER.map((name, idx) => `
+    <div style="display:flex;align-items:center;gap:10px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;padding:10px 12px;">
+      <span style="font-weight:800;color:var(--accent-secondary);width:20px;text-align:center;">${idx+1}</span>
+      <span style="flex:1;font-weight:600;font-size:12px;">${name}</span>
+      <button class="btn-ghost" onclick="moveGridItem(${idx},-1)" ${idx===0?'disabled':''} style="width:32px;height:32px;padding:0;border:1px solid var(--border-color);border-radius:6px;background:var(--card-bg);color:var(--text-primary);cursor:pointer;"><i class="fas fa-chevron-up"></i></button>
+      <button class="btn-ghost" onclick="moveGridItem(${idx},1)" ${idx===window.GRID_ORDER.length-1?'disabled':''} style="width:32px;height:32px;padding:0;border:1px solid var(--border-color);border-radius:6px;background:var(--card-bg);color:var(--text-primary);cursor:pointer;"><i class="fas fa-chevron-down"></i></button>
+    </div>`).join('');
+}
+
+window.moveGridItem = (idx, dir) => {
+  const newIdx = idx + dir;
+  if(newIdx < 0 || newIdx >= window.GRID_ORDER.length) return;
+  const tmp = window.GRID_ORDER[idx];
+  window.GRID_ORDER[idx] = window.GRID_ORDER[newIdx];
+  window.GRID_ORDER[newIdx] = tmp;
+  renderGridOrderUI();
+};
+
+window.saveGridOrder = async () => {
+  showLoading('Saving grid order...');
+  try{
+    await set(ref(db,'meta/gridOrder'), window.GRID_ORDER);
+    hideLoading(); showToast('✅ Grid order saved! Reflects in user app instantly.');
+  }catch(e){hideLoading(); showToast('❌ '+e.message);}
+};
+
+window.resetGridOrder = () => {
+  window.GRID_ORDER = [...DEFAULT_GRID_ORDER];
+  renderGridOrderUI();
+  showToast('Reset — click Save to persist');
 };
 
 // ── GIFT CODES ────────────────────────────────────────────────────────
