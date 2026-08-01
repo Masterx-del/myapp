@@ -2369,12 +2369,14 @@ function _decodePushTimestamp(id){
   return ts>0?ts:null;
 }
 function safeOrderTime(id,o){
-  // Firebase push IDs are generated using the SDK's server-time-corrected clock
-  // (.info/serverTimeOffset), so they stay correctly chronological even when a
-  // customer's device clock is wrong/skewed. Client-supplied createdAt (built from
-  // the device's own Date.now()) can drift and push a truly-recent order out of
-  // the "All Orders" first page. So prefer the push-ID decoded time, and only
-  // fall back to createdAt for the rare non-standard/legacy ID.
+  // New orders store createdAt via Firebase serverTimestamp(), which resolves to
+  // a NUMBER (ms since epoch) written server-side — fully authoritative and
+  // immune to any customer device clock issues. Trust it directly when present.
+  if(o && typeof o.createdAt === 'number' && !isNaN(o.createdAt)) return o.createdAt;
+  // Legacy orders (old ISO-string createdAt from the device's own clock, which
+  // can drift/be wrong) or orders missing createdAt entirely — fall back to the
+  // push ID's time component, which is server-time-corrected via Firebase's
+  // serverTimeOffset and is far more reliable than a raw device clock string.
   const decoded=_decodePushTimestamp(id);
   if(decoded!==null)return decoded;
   if(o&&o.createdAt){
