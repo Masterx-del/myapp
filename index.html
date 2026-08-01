@@ -1692,6 +1692,7 @@ function initData(){
   onValue(ref(db,'coupons'),s=>renderCoupons(s.val()));
   onValue(ref(db,'exclusivePacks'),s=>{ window._globalExclusivePacks = s.val()||{}; renderExclusivePacks(window._globalExclusivePacks); const count=Object.keys(window._globalExclusivePacks).length; if($('dashTotalSubscriptions')) $('dashTotalSubscriptions').textContent=count; });
   onValue(ref(db,'users'),s=>renderUsers(s.val()));
+  onValue(ref(db,'meta/freeServiceBans'),s=>{ globalFreeServiceBans = s.val()||{}; renderUsers(globalUsersData); });
   onValue(ref(db,'chats'),s=>renderChatUsers(s.val()));
   onValue(ref(db,'meta/brand'),s=>{if(s.exists()){const d=s.val();$('brandName').value=d.name||'';$('brandLogoUrl').value=d.logoUrl||'';if(d.logoUrl){$('drawerLogo').src=d.logoUrl;$('drawerLogo').style.display='block';}if(d.name)$('drawerBrandName').textContent=d.name;}});
   onValue(ref(db,'meta/contact'),s=>{if(s.exists()){const d=s.val();$('contactEmail').value=d.email||'';$('contactTelegram').value=d.socialTelegram||'';}});
@@ -2918,6 +2919,7 @@ window.deleteExclusivePack = async (id) => {
 
 // ── USERS ─────────────────────────────────────────────────────────────
 let globalUsersData = {};
+let globalFreeServiceBans = {};
 window.renderUsers = function renderUsers(data){
   globalUsersData = data || {};
   const searchQ = ($('userSearchInput')?.value||'').toLowerCase();
@@ -2944,9 +2946,11 @@ window.renderUsers = function renderUsers(data){
     const refBadge = refCount>0 ? `<span style="background:rgba(245,158,11,0.1);color:#d97706;border:1px solid rgba(245,158,11,0.3);padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;"><i class="fas fa-user-plus"></i> ${refCount} Referral${refCount>1?'s':''}</span>` : '';
     const refEarnedBadge = parseFloat(refEarned)>0 ? `<span style="background:rgba(16,185,129,0.08);color:#10b981;padding:3px 8px;border-radius:6px;font-weight:600;font-size:11px;">🎁 ₹${refEarned} Earned</span>` : '';
     const referredByBadge = p.referredBy ? `<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;"><i class="fas fa-link" style="margin-right:3px;color:#f59e0b;"></i>Referred by: <code style="font-size:10px;background:var(--input-bg);padding:2px 5px;border-radius:3px;border:1px solid var(--border-color);">${p.referredBy.substring(0,10)}...</code></div>` : '';
+    const isFreeBanned = !!globalFreeServiceBans[id];
+    const freeBanBadge = isFreeBanned ? '<span style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;"><i class="fas fa-ban"></i> Free Blocked</span>' : '';
     html+=`<div class="product-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
-        <div style="font-weight:700;font-size:12px;display:flex;align-items:center;gap:6px;">${name}${isGuest?'<span style="background:rgba(100,116,139,0.12);color:#64748b;border:1px solid rgba(100,116,139,0.3);padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;"><i class="fas fa-user-secret"></i> Guest</span>':''}</div>
+        <div style="font-weight:700;font-size:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${name}${isGuest?'<span style="background:rgba(100,116,139,0.12);color:#64748b;border:1px solid rgba(100,116,139,0.3);padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;"><i class="fas fa-user-secret"></i> Guest</span>':''}${freeBanBadge}</div>
         <div style="font-size:10px;color:var(--text-secondary);text-align:right;">Since ${memberSince}</div>
       </div>
       <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">${email}</div>
@@ -2959,6 +2963,7 @@ window.renderUsers = function renderUsers(data){
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
         <button class="btn-inline-edit" style="flex:1;" onclick="toggleInlineEdit('uie_${id}',this)"><i class="fas fa-wallet"></i> Adjust Wallet</button>
         <button class="btn btn-sm" style="flex:1;" onclick="adminContactUser('${id}','${safeName}')"><i class="fas fa-comment"></i> Chat</button>
+        <button class="btn btn-sm ${isFreeBanned?'btn-success':'btn-danger'}" style="flex:1;" onclick="toggleFreeServiceBan('${id}','${safeName}',${isFreeBanned})" title="${isFreeBanned?'Unblock free services':'Block free services (paid orders still allowed)'}"><i class="fas fa-${isFreeBanned?'unlock':'ban'}"></i> ${isFreeBanned?'Unblock Free':'Block Free'}</button>
         <button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')"><i class="fas fa-trash"></i></button>
       </div>
       <div class="inline-edit-panel" id="uie_${id}">
@@ -2995,6 +3000,16 @@ window.applyInlineWallet=async(uid,currentBal)=>{
 };
 window.filterUsers = () => { renderUsers(globalUsersData); };
 window.deleteUser=async(id)=>{const ok=await customConfirm({title:'Remove User?',msg:'All data for this user will be permanently deleted.',icon:'👤',okLabel:'Remove User',danger:true});if(ok)remove(ref(db,`users/${id}`));};
+window.toggleFreeServiceBan=async(uid,name,currentlyBanned)=>{
+  const ok=await customConfirm(currentlyBanned
+    ? {title:'Unblock Free Services?',msg:`${name} will be able to claim free services again.`,icon:'🔓',okLabel:'Unblock',danger:false}
+    : {title:'Block Free Services?',msg:`${name} will no longer be able to claim free services. Paid purchases are not affected.`,icon:'🚫',okLabel:'Block Free Services',danger:true});
+  if(!ok)return;
+  try{
+    await set(ref(db,`meta/freeServiceBans/${uid}`), currentlyBanned ? null : true);
+    showToast(currentlyBanned ? `✅ ${name} can claim free services again` : `🚫 ${name} blocked from free services`);
+  }catch(e){showToast('❌ '+e.message);}
+};
 
 // ── PAYMENT GATEWAY SETTINGS + BINANCE/PAYPAL DEPOSIT REQUESTS ─────────
 let globalDepositRequests = {};
