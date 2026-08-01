@@ -139,6 +139,30 @@ body { font-family:'Inter',system-ui,-apple-system,sans-serif; background-color:
 .badge-api { background:rgba(16,185,129,0.08); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
 .badge-manual { background:var(--input-bg); color:var(--text-secondary); border:1px solid var(--border-color); }
 
+/* WAVE ORDER CARD */
+.order-card.order-card-wave { padding:0; overflow:hidden; }
+.owave-hero { padding:16px 16px 20px; text-align:center; position:relative; clip-path:ellipse(75% 100% at 50% 0%); color:#fff; }
+.owave-hero.status-pending { background:linear-gradient(135deg,#f59e0b 0%,#fbbf24 100%); }
+.owave-hero.status-progress { background:linear-gradient(135deg,#2563eb 0%,#60a5fa 100%); }
+.owave-hero.status-completed { background:linear-gradient(135deg,#059669 0%,#34d399 100%); }
+.owave-hero.status-rejected { background:linear-gradient(135deg,#ef4444 0%,#f87171 100%); }
+.owave-topline { display:flex; justify-content:space-between; align-items:center; position:relative; }
+.owave-id { font-size:9px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; opacity:.85; }
+.owave-amt { font-size:26px; font-weight:800; margin-top:4px; position:relative; }
+.owave-product { font-size:12px; font-weight:600; opacity:.95; position:relative; }
+.owave-badges { display:flex; justify-content:center; gap:5px; margin-top:8px; flex-wrap:wrap; position:relative; }
+.owave-b1 { background:rgba(255,255,255,0.92); color:#059669; padding:2px 8px; border-radius:6px; font-size:9px; font-weight:700; }
+.owave-b2 { background:rgba(255,255,255,0.2); color:#fff; padding:2px 8px; border-radius:6px; font-size:9px; font-weight:700; }
+.owave-dot { width:5px; height:5px; border-radius:50%; background:#fff; display:inline-block; margin-right:3px; }
+.owave-time { color:var(--text-secondary); font-size:9px; text-align:center; margin:6px 0 4px; }
+.owave-body { padding:0 16px 14px; }
+.owave-row { padding:6px 0; border-bottom:1px solid var(--border-color); }
+.owave-row:last-of-type { border-bottom:none; }
+.owave-label { color:var(--text-secondary); font-size:9px; font-weight:700; letter-spacing:.3px; text-transform:uppercase; display:block; margin-bottom:1px; }
+.owave-value { color:var(--text-primary); font-weight:700; font-size:12px; word-break:break-word; }
+.owave-txid { color:var(--accent-danger); font-family:monospace; cursor:pointer; }
+.owave-lnk { color:var(--accent-primary); text-decoration:underline; word-break:break-all; cursor:pointer; }
+
 /* QUICK ACTIONS */
 .quick-actions { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:20px; }
 .quick-action-btn { background:var(--card-bg); border:1px solid var(--border-color); padding:16px; border-radius:12px; text-align:center; cursor:pointer; transition:var(--transition); color:var(--text-primary); box-shadow:var(--shadow); }
@@ -2393,55 +2417,57 @@ function buildOrderCardHTML(id, o) {
   const status=o.status||'pending';
   const productName=o.productSnapshot?.title||o.productSnapshot?.planName||'N/A';
   const isFreeOrder=price<=0;
-  const freeBadge=isFreeOrder?`<span class="badge" style="background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.3);margin-left:4px;">🆓 FREE</span>`:'';
-  const statusBadge={pending:`<span class="badge badge-pending">⏳ Pending</span>`,progress:`<span class="badge badge-progress">⚙️ In Progress</span>`,completed:`<span class="badge badge-completed">✅ Completed</span>`,rejected:`<span class="badge badge-rejected">❌ Rejected</span>`}[status]||'';
-  return `<div class="order-card border-${status}">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-  <div style="display:flex;align-items:center;gap:8px;">
-    <input type="checkbox" class="order-bulk-check" value="${id}" style="width:16px;height:16px;accent-color:var(--accent-primary);display:none;" onchange="updateBulkCount()">
-    <span style="font-size:11px;font-weight:700;color:var(--accent-primary);">#${id.slice(-6).toUpperCase()}</span>
-    <button onclick="copyToClip('${id.slice(-6).toUpperCase()}')" title="Copy Order ID" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:11px;padding:2px 4px;border-radius:4px;" onmouseover="this.style.color='var(--accent-primary)'" onmouseout="this.style.color='var(--text-secondary)'"><i class="fas fa-copy"></i></button>
-    ${o.isSubscription?'<span class="badge badge-manual" style="margin-left:2px;font-size:10px;">SUB</span>':''}
-    ${o.apiOrderId?`<span class="badge badge-api" style="margin-left:2px;font-size:10px;"><i class="fas fa-robot"></i> API#${o.apiOrderId}</span>`:''}
-    ${freeBadge}
+  const freeBadge=isFreeOrder?`<span class="owave-b1">🆓 FREE</span>`:'';
+  const statusBadge={pending:`<span class="owave-b2"><span class="owave-dot"></span>⏳ Pending</span>`,progress:`<span class="owave-b2"><span class="owave-dot"></span>⚙️ In Progress</span>`,completed:`<span class="owave-b2"><span class="owave-dot"></span>✅ Completed</span>`,rejected:`<span class="owave-b2"><span class="owave-dot"></span>❌ Rejected</span>`}[status]||'';
+  return `<div class="order-card order-card-wave border-${status}">
+<div class="owave-hero status-${status}">
+  <div class="owave-topline">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <input type="checkbox" class="order-bulk-check" value="${id}" style="width:16px;height:16px;accent-color:#fff;display:none;" onchange="updateBulkCount()">
+      <span class="owave-id">#${id.slice(-6).toUpperCase()}</span>
+      <button onclick="copyToClip('${id.slice(-6).toUpperCase()}')" title="Copy Order ID" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.85);font-size:11px;padding:2px 4px;"><i class="fas fa-copy"></i></button>
+    </div>
+    <span style="font-size:9px;color:rgba(255,255,255,0.75);">${oDate.toLocaleDateString()} ${oDate.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;">
+  <div class="owave-amt">₹${price}</div>
+  <div class="owave-product">${productName}</div>
+  <div class="owave-badges">
     ${statusBadge}
-    <span style="font-size:11px;color:var(--text-secondary);">${oDate.toLocaleDateString()} ${oDate.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+    ${freeBadge}
+    ${o.isSubscription?'<span class="owave-b2">SUB</span>':''}
+    ${o.apiOrderId?`<span class="owave-b2"><i class="fas fa-robot"></i> API#${o.apiOrderId}</span>`:''}
   </div>
 </div>
-<div class="order-info">
-  <div><span class="order-field">Product</span><span class="order-value">${productName}</span></div>
-  <div><span class="order-field">Amount</span><span class="order-value" style="color:var(--accent-success);font-weight:700;">₹${price}</span></div>
-  <div><span class="order-field">User</span><span class="order-value">${o.userName||o.userEmail||'N/A'}</span></div>
-  <div><span class="order-field">User Email</span><span class="order-value">${o.userEmail||'N/A'}</span></div>
-  <div><span class="order-field">UTR / TxID</span><span class="order-value" style="color:var(--accent-danger);font-family:monospace;cursor:pointer;" onclick="copyToClip('${o.utrId||''}')" title="Click to copy">${o.utrId||'N/A'} ${o.utrId?'<i class="fas fa-copy" style="font-size:10px;opacity:0.5;"></i>':''}</span></div>
-  ${o.targetLink?`<div style="grid-column:1/-1"><span class="order-field">Link / Username</span><span onclick="copyToClip('${o.targetLink}')" class="order-value" style="color:var(--accent-primary);text-decoration:underline;cursor:pointer;word-break:break-all;">${o.targetLink} <i class="fas fa-copy" style="font-size:11px;opacity:0.6;"></i></span></div>`:''}
-  ${o.targetLink2?`<div style="grid-column:1/-1"><span class="order-field">Link 2</span><span onclick="copyToClip('${o.targetLink2}')" class="order-value" style="color:var(--accent-primary);text-decoration:underline;cursor:pointer;word-break:break-all;">${o.targetLink2}</span></div>`:''}
-  ${o.targetLink3?`<div style="grid-column:1/-1"><span class="order-field">Link 3</span><span onclick="copyToClip('${o.targetLink3}')" class="order-value" style="color:var(--accent-primary);text-decoration:underline;cursor:pointer;word-break:break-all;">${o.targetLink3}</span></div>`:''}
-  ${o.targetLink4?`<div style="grid-column:1/-1"><span class="order-field">Link 4</span><span onclick="copyToClip('${o.targetLink4}')" class="order-value" style="color:var(--accent-primary);text-decoration:underline;cursor:pointer;word-break:break-all;">${o.targetLink4}</span></div>`:''}
-  ${o.targetLink5?`<div style="grid-column:1/-1"><span class="order-field">Link 5</span><span onclick="copyToClip('${o.targetLink5}')" class="order-value" style="color:var(--accent-primary);text-decoration:underline;cursor:pointer;word-break:break-all;">${o.targetLink5}</span></div>`:''}
-  ${o.pollOption?`<div style="grid-column:1/-1"><span class="order-field">Poll Vote</span><span class="order-value">${o.pollOption}</span></div>`:''}
-  ${o.customComments?`<div style="grid-column:1/-1"><span class="order-field">Custom Comments</span><span class="order-value" style="white-space:pre-line;">${o.customComments}</span></div>`:''}
-  ${o.apiOrderId?`<div style="grid-column:1/-1"><span class="order-field" style="color:#10b981;"><i class="fas fa-robot"></i> API Order ID</span><span class="order-value" style="color:#10b981;font-family:monospace;">${o.apiOrderId}</span></div>`:''}
-  ${(o.apiStatus==='error'&&o.apiRawResponse)?`<div style="grid-column:1/-1"><span class="order-field" style="color:var(--accent-danger);"><i class="fas fa-exclamation-circle"></i> API Error</span><span class="order-value" style="color:var(--accent-danger);font-family:monospace;font-size:11px;word-break:break-all;">${o.apiRawResponse}</span></div>`:''}
-</div>
-<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center;">
-  ${status==='pending'?`<button class="btn btn-sm btn-success" onclick="updateStatus('${id}','progress')" style="flex:1;"><i class="fas fa-play"></i> Accept</button>`:''}
-  ${status==='progress'?`<button class="btn btn-sm btn-success" onclick="updateStatus('${id}','completed')" style="flex:1;"><i class="fas fa-check"></i> Complete</button>`:''}
-  ${(status==='pending'||status==='progress')?`<button class="btn btn-sm btn-danger" onclick="confirmReject('${id}')" style="flex:1;"><i class="fas fa-times"></i> Reject</button>`:''}
-  <select style="padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:11px;flex:1;min-width:120px;font-family:inherit;" onchange="confirmStatusChange('${id}',this.value,'${status}',this)">
-    <option value="" disabled selected style="display:none;">⚡ Change Status</option>
-    <option value="pending">⏳ Pending</option>
-    <option value="progress">⚙️ In Progress</option>
-    <option value="completed">✅ Completed</option>
-    <option value="rejected">❌ Rejected</option>
-  </select>
-</div>
-<div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
-  <input type="text" id="estTimeInput_${id}" value="${o.estTime||''}" placeholder="Est. time (e.g. 30 Min, 1 Hr)" style="flex:1;padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:11px;font-family:inherit;">
-  <button class="btn btn-sm" style="width:auto;padding:0 16px;" onclick="saveEstTime('${id}')">⏱ Set</button>
-  <button class="btn btn-sm btn-danger" onclick="deleteOrder('${id}')" title="Delete Order"><i class="fas fa-trash"></i></button>
+<div class="owave-body">
+  <div class="owave-row"><span class="owave-label">User</span><span class="owave-value">${o.userName||o.userEmail||'N/A'}</span></div>
+  <div class="owave-row"><span class="owave-label">User Email</span><span class="owave-value">${o.userEmail||'N/A'}</span></div>
+  <div class="owave-row"><span class="owave-label">UTR / TxID</span><span class="owave-value owave-txid" onclick="copyToClip('${o.utrId||''}')" title="Click to copy">${o.utrId||'N/A'} ${o.utrId?'<i class="fas fa-copy" style="font-size:10px;opacity:0.5;"></i>':''}</span></div>
+  ${o.targetLink?`<div class="owave-row"><span class="owave-label">Link / Username</span><span onclick="copyToClip('${o.targetLink}')" class="owave-value owave-lnk">${o.targetLink} <i class="fas fa-copy" style="font-size:11px;opacity:0.6;"></i></span></div>`:''}
+  ${o.targetLink2?`<div class="owave-row"><span class="owave-label">Link 2</span><span onclick="copyToClip('${o.targetLink2}')" class="owave-value owave-lnk">${o.targetLink2}</span></div>`:''}
+  ${o.targetLink3?`<div class="owave-row"><span class="owave-label">Link 3</span><span onclick="copyToClip('${o.targetLink3}')" class="owave-value owave-lnk">${o.targetLink3}</span></div>`:''}
+  ${o.targetLink4?`<div class="owave-row"><span class="owave-label">Link 4</span><span onclick="copyToClip('${o.targetLink4}')" class="owave-value owave-lnk">${o.targetLink4}</span></div>`:''}
+  ${o.targetLink5?`<div class="owave-row"><span class="owave-label">Link 5</span><span onclick="copyToClip('${o.targetLink5}')" class="owave-value owave-lnk">${o.targetLink5}</span></div>`:''}
+  ${o.pollOption?`<div class="owave-row"><span class="owave-label">Poll Vote</span><span class="owave-value">${o.pollOption}</span></div>`:''}
+  ${o.customComments?`<div class="owave-row"><span class="owave-label">Custom Comments</span><span class="owave-value" style="white-space:pre-line;">${o.customComments}</span></div>`:''}
+  ${o.apiOrderId?`<div class="owave-row"><span class="owave-label" style="color:#10b981;"><i class="fas fa-robot"></i> API Order ID</span><span class="owave-value" style="color:#10b981;font-family:monospace;">${o.apiOrderId}</span></div>`:''}
+  ${(o.apiStatus==='error'&&o.apiRawResponse)?`<div class="owave-row"><span class="owave-label" style="color:var(--accent-danger);"><i class="fas fa-exclamation-circle"></i> API Error</span><span class="owave-value" style="color:var(--accent-danger);font-family:monospace;font-size:11px;word-break:break-all;">${o.apiRawResponse}</span></div>`:''}
+  <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center;">
+    ${status==='pending'?`<button class="btn btn-sm btn-success" onclick="updateStatus('${id}','progress')" style="flex:1;"><i class="fas fa-play"></i> Accept</button>`:''}
+    ${status==='progress'?`<button class="btn btn-sm btn-success" onclick="updateStatus('${id}','completed')" style="flex:1;"><i class="fas fa-check"></i> Complete</button>`:''}
+    ${(status==='pending'||status==='progress')?`<button class="btn btn-sm btn-danger" onclick="confirmReject('${id}')" style="flex:1;"><i class="fas fa-times"></i> Reject</button>`:''}
+    <select style="padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:11px;flex:1;min-width:120px;font-family:inherit;" onchange="confirmStatusChange('${id}',this.value,'${status}',this)">
+      <option value="" disabled selected style="display:none;">⚡ Change Status</option>
+      <option value="pending">⏳ Pending</option>
+      <option value="progress">⚙️ In Progress</option>
+      <option value="completed">✅ Completed</option>
+      <option value="rejected">❌ Rejected</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+    <input type="text" id="estTimeInput_${id}" value="${o.estTime||''}" placeholder="Est. time (e.g. 30 Min, 1 Hr)" style="flex:1;padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:11px;font-family:inherit;">
+    <button class="btn btn-sm" style="width:auto;padding:0 16px;" onclick="saveEstTime('${id}')">⏱ Set</button>
+    <button class="btn btn-sm btn-danger" onclick="deleteOrder('${id}')" title="Delete Order"><i class="fas fa-trash"></i></button>
+  </div>
 </div></div>`;
 }
 
