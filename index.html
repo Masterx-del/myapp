@@ -3042,7 +3042,86 @@ window.toggleFreeServiceHidden = async (uid, currentlyHidden) => {
   }catch(e){hideLoading();showToast('❌ '+e.message);}
 };
 window.filterUsers = () => { renderUsers(globalUsersData); };
-window.deleteUser=async(id)=>{const ok=await customConfirm({title:'Remove User?',msg:'All data for this user will be permanently deleted.',icon:'👤',okLabel:'Remove User',danger:true});if(ok)remove(ref(db,`users/${id}`));};
+// ── FULL ACCOUNT DELETE — wipes the account and every trace of it from the DB ──
+// (profile/wallet/anon accounts alike; works for Guest accounts too since they
+// live under users/{uid} exactly the same way as regular accounts).
+// NOTE ON FIREBASE AUTH: this removes everything from the Realtime Database, but
+// it can NOT delete the underlying Firebase Authentication login record — the
+// client SDK has no permission to delete another user's auth account (only a
+// user can delete themselves, or an Admin SDK / Cloud Function can, server-side).
+// So after this runs, the email/Google/PIN login itself still technically exists
+// in Firebase Auth (just with zero data behind it) unless you also remove it from
+// Authentication → Users in the Firebase Console, or wire up the Cloud Function
+// noted below. Anonymous/Guest accounts are harmless to leave behind in Auth —
+// they have no email/password, can never be used to log back in as "that" user,
+// and Firebase auto-purges long-inactive anonymous auth records over time.
+window.deleteUser = async (id) => {
+  const ok = await customConfirm({
+    title: 'Permanently Delete Account?',
+    msg: 'This removes the account and every trace of it — profile, wallet history, redeemed codes, orders, deposit requests, chat thread, and username — from the database. This CANNOT be undone.',
+    icon: '🗑️',
+    okLabel: 'Delete Everything',
+    danger: true
+  });
+  if (!ok) return;
+  showLoading();
+  try {
+    // Read the profile FIRST — need the username (reverse mapping) before it's gone.
+    const profSnap = await get(ref(db, `users/${id}/profile`));
+    const p = profSnap.exists() ? profSnap.val() : {};
+
+    const deletions = [];
+
+    // 1) The user's entire tree — profile, walletHistory, freeServiceUsed,
+    //    redeemedGiftCodes, pendingVerification, pendingCryptoDeposit, everything.
+    deletions.push(remove(ref(db, `users/${id}`)));
+
+    // 2) Reverse username → uid mapping (frees the username up for reuse)
+    if (p.username) deletions.push(remove(ref(db, `usernames/${p.username}`)));
+
+    // 3) Chat thread with this user
+    deletions.push(remove(ref(db, `chats/${id}`)));
+
+    // 4) Admin flag — never leave a stale admin entry behind for a deleted account
+    deletions.push(remove(ref(db, `meta/admins/${id}`)));
+
+    // 5) Every order this user placed
+    const ordersSnap = await get(query(ref(db, 'orders'), orderByChild('userId'), equalTo(id)));
+    if (ordersSnap.exists()) ordersSnap.forEach(o => deletions.push(remove(ref(db, `orders/${o.key}`))));
+
+    // 6) Every deposit/top-up request filed by this user
+    const depSnap = await get(query(ref(db, 'depositRequests'), orderByChild('userId'), equalTo(id)));
+    if (depSnap.exists()) depSnap.forEach(o => deletions.push(remove(ref(db, `depositRequests/${o.key}`))));
+
+    // 7) Crypto pending orders belonging to this user (no index on userId — small live
+    //    set, so a plain scan is fine; avoids requiring a new .indexOn rules change)
+    const cryptoSnap = await get(ref(db, 'cryptoPendingOrders'));
+    if (cryptoSnap.exists()) cryptoSnap.forEach(o => { if (o.val()?.userId === id) deletions.push(remove(ref(db, `cryptoPendingOrders/${o.key}`))); });
+
+    // 8) Clear dangling "referredBy" pointers on anyone this user had referred,
+    //    so no other account is left pointing at a uid that no longer exists.
+    const referredSnap = await get(query(ref(db, 'users'), orderByChild('profile/referredBy'), equalTo(id)));
+    if (referredSnap.exists()) referredSnap.forEach(u => deletions.push(update(ref(db, `users/${u.key}/profile`), { referredBy: null })));
+
+    await Promise.all(deletions);
+
+    // NOTE: this does NOT delete the Firebase Authentication login record itself
+    // (email/Google/PIN) — that needs the Admin SDK server-side (Cloud Functions,
+    // which requires the paid Blaze plan), so it's intentionally left out here.
+    // The account is left with zero data and can't be used to log in and see
+    // anything; if you ever want the login itself gone too (e.g. to free up that
+    // exact email for reuse), remove it manually: Firebase Console → Authentication
+    // → Users → search the email → delete. Not needed for guest/anonymous accounts.
+
+    hideLoading();
+    showToast('✅ Account & all related data permanently deleted', 3500);
+    const uSnap = await get(ref(db, 'users'));
+    renderUsers(uSnap.exists() ? uSnap.val() : {});
+  } catch (e) {
+    hideLoading();
+    showToast('❌ ' + e.message);
+  }
+};
 
 // ── PAYMENT GATEWAY SETTINGS + BINANCE/PAYPAL DEPOSIT REQUESTS ─────────
 let globalDepositRequests = {};
