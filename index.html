@@ -2986,15 +2986,16 @@ window.renderUsers = function renderUsers(data){
     // Per-service free bans (duplicate-link abuse) — admin is the ONLY way to clear these
     const svcBans = u.freeServiceBans || {};
     const svcBanIds = Object.keys(svcBans).filter(pid => svcBans[pid]);
-    const svcBansHtml = svcBanIds.length ? `<div style="margin-top:8px;padding:10px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.25);border-radius:8px;">
-        <div style="font-size:11px;font-weight:700;color:#ef4444;margin-bottom:6px;"><i class="fas fa-ban"></i> Free Service Banned (Duplicate Link)</div>
+    const svcBansHtml = svcBanIds.length ? `<div class="inline-edit-panel" id="svb_${id}">
+        <div style="font-size:11px;font-weight:700;color:#ef4444;margin-bottom:8px;"><i class="fas fa-ban"></i> Restricted Free Services</div>
         ${svcBanIds.map(pid => {
           const svcTitle = (globalProducts[pid] && globalProducts[pid].title) || 'Deleted / Unknown Service';
           const banMeta = svcBans[pid];
           const usedLink = (banMeta && typeof banMeta === 'object' && banMeta.link) ? banMeta.link : '';
           const shortLink = usedLink.length > 34 ? usedLink.slice(0,34)+'…' : usedLink;
-          return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;margin-bottom:5px;">
-            <span style="color:var(--text-secondary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${usedLink.replace(/"/g,'&quot;')}">${svcTitle}${shortLink?` <span style="opacity:0.65;">(${shortLink})</span>`:''}</span>
+          const banReason = (banMeta && typeof banMeta === 'object' && banMeta.reason === 'cooldown_bypass_attempt') ? 'Cooldown Bypass Attempt' : 'Duplicate Link';
+          return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border-color);">
+            <span style="color:var(--text-secondary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${usedLink.replace(/"/g,'&quot;')}">${svcTitle} <span style="opacity:0.7;font-weight:600;">[${banReason}]</span>${shortLink?` <span style="opacity:0.65;">(${shortLink})</span>`:''}</span>
             <button class="btn btn-sm" style="width:auto;flex-shrink:0;padding:3px 10px;background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.3);" onclick="unbanFreeService('${id}','${pid}')"><i class="fas fa-undo"></i> Unban</button>
           </div>`;
         }).join('')}
@@ -3014,6 +3015,7 @@ window.renderUsers = function renderUsers(data){
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
         <button class="btn-inline-edit" style="flex:1;" onclick="toggleInlineEdit('uie_${id}',this)"><i class="fas fa-wallet"></i> Adjust Wallet</button>
         <button class="btn btn-sm" style="flex:1;" onclick="adminContactUser('${id}','${safeName}')"><i class="fas fa-comment"></i> Chat</button>
+        ${svcBanIds.length ? `<button class="btn btn-sm" style="width:auto;position:relative;background:rgba(239,68,68,0.08);color:#ef4444;border:1px solid rgba(239,68,68,0.3);" title="Restricted Free Services" onclick="toggleInlineEdit('svb_${id}',this)"><i class="fas fa-ellipsis-v"></i><span style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;padding:0 3px;">${svcBanIds.length}</span></button>` : ''}
         <button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')"><i class="fas fa-trash"></i></button>
       </div>
       <div style="margin-top:8px;">
