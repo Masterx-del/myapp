@@ -108,6 +108,12 @@ body { font-family:'Inter',system-ui,-apple-system,sans-serif; background-color:
 .stat-value { font-size:11px; font-weight:800; color:var(--accent-primary); margin-bottom:6px; letter-spacing:-0.5px; }
 .stat-label { font-size:11px; color:var(--text-secondary); text-transform:uppercase; font-weight:600; letter-spacing:0.5px; }
 
+/* KPI + CHART MINI BOX (Last 7 Days card) */
+.kpi-mini-row { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin:0 0 20px; }
+.kpi-mini-box { background:var(--input-bg); border-radius:14px; padding:26px 16px; text-align:center; }
+.kpi-mini-value { font-size:30px; font-weight:800; letter-spacing:-0.5px; margin-bottom:6px; }
+.kpi-mini-label { font-size:11px; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:0.8px; }
+
 .input-group { margin-bottom:10px; }
 .input-group label { display:block; margin-bottom:5px; font-size:10px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px; }
 .input-group input, .input-group textarea, .input-group select { width:100%; padding:8px 10px; background:var(--input-bg); border:1px solid var(--border-color); border-radius:8px; color:var(--text-primary); font-size:12px; transition:var(--transition); font-family:'Inter',sans-serif; }
@@ -667,6 +673,10 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
 <!-- CHARTS ROW -->
 <div class="card">
 <h2 class="card-title"><i class="fas fa-chart-bar" style="color:var(--accent-primary);"></i> Last 7 Days — Orders & Revenue</h2>
+<div class="kpi-mini-row">
+  <div class="kpi-mini-box"><div class="kpi-mini-value" id="dashWeekPaidOrders" style="color:var(--accent-primary);">0</div><div class="kpi-mini-label">Orders</div></div>
+  <div class="kpi-mini-box"><div class="kpi-mini-value" id="dashWeekPaidRevenue" style="color:var(--accent-success);">₹0</div><div class="kpi-mini-label">Revenue</div></div>
+</div>
 <div class="chart-wrap" style="height:220px;"><canvas id="ordersRevenueChart"></canvas></div>
 </div>
 
@@ -3940,76 +3950,65 @@ function getChartColors(isDark){
 
 function buildOrdersRevenueChart(orders){
   const ctx=document.getElementById('ordersRevenueChart');if(!ctx)return;
-  if(_chartOrdersRevenue){_chartOrdersRevenue.destroy();}
-  const labels=[],orderCounts=[],revenues=[];
-  for(let i=6;i>=0;i--){
-    const d=new Date();d.setDate(d.getDate()-i);
-    labels.push(d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric'}));
-    let cnt=0,rev=0;
-    if(orders)Object.values(orders).forEach(o=>{
-      if(!o.createdAt)return;
-      if(o.type==='wallet_topup')return; // wallet fund-add revenue/orders mein count nahi hota
-      if(new Date(o.createdAt).toDateString()===d.toDateString()){
-        cnt++;
-        if((o.status||'pending')==='completed')rev+=parseFloat(o.finalAmount||0); // sirf completed orders hi revenue
+  try{
+    if(_chartOrdersRevenue){_chartOrdersRevenue.destroy();}
+    const labels=[],paidOrderCounts=[],paidRevenues=[];
+    let totalPaidOrders=0,totalPaidRevenue=0;
+    for(let i=6;i>=0;i--){
+      const d=new Date();d.setDate(d.getDate()-i);
+      labels.push(d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric'}));
+      let cnt=0,rev=0;
+      if(orders)Object.entries(orders).forEach(([id,o])=>{
+        if(o.type==='wallet_topup')return; // wallet fund-add paid orders/revenue mein count nahi hota
+        const amt=parseFloat(o.finalAmount||0);
+        if(amt<=0)return; // sirf PAID orders — free orders (amount<=0) dono metrics se exclude
+        const t=safeOrderTime(id,o);if(!t)return;
+        const oDate=new Date(t);
+        if(oDate.toDateString()===d.toDateString()){
+          cnt++; // order placed us din — status kuch bhi ho (Total Orders/Today's Orders jaisa hi convention)
+          if((o.status||'pending')==='completed')rev+=amt; // sirf completed orders ka hi revenue (This Week/Today's Revenue jaisa hi convention)
+        }
+      });
+      paidOrderCounts.push(cnt);
+      paidRevenues.push(parseFloat(rev.toFixed(2)));
+      totalPaidOrders+=cnt;
+      totalPaidRevenue+=rev;
+    }
+    const kpiOrdersEl=$('dashWeekPaidOrders');if(kpiOrdersEl)kpiOrdersEl.textContent=totalPaidOrders;
+    const kpiRevEl=$('dashWeekPaidRevenue');if(kpiRevEl)kpiRevEl.textContent='₹'+totalPaidRevenue.toFixed(0);
+
+    const dark=document.body.classList.contains('dark-mode');
+    const c=getChartColors(dark);
+    _chartOrdersRevenue=new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels,
+        datasets:[{
+          label:'Paid Orders',
+          data:paidOrderCounts,
+          backgroundColor:'#2563eb',
+          borderRadius:8,
+          maxBarThickness:48,
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{
+            label:ctx=>ctx.parsed.y+' paid orders',
+            afterLabel:ctx=>'₹'+paidRevenues[ctx.dataIndex]+' revenue'
+          }}
+        },
+        scales:{
+          y:{beginAtZero:true,ticks:{display:false},grid:{display:false},border:{display:false}},
+          x:{ticks:{color:c.text},grid:{display:false},border:{display:false}}
+        }
       }
     });
-    orderCounts.push(cnt);
-    revenues.push(parseFloat(rev.toFixed(2)));
+  }catch(e){
+    showToast('❌ Chart load error: '+e.message);
   }
-  const dark=document.body.classList.contains('dark-mode');
-  const c=getChartColors(dark);
-  _chartOrdersRevenue=new Chart(ctx,{
-    type:'line',
-    data:{
-      labels,
-      datasets:[
-        {
-          label:'Orders',
-          data:orderCounts,
-          borderColor:'#2563eb',
-          backgroundColor:'rgba(37,99,235,0.08)',
-          fill:true,
-          tension:0.4,
-          pointBackgroundColor:'#2563eb',
-          pointRadius:4,
-          pointHoverRadius:7,
-          borderWidth:2.5,
-          yAxisID:'y',
-        },
-        {
-          label:'Revenue (₹)',
-          data:revenues,
-          borderColor:'#10b981',
-          backgroundColor:'rgba(16,185,129,0.08)',
-          fill:true,
-          tension:0.4,
-          pointBackgroundColor:'#10b981',
-          pointRadius:4,
-          pointHoverRadius:7,
-          borderWidth:2.5,
-          yAxisID:'y1',
-        }
-      ]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{
-          display:true,
-          position:'top',
-          labels:{color:c.text,font:{size:12},padding:14,usePointStyle:true}
-        },
-        tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===1?'₹'+ctx.parsed.y:ctx.parsed.y+' orders'}}
-      },
-      scales:{
-        y:{beginAtZero:true,position:'left',ticks:{color:c.text,stepSize:1},grid:{color:c.grid},title:{display:true,text:'Orders',color:c.text,font:{size:11}}},
-        y1:{beginAtZero:true,position:'right',ticks:{color:c.text,callback:v=>'₹'+v},grid:{drawOnChartArea:false},title:{display:true,text:'Revenue (₹)',color:c.text,font:{size:11}}},
-        x:{ticks:{color:c.text},grid:{display:false}}
-      }
-    }
-  });
 }
 
 function buildUserGrowthChart(users){
