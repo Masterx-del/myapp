@@ -327,10 +327,6 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
 .recent-order-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 
 /* ── SORT MANAGER ── */
-.sort-row { user-select:none; }
-.sort-row:hover { border-color:var(--accent-primary)!important; box-shadow:0 2px 8px rgba(37,99,235,0.1); }
-.sort-row.dragging { opacity:0.4; border:2px dashed var(--accent-primary)!important; }
-.sort-row.drag-over { border-color:var(--accent-success)!important; background:rgba(16,185,129,0.05)!important; }
 
 /* ── TOP PRODUCTS ── */
 .top-product-row { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--border-color); font-size:11px; }
@@ -453,7 +449,7 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
   <div class="drawer-nav-item" data-tab="serviceIdMgmt"><i class="fas fa-hashtag" style="width:18px;text-align:center;"></i> Service ID Management</div>
   <div class="drawer-nav-item" data-tab="descMgmt"><i class="fas fa-align-left" style="width:18px;text-align:center;"></i> Description Management</div>
   <div class="drawer-nav-item" data-tab="featureMgmt"><i class="fas fa-list-check" style="width:18px;text-align:center;"></i> Feature Management</div>
-  <div class="drawer-nav-item" data-tab="sortMgmt"><i class="fas fa-sort-numeric-down" style="width:18px;text-align:center;"></i> Display Order / Rank</div>
+  <div class="drawer-nav-item" data-tab="freeRestrictMgmt"><i class="fas fa-ban" style="width:18px;text-align:center;color:#ef4444;"></i> Free Service Restrictions</div>
 
   <div class="nav-divider"></div>
   <!-- API & AUTOMATION -->
@@ -709,7 +705,13 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
   <div class="input-group"><label>Price (₹) <span style="font-weight:400;text-transform:none;">(Put 0 for Free Daily)</span></label><input type="number" id="productDiscountPrice" placeholder="e.g., 99 or 0"></div>
   <div class="input-group"><label>Avg Delivery Time</label><input type="text" id="productAvgTime" placeholder="e.g., 16 Min, 1 Hr"></div>
-  <div class="input-group"><label>Display Order <span style="font-weight:400;text-transform:none;">(rank in app)</span></label><input type="number" id="productDisplayOrder" placeholder="e.g., 1, 2, 3..." min="1"></div>
+  <div class="input-group">
+    <label>Free Service Restriction <span style="font-weight:400;text-transform:none;">(anti-abuse)</span></label>
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 10px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;margin:0;text-transform:none;">
+      <input type="checkbox" id="productFreeRestriction" style="width:16px;height:16px;flex-shrink:0;" checked>
+      <span style="font-size:12px;font-weight:500;color:var(--text-primary);">Enabled</span>
+    </label>
+  </div>
 </div>
 <div class="input-group"><label>Free Usage Limit <span style="font-weight:400;text-transform:none;">(sirf Price = 0 par lagu — is service ko ek user kitni baar claim kar sakta hai, life-time)</span></label><input type="number" id="productFreeLimit" placeholder="e.g., 5 (blank = default 5)" min="1"></div>
 
@@ -1438,30 +1440,19 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
 </div>
 
 
-<!-- SORT MANAGER TAB -->
-<div id="sortMgmtTab" class="tab-content">
+<!-- FREE SERVICE RESTRICTIONS TAB -->
+<div id="freeRestrictMgmtTab" class="tab-content">
 <div class="card">
-  <h2 class="card-title"><i class="fas fa-sort-numeric-down" style="color:var(--accent-primary);"></i> Display Order / Rank Manager</h2>
-  <p style="font-size:11px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6;">Drag products up/down to set the order they appear in the app. Lower number = shown first. Filter by category to manage one section at a time.</p>
+  <h2 class="card-title"><i class="fas fa-ban" style="color:#ef4444;"></i> Free Service Restrictions</h2>
+  <p style="font-size:11px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6;">See which free services have restricted accounts (duplicate-link abuse or cooldown-bypass attempts), how many accounts are restricted per service, and unban them here.</p>
 
   <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-    <input type="text" id="sortFilterInput" placeholder="🔍 Search products..." oninput="renderSortList()" style="flex:1;min-width:160px;padding:11px 14px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:inherit;">
-    <select id="sortCatFilter" onchange="renderSortList()" style="padding:11px 14px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:11px;font-family:inherit;">
-      <option value="">All Categories</option>
-    </select>
+    <input type="text" id="frmFilterInput" placeholder="🔍 Search service or user..." oninput="renderFreeRestrictMgmt()" style="flex:1;min-width:160px;padding:11px 14px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:inherit;">
   </div>
 
-  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
-    <button class="btn btn-sm btn-ghost" onclick="autoRankProducts()" style="flex:1;min-width:140px;"><i class="fas fa-magic"></i> Auto-Number (1,2,3…)</button>
-    <button class="btn btn-sm btn-success" onclick="saveAllRanks()" style="flex:1;min-width:140px;"><i class="fas fa-save"></i> Save All Ranks</button>
-  </div>
+  <div id="frmSummary" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;"></div>
 
-  <div style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;padding:10px 12px;background:var(--input-bg);border-radius:8px;border:1px solid var(--border-color);">
-    <i class="fas fa-info-circle" style="color:var(--accent-primary);margin-right:4px;"></i>
-    <b>Tip:</b> Use the ↑ ↓ buttons or drag the <i class="fas fa-grip-vertical"></i> handle to reorder. Click <b>Save All Ranks</b> after reordering.
-  </div>
-
-  <div id="sortProductList" style="display:flex;flex-direction:column;gap:8px;"></div>
+  <div id="frmProductList" style="display:flex;flex-direction:column;gap:10px;"></div>
 </div>
 </div>
 
@@ -1624,7 +1615,7 @@ window.switchTab=(tab,isUser=false)=>{
   if(tab==='serviceIdMgmt'&&window.renderSIMList)window.renderSIMList();
   if(tab==='descMgmt'&&window.renderDMList)window.renderDMList();
   if(tab==='featureMgmt'&&window.renderFMList)window.renderFMList();
-  if(tab==='sortMgmt'){renderSortList();populateSortCatFilter();}
+  if(tab==='freeRestrictMgmt'){renderFreeRestrictMgmt();}
   if(tab==='dashboard')refreshDashboardCharts();
   if(tab==='referrals'||tab==='referralTab'){if(Object.keys(globalUsersData||{}).length){window.renderReferralLeaderboard&&window.renderReferralLeaderboard();window.renderRefTransactions&&window.renderRefTransactions();}}
   if(tab==='walletManageTab')window.renderWalletManageList&&window.renderWalletManageList();
@@ -1754,7 +1745,7 @@ window.CATEGORY_MAP = JSON.parse(JSON.stringify(DEFAULT_CATEGORY_MAP));
 window.populateCategorySelects = function() {
   const cats = Object.keys(window.CATEGORY_MAP);
   // IDs that need category options (with "All Categories" prefix)
-  const filterSelects = ['productCatFilter','qmCatFilter','sortCatFilter'];
+  const filterSelects = ['productCatFilter','qmCatFilter'];
   filterSelects.forEach(id => {
     const el = $(id); if(!el) return;
     const cur = el.value;
@@ -1999,7 +1990,7 @@ $('saveProductBtn').addEventListener('click',async()=>{
   const description=$('productDescription').value.trim();
   const features=$('productFeatures').value.trim().split('\n').map(f=>f.trim()).filter(f=>f.length>0);
   const specification=$('productSpecification').value.trim();
-  const displayOrder=parseInt($('productDisplayOrder').value)||0;
+  const freeRestrictionEnabled=$('productFreeRestriction').checked;
   const freeLimit=parseInt($('productFreeLimit').value)||5;
   const customComments=$('productCustomComments').checked;
   const commentRateTiers=customComments?$('productCommentRates').value.trim().split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{
@@ -2009,7 +2000,7 @@ $('saveProductBtn').addEventListener('click',async()=>{
   const editId=$('editProductId').value;
   if(!title || price === '') return showToast('⚠️ Title and price are required');
   showLoading();
-  const pData={title,category:cat,subCategory:sub,discountedPrice:price,avgTime:avgTime||'',description:description||'',features,specification:specification||'',apiUrl:apiUrl||'',apiKey:apiKey||'',serviceId:serviceId||'',linkLabel:linkLabel||'',customComments,commentRateTiers,displayOrder,freeLimit,updatedAt:new Date().toISOString()};
+  const pData={title,category:cat,subCategory:sub,discountedPrice:price,avgTime:avgTime||'',description:description||'',features,specification:specification||'',apiUrl:apiUrl||'',apiKey:apiKey||'',serviceId:serviceId||'',linkLabel:linkLabel||'',customComments,commentRateTiers,freeRestrictionEnabled,freeLimit,updatedAt:new Date().toISOString()};
   try{
     if(editId){await update(ref(db,`products/${editId}`),pData);}
     else{pData.createdAt=new Date().toISOString();await push(ref(db,'products'),pData);}
@@ -2018,8 +2009,9 @@ $('saveProductBtn').addEventListener('click',async()=>{
 });
 
 $('clearProductBtn').addEventListener('click',()=>{
-  $('editProductId').value='';$('productFormTitle').textContent='Add Product';['productTitle','productDiscountPrice','productAvgTime','productApiUrl','productApiKey','productServiceId','productLinkLabel','productDescription','productFeatures','productSpecification','productDisplayOrder','productCommentRates','productFreeLimit'].forEach(id=>$(id).value='');
+  $('editProductId').value='';$('productFormTitle').textContent='Add Product';['productTitle','productDiscountPrice','productAvgTime','productApiUrl','productApiKey','productServiceId','productLinkLabel','productDescription','productFeatures','productSpecification','productCommentRates','productFreeLimit'].forEach(id=>$(id).value='');
   $('productCustomComments').checked=false;
+  $('productFreeRestriction').checked=true;
   $('productCommentRatesBox').style.display='none';
 });
 
@@ -2246,7 +2238,7 @@ window.editProduct=(id)=>{
   window.updateSubCategories();
   setTimeout(()=>$('productSubCategory').value=p.subCategory,50);
   $('productDiscountPrice').value=p.discountedPrice;$('productAvgTime').value=p.avgTime||'';
-  $('productDisplayOrder').value=p.displayOrder||'';
+  $('productFreeRestriction').checked=(p.freeRestrictionEnabled!==false);
   $('productDescription').value=p.description||'';
   $('productFeatures').value=(p.features&&p.features.length)?p.features.join('\n'):'';
   $('productApiUrl').value=p.apiUrl||'';$('productApiKey').value=p.apiKey||'';
@@ -2556,12 +2548,19 @@ function renderOrders(data){
     // Pehle createdAt ke hisaab se latest-first sort karo (safeOrderTime => missing/invalid createdAt wale legacy orders ab galat se top pe nahi jaate)
     const sorted=Object.entries(data).sort((a,b)=>safeOrderTime(b[0],b[1])-safeOrderTime(a[0],a[1]));
     sorted.forEach(([id,o])=>{
+      // Wallet top-ups (fund add) 'orders' node mein aate hain lekin ye actual purchase nahi
+      // hain — inhe revenue/order-count stats se bahar rakhna hai warna wallet mein paisa add
+      // karte hi wo "revenue" mein dikhne lagta hai, aur baad mein wahi paisa kharch karne pe
+      // dobara bhi count ho jata hai (double counting).
+      const isWalletTopup=o.type==='wallet_topup';
       const price=parseFloat(o.finalAmount||0);
       const oDate=new Date(safeOrderTime(id,o));
       const status=o.status||'pending';
       const isToday=oDate.toDateString()===tStr;
-      total++;if(isToday)today++;if(status==='pending')pending++;
-      if(status==='completed'){rev+=price;if(isToday)todayRev+=price;if(oDate>=weekStart2)weeklyRev+=price;if(oDate>=monthStart2)monthlyRev+=price;}
+      if(!isWalletTopup){
+        total++;if(isToday)today++;if(status==='pending')pending++;
+        if(status==='completed'){rev+=price;if(isToday)todayRev+=price;if(oDate>=weekStart2)weeklyRev+=price;if(oDate>=monthStart2)monthlyRev+=price;}
+      }
       const pName=o.productSnapshot?.title||o.productSnapshot?.planName||'Unknown';
       if(pName!=='Unknown')productSales[pName]=(productSales[pName]||0)+1;
       // Ab sorted hai toh pehle 5 = latest 5
@@ -2651,7 +2650,11 @@ window.updateStatus=async(id,s)=>{
             const uSnap=await get(ref(db,`users/${order.userId}/profile`));
             const curBal=uSnap.exists()?parseFloat(uSnap.val().walletBalance||0):0;
             const newBal=curBal+refundAmt;
-            await update(ref(db,`users/${order.userId}/profile`),{walletBalance:newBal});
+            // Order cancel/reject hone pe "invested" (totalSpent) bhi utna hi wapas ghatana hai,
+            // warna wallet balance to refund ho jata hai par invested wahi ka wahi (double-count) rehta hai.
+            const curSpent=uSnap.exists()?parseFloat(uSnap.val().totalSpent||0):0;
+            const newSpent=Math.max(0,curSpent-refundAmt);
+            await update(ref(db,`users/${order.userId}/profile`),{walletBalance:newBal,totalSpent:newSpent});
             const histRef=await push(ref(db,`users/${order.userId}/walletHistory`),{
               type:'credit',
               amount:refundAmt,
@@ -2661,14 +2664,15 @@ window.updateStatus=async(id,s)=>{
             });
             await update(ref(db,`orders/${id}`),{walletRefunded:true,refundAmount:refundAmt,_refundHistKey:histRef.key});
             // Show undo toast for 8 seconds
-            const _uid=order.userId, _amt=refundAmt, _histKey=histRef.key, _prevBal=curBal;
+            const _uid=order.userId, _amt=refundAmt, _histKey=histRef.key, _prevBal=curBal, _prevSpent=curSpent;
             showUndoToast(`❌ Rejected · 💰 ₹${refundAmt.toFixed(2)} refund diya`, async function(){
               try{
-                // Reverse: set order back to pending, deduct refund from wallet, remove history entry
+                // Reverse: set order back to pending, deduct refund from wallet, restore totalSpent, remove history entry
                 await update(ref(db,`orders/${id}`),{status:'pending',walletRefunded:false,refundAmount:null,_refundHistKey:null});
                 const uSnap2=await get(ref(db,`users/${_uid}/profile`));
                 const latBal=uSnap2.exists()?parseFloat(uSnap2.val().walletBalance||0):_prevBal+_amt;
-                await update(ref(db,`users/${_uid}/profile`),{walletBalance:Math.max(0,latBal-_amt)});
+                const latSpent=uSnap2.exists()?parseFloat(uSnap2.val().totalSpent||0):_prevSpent-_amt;
+                await update(ref(db,`users/${_uid}/profile`),{walletBalance:Math.max(0,latBal-_amt),totalSpent:latSpent+_amt});
                 if(_histKey) await remove(ref(db,`users/${_uid}/walletHistory/${_histKey}`));
                 showToast('↩ Undo ho gaya! Order wapas Pending hai.');
               }catch(e){showToast('❌ Undo failed: '+e.message);}
@@ -3641,166 +3645,69 @@ window.saveQMUpdate=async(id)=>{
 
 // Tab renders handled in main switchTab
 
-// ── SORT / RANK MANAGER ──────────────────────────────────────────────
-let sortDragSrcId = null;
+// ── FREE SERVICE RESTRICTIONS MANAGER ──────────────────────────────────
+window.renderFreeRestrictMgmt=()=>{
+  const q=($('frmFilterInput')?.value||'').toLowerCase();
+  const summaryCont=$('frmSummary');
+  const cont=$('frmProductList'); if(!cont) return;
 
-function populateSortCatFilter(){
-  const el=$('sortCatFilter'); if(!el) return;
-  const cats=Object.keys(window.CATEGORY_MAP);
-  const cur=el.value;
-  el.innerHTML='<option value="">All Categories</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
-  if(cats.includes(cur)) el.value=cur;
-}
-
-window.renderSortList=()=>{
-  const q=($('sortFilterInput')?.value||'').toLowerCase();
-  const cat=$('sortCatFilter')?.value||'';
-  const cont=$('sortProductList'); if(!cont) return;
-
-  let entries=Object.entries(globalProducts).filter(([,p])=>{
-    if(cat&&p.category!==cat)return false;
-    if(q&&!(p.title||'').toLowerCase().includes(q))return false;
-    return true;
+  // Aggregate all bans across users, grouped by productId
+  const byProduct={}; // { productId: [{uid,name,email,link,reason,ts}] }
+  let totalRestrictedAccounts=0;
+  Object.entries(globalUsersData||{}).forEach(([uid,u])=>{
+    const p=u.profile||{};
+    const bans=u.freeServiceBans||{};
+    Object.entries(bans).forEach(([pid,meta])=>{
+      if(!meta) return;
+      if(!byProduct[pid]) byProduct[pid]=[];
+      byProduct[pid].push({
+        uid,
+        name: p.name||p.email||(p.username?('@'+p.username):'Guest'),
+        email: p.email||'',
+        link: (meta && typeof meta==='object' && meta.link) ? meta.link : '',
+        reason: (meta && typeof meta==='object' && meta.reason==='cooldown_bypass_attempt') ? 'Cooldown Bypass Attempt' : 'Duplicate Link',
+        ts: (meta && typeof meta==='object' && meta.ts) ? meta.ts : 0
+      });
+      totalRestrictedAccounts++;
+    });
   });
-  // Sort by current displayOrder
-  entries.sort((a,b)=>{
-    const oa=parseInt(a[1].displayOrder)||9999;
-    const ob=parseInt(b[1].displayOrder)||9999;
-    return oa-ob;
-  });
+
+  const productIds=Object.keys(byProduct);
+  if(summaryCont) summaryCont.innerHTML = productIds.length ? `
+    <span style="background:rgba(239,68,68,0.08);color:#ef4444;padding:5px 12px;border-radius:6px;font-weight:700;font-size:12px;"><i class="fas fa-ban"></i> ${totalRestrictedAccounts} account${totalRestrictedAccounts!==1?'s':''} restricted</span>
+    <span style="background:var(--input-bg);color:var(--text-secondary);border:1px solid var(--border-color);padding:5px 12px;border-radius:6px;font-weight:700;font-size:12px;"><i class="fas fa-box"></i> ${productIds.length} service${productIds.length!==1?'s':''} affected</span>
+  ` : `<span style="background:rgba(16,185,129,0.08);color:#10b981;padding:5px 12px;border-radius:6px;font-weight:700;font-size:12px;"><i class="fas fa-check-circle"></i> No active restrictions</span>`;
+
+  // Filter by search (service title or user name/email)
+  let entries=productIds.map(pid=>({pid, title:(globalProducts[pid]&&globalProducts[pid].title)||'Deleted / Unknown Service', users:byProduct[pid]}));
+  if(q){
+    entries=entries.map(e=>({...e, users: e.users.filter(u=>u.name.toLowerCase().includes(q)||u.email.toLowerCase().includes(q)||e.title.toLowerCase().includes(q))}))
+                    .filter(e=> e.title.toLowerCase().includes(q) || e.users.length);
+  }
+  entries.sort((a,b)=>b.users.length-a.users.length);
 
   if(!entries.length){
-    cont.innerHTML='<p style="color:var(--text-secondary);text-align:center;padding:20px;">No products found.</p>';
+    cont.innerHTML='<p style="color:var(--text-secondary);text-align:center;padding:20px;">No restricted accounts found.</p>';
     return;
   }
 
-  cont.innerHTML=entries.map(([id,p],idx)=>{
-    const rank=parseInt(p.displayOrder)||'—';
-    return `<div class="sort-row" id="srow_${id}" draggable="true"
-      ondragstart="sortDragStart(event,'${id}')"
-      ondragover="sortDragOver(event)"
-      ondrop="sortDrop(event,'${id}')"
-      ondragend="sortDragEnd(event)"
-      style="display:flex;align-items:center;gap:10px;background:var(--card-bg);border:1px solid var(--border-color);border-radius:10px;padding:12px 14px;cursor:grab;transition:var(--transition);">
-      <i class="fas fa-grip-vertical" style="color:var(--text-secondary);font-size:12px;cursor:grab;flex-shrink:0;"></i>
-      <span style="background:var(--accent-primary);color:#fff;border-radius:6px;padding:3px 9px;font-size:12px;font-weight:800;min-width:32px;text-align:center;flex-shrink:0;" id="srankbadge_${id}">#${rank}</span>
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:700;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.title}</div>
-        <div style="font-size:11px;color:var(--text-secondary);">${p.category} › ${p.subCategory}</div>
+  cont.innerHTML=entries.map(({pid,title,users})=>`
+    <div style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:10px;padding:14px 16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:${users.length?'10px':'0'};">
+        <div style="font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${title}</div>
+        <span style="background:rgba(239,68,68,0.08);color:#ef4444;border-radius:6px;padding:2px 9px;font-size:11px;font-weight:800;flex-shrink:0;">${users.length} restricted</span>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
-        <button onclick="moveRankUp('${id}')" style="background:var(--input-bg);border:1px solid var(--border-color);border-radius:5px;width:28px;height:24px;cursor:pointer;color:var(--text-primary);font-size:12px;" title="Move up">↑</button>
-        <button onclick="moveRankDown('${id}')" style="background:var(--input-bg);border:1px solid var(--border-color);border-radius:5px;width:28px;height:24px;cursor:pointer;color:var(--text-primary);font-size:12px;" title="Move down">↓</button>
-      </div>
-      <input type="number" id="srank_${id}" value="${p.displayOrder||''}" placeholder="—"
-        style="width:58px;padding:8px;border:1px solid var(--border-color);border-radius:6px;background:var(--input-bg);color:var(--text-primary);font-size:11px;font-weight:700;text-align:center;"
-        oninput="updateSortBadge('${id}',this.value)">
-    </div>`;
-  }).join('');
-
-  // Attach drag events
-  cont.querySelectorAll('.sort-row').forEach(row=>{
-    row.addEventListener('dragstart',e=>sortDragStart(e,row.id.replace('srow_','')));
-    row.addEventListener('dragover',sortDragOver);
-    row.addEventListener('drop',e=>sortDrop(e,row.id.replace('srow_','')));
-    row.addEventListener('dragend',sortDragEnd);
-  });
-};
-
-window.updateSortBadge=(id,val)=>{
-  const badge=document.getElementById(`srankbadge_${id}`);
-  if(badge) badge.textContent=val?`#${val}`:'#—';
-};
-
-window.moveRankUp=(id)=>{
-  const rows=[...document.querySelectorAll('.sort-row')];
-  const idx=rows.findIndex(r=>r.id===`srow_${id}`);
-  if(idx<=0)return;
-  const prevId=rows[idx-1].id.replace('srow_','');
-  // Swap rank values
-  const curVal=document.getElementById(`srank_${id}`)?.value||'';
-  const prevVal=document.getElementById(`srank_${prevId}`)?.value||'';
-  document.getElementById(`srank_${id}`).value=prevVal;
-  document.getElementById(`srank_${prevId}`).value=curVal;
-  updateSortBadge(id,prevVal);
-  updateSortBadge(prevId,curVal);
-  // Move DOM
-  rows[idx-1].parentNode.insertBefore(rows[idx],rows[idx-1]);
-  rows[idx].scrollIntoView({block:'nearest'});
-};
-
-window.moveRankDown=(id)=>{
-  const rows=[...document.querySelectorAll('.sort-row')];
-  const idx=rows.findIndex(r=>r.id===`srow_${id}`);
-  if(idx<0||idx>=rows.length-1)return;
-  const nextId=rows[idx+1].id.replace('srow_','');
-  const curVal=document.getElementById(`srank_${id}`)?.value||'';
-  const nextVal=document.getElementById(`srank_${nextId}`)?.value||'';
-  document.getElementById(`srank_${id}`).value=nextVal;
-  document.getElementById(`srank_${nextId}`).value=curVal;
-  updateSortBadge(id,nextVal);
-  updateSortBadge(nextId,curVal);
-  rows[idx].parentNode.insertBefore(rows[idx+1],rows[idx]);
-};
-
-// Drag & Drop
-window.sortDragStart=(e,id)=>{
-  sortDragSrcId=id;
-  e.dataTransfer.effectAllowed='move';
-  setTimeout(()=>document.getElementById(`srow_${id}`)?.classList.add('dragging'),0);
-};
-window.sortDragOver=(e)=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; };
-window.sortDragEnd=(e)=>{ document.querySelectorAll('.sort-row').forEach(r=>r.classList.remove('dragging','drag-over')); sortDragSrcId=null; };
-window.sortDrop=(e,targetId)=>{
-  e.preventDefault();
-  if(!sortDragSrcId||sortDragSrcId===targetId)return;
-  const src=document.getElementById(`srow_${sortDragSrcId}`);
-  const tgt=document.getElementById(`srow_${targetId}`);
-  if(!src||!tgt)return;
-  // Swap rank input values
-  const srcVal=document.getElementById(`srank_${sortDragSrcId}`)?.value||'';
-  const tgtVal=document.getElementById(`srank_${targetId}`)?.value||'';
-  document.getElementById(`srank_${sortDragSrcId}`).value=tgtVal;
-  document.getElementById(`srank_${targetId}`).value=srcVal;
-  updateSortBadge(sortDragSrcId,tgtVal);
-  updateSortBadge(targetId,srcVal);
-  // Swap DOM positions
-  const parent=src.parentNode;
-  const srcNext=src.nextSibling;
-  parent.insertBefore(src,tgt);
-  parent.insertBefore(tgt,srcNext);
-  sortDragSrcId=null;
-};
-
-window.autoRankProducts=()=>{
-  const rows=[...document.querySelectorAll('.sort-row')];
-  rows.forEach((row,idx)=>{
-    const id=row.id.replace('srow_','');
-    const inp=document.getElementById(`srank_${id}`);
-    if(inp){ inp.value=idx+1; updateSortBadge(id,idx+1); }
-  });
-  showToast('✅ Auto-numbered! Click "Save All Ranks" to apply.');
-};
-
-window.saveAllRanks=async()=>{
-  const rows=[...document.querySelectorAll('.sort-row')];
-  if(!rows.length)return showToast('⚠️ No products visible');
-  showLoading('Saving ranks...');
-  try{
-    const updates={};
-    rows.forEach(row=>{
-      const id=row.id.replace('srow_','');
-      const val=parseInt(document.getElementById(`srank_${id}`)?.value)||0;
-      updates[`products/${id}/displayOrder`]=val;
-      updates[`products/${id}/updatedAt`]=new Date().toISOString();
-      // Update local cache
-      if(globalProducts[id]) globalProducts[id].displayOrder=val;
-    });
-    await update(ref(db),updates);
-    hideLoading();
-    showToast(`✅ Ranks saved for ${rows.length} products!`);
-    renderProducts(globalProducts); // Refresh product grid too
-  }catch(e){hideLoading();showToast('❌ '+e.message);}
+      ${users.map(u=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;padding:8px 0;border-top:1px solid var(--border-color);">
+          <div style="min-width:0;">
+            <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.name}</div>
+            <div style="color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${u.link.replace(/"/g,'&quot;')}"><span style="opacity:0.75;font-weight:600;">[${u.reason}]</span>${u.link?` ${u.link.length>36?u.link.slice(0,36)+'…':u.link}`:''}</div>
+          </div>
+          <button class="btn btn-sm" style="width:auto;flex-shrink:0;padding:3px 10px;background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.3);" onclick="unbanFreeService('${u.uid}','${pid}')"><i class="fas fa-undo"></i> Unban</button>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
 };
 
 // ── LINK MANAGEMENT ──────────────────────────────────────────────────
@@ -4041,7 +3948,11 @@ function buildOrdersRevenueChart(orders){
     let cnt=0,rev=0;
     if(orders)Object.values(orders).forEach(o=>{
       if(!o.createdAt)return;
-      if(new Date(o.createdAt).toDateString()===d.toDateString()){cnt++;rev+=parseFloat(o.finalAmount||0);}
+      if(o.type==='wallet_topup')return; // wallet fund-add revenue/orders mein count nahi hota
+      if(new Date(o.createdAt).toDateString()===d.toDateString()){
+        cnt++;
+        if((o.status||'pending')==='completed')rev+=parseFloat(o.finalAmount||0); // sirf completed orders hi revenue
+      }
     });
     orderCounts.push(cnt);
     revenues.push(parseFloat(rev.toFixed(2)));
