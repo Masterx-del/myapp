@@ -629,11 +629,26 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
 <!-- STATS ROW 1 - Revenue -->
 <div class="card" style="padding:20px 20px 16px;">
 <h2 class="card-title" style="margin-bottom:14px;font-size:0.82rem;"><i class="fas fa-rupee-sign" style="color:var(--accent-success);"></i> Revenue</h2>
-<div class="stats-grid" style="grid-template-columns:repeat(2,1fr);margin:0;">
-  <div class="stat-card green"><div class="stat-value" id="dashTotalRevenue">₹0</div><div class="stat-label">Total Revenue</div></div>
-  <div class="stat-card green"><div class="stat-value" id="dashMonthlyRevenue">₹0</div><div class="stat-label">This Month</div></div>
-  <div class="stat-card green"><div class="stat-value" id="dashWeeklyRevenue">₹0</div><div class="stat-label">This Week</div></div>
-  <div class="stat-card green"><div class="stat-value" id="dashTodayRevenue" style="color:var(--accent-success);">₹0</div><div class="stat-label">Today's Revenue</div></div>
+<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+  <div style="flex:1;min-width:160px;">
+    <div id="dashTotalRevenue" style="font-size:32px;font-weight:800;color:var(--accent-success);">₹0</div>
+    <div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;font-weight:700;margin-top:2px;">Total Revenue</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;flex:1;min-width:220px;">
+    <div class="stat-card green"><div class="stat-value" id="dashMonthlyRevenue">₹0</div><div class="stat-label">Monthly</div></div>
+    <div class="stat-card green"><div class="stat-value" id="dashWeeklyRevenue">₹0</div><div class="stat-label">Weekly</div></div>
+    <div class="stat-card green"><div class="stat-value" id="dashTodayRevenue" style="color:var(--accent-success);">₹0</div><div class="stat-label">Today</div></div>
+    <div class="stat-card warn"><div class="stat-value" id="dashTargetRemaining">₹14,000</div><div class="stat-label">Target</div></div>
+  </div>
+</div>
+<div style="margin-top:16px;">
+  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);font-weight:600;margin-bottom:6px;">
+    <span>Monthly Target Progress</span>
+    <span id="dashTargetProgress">0%</span>
+  </div>
+  <div style="height:8px;background:var(--input-bg);border-radius:6px;overflow:hidden;border:1px solid var(--border-color);">
+    <div id="dashTargetProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent-primary),var(--accent-success));border-radius:6px;transition:width .4s ease;"></div>
+  </div>
 </div>
 </div>
 
@@ -681,8 +696,21 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
 </div>
 
 <div class="card">
-<h2 class="card-title"><i class="fas fa-user-clock" style="color:var(--accent-secondary);"></i> User Growth — Last 30 Days</h2>
-<div class="chart-wrap" style="height:220px;"><canvas id="userGrowthChart"></canvas></div>
+<h2 class="card-title"><i class="fas fa-balance-scale" style="color:var(--accent-primary);"></i> Overall Performance</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+  <div style="border-radius:12px;padding:16px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);">
+    <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;font-weight:700;color:var(--accent-success);">Today</h4>
+    <div style="display:flex;justify-content:space-between;font-size:11px;padding:6px 0;border-bottom:1px dashed var(--border-color);"><span>Revenue</span><b id="opTodayRevenue">₹0</b></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;padding:6px 0;border-bottom:1px dashed var(--border-color);"><span>Orders</span><b id="opTodayOrders">0</b></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;padding:6px 0;"><span>New Users</span><b id="opTodayUsers">0</b></div>
+  </div>
+  <div style="border-radius:12px;padding:16px;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.25);">
+    <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;font-weight:700;color:var(--accent-primary);">This Month</h4>
+    <div style="display:flex;justify-content:space-between;font-size:11px;padding:6px 0;border-bottom:1px dashed var(--border-color);"><span>Revenue</span><b id="opMonthRevenue">₹0</b></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;padding:6px 0;border-bottom:1px dashed var(--border-color);"><span>Orders</span><b id="opMonthOrders">0</b></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;padding:6px 0;"><span>New Users</span><b id="opMonthUsers">0</b></div>
+  </div>
+</div>
 </div>
 
 <!-- RECENT 5 ORDERS -->
@@ -2550,7 +2578,7 @@ function renderOrders(data){
   const tStr=now.toDateString();
   const weekStart2=new Date(now.getFullYear(),now.getMonth(),now.getDate()-6);
   const monthStart2=new Date(now.getFullYear(),now.getMonth(),1);
-  let total=0,today=0,rev=0,todayRev=0,weeklyRev=0,monthlyRev=0,pending=0;
+  let total=0,today=0,rev=0,todayRev=0,weeklyRev=0,monthlyRev=0,pending=0,monthlyOrders=0;
   const recentOrders=[];
   const productSales={};
   // Stats pass — pure JS, no DOM touch
@@ -2569,6 +2597,7 @@ function renderOrders(data){
       const isToday=oDate.toDateString()===tStr;
       if(!isWalletTopup){
         total++;if(isToday)today++;if(status==='pending')pending++;
+        if(oDate>=monthStart2)monthlyOrders++;
         if(status==='completed'){rev+=price;if(isToday)todayRev+=price;if(oDate>=weekStart2)weeklyRev+=price;if(oDate>=monthStart2)monthlyRev+=price;}
       }
       const pName=o.productSnapshot?.title||o.productSnapshot?.planName||'Unknown';
@@ -2580,9 +2609,19 @@ function renderOrders(data){
   // Update stats instantly
   $('dashTotalOrders').textContent=total;$('dashTodayOrders').textContent=today;$('dashPendingOrders').textContent=pending;
   $('dashTotalRevenue').textContent='₹'+rev.toFixed(2).replace(/\.00$/,'');
-  $('dashTodayRevenue').textContent='₹'+todayRev.toFixed(2).replace(/\.00$/,'');
+  if($('dashTodayRevenue'))$('dashTodayRevenue').textContent='₹'+todayRev.toFixed(2).replace(/\.00$/,'');
   if($('dashWeeklyRevenue'))$('dashWeeklyRevenue').textContent='₹'+weeklyRev.toFixed(2).replace(/\.00$/,'');
   if($('dashMonthlyRevenue'))$('dashMonthlyRevenue').textContent='₹'+monthlyRev.toFixed(2).replace(/\.00$/,'');
+  const MONTHLY_TARGET=14000;
+  const targetLeft=Math.max(MONTHLY_TARGET-monthlyRev,0);
+  const targetPct=Math.min((monthlyRev/MONTHLY_TARGET)*100,100);
+  if($('dashTargetRemaining'))$('dashTargetRemaining').textContent=targetLeft>0?('₹'+targetLeft.toFixed(2).replace(/\.00$/,'')):'🎯 Achieved!';
+  if($('dashTargetProgress'))$('dashTargetProgress').textContent=targetPct.toFixed(0)+'%';
+  if($('dashTargetProgressBar'))$('dashTargetProgressBar').style.width=targetPct.toFixed(0)+'%';
+  if($('opTodayRevenue'))$('opTodayRevenue').textContent='₹'+todayRev.toFixed(2).replace(/\.00$/,'');
+  if($('opTodayOrders'))$('opTodayOrders').textContent=today;
+  if($('opMonthRevenue'))$('opMonthRevenue').textContent='₹'+monthlyRev.toFixed(2).replace(/\.00$/,'');
+  if($('opMonthOrders'))$('opMonthOrders').textContent=monthlyOrders;
   const badge=$('navPendingBadge');badge.textContent=pending;badge.style.display=pending>0?'flex':'none';
   const bnavBadge=$('bnavPendingBadge');if(bnavBadge){bnavBadge.textContent=pending;bnavBadge.style.display=pending>0?'inline-flex':'none';}
   const alertBar=$('pendingAlertBar');
@@ -4012,91 +4051,21 @@ function buildOrdersRevenueChart(orders){
 }
 
 function buildUserGrowthChart(users){
-  const ctx=document.getElementById('userGrowthChart');if(!ctx)return;
-  if(_chartUserGrowth){_chartUserGrowth.destroy();}
-  const dark=document.body.classList.contains('dark-mode');
-  const c=getChartColors(dark);
-
-  // Build last 30 days labels
-  const labels=[], dailyCounts=[], cumulativeCounts=[];
-  const today=new Date(); today.setHours(23,59,59,999);
-
-  // Count users per day
-  const dayCounts={};
+  // Overall Performance card — Today / This Month new-user counts
+  const now=new Date();
+  const tStr=now.toDateString();
+  const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
+  let newUsersToday=0, newUsersMonth=0;
   Object.values(users||{}).forEach(u=>{
     const createdAt=u.profile?.createdAt;
     if(!createdAt)return;
     const d=new Date(createdAt);
     if(isNaN(d))return;
-    const key=d.toISOString().slice(0,10);
-    dayCounts[key]=(dayCounts[key]||0)+1;
+    if(d.toDateString()===tStr)newUsersToday++;
+    if(d>=monthStart)newUsersMonth++;
   });
-
-  // Count total users before 30-day window for cumulative baseline
-  const windowStart=new Date(); windowStart.setDate(windowStart.getDate()-29); windowStart.setHours(0,0,0,0);
-  let baseline=0;
-  Object.entries(dayCounts).forEach(([key,cnt])=>{
-    if(new Date(key)<windowStart) baseline+=cnt;
-  });
-
-  let cumulative=baseline;
-  for(let i=29;i>=0;i--){
-    const d=new Date(); d.setDate(d.getDate()-i);
-    const key=d.toISOString().slice(0,10);
-    const dayCount=dayCounts[key]||0;
-    cumulative+=dayCount;
-    labels.push(d.toLocaleDateString('en-IN',{day:'numeric',month:'short'}));
-    dailyCounts.push(dayCount);
-    cumulativeCounts.push(cumulative);
-  }
-
-  _chartUserGrowth=new Chart(ctx,{
-    type:'line',
-    data:{
-      labels,
-      datasets:[
-        {
-          label:'New Users',
-          data:dailyCounts,
-          borderColor:'#4f46e5',
-          backgroundColor:'rgba(79,70,229,0.08)',
-          fill:true,
-          tension:0.4,
-          pointBackgroundColor:'#4f46e5',
-          pointRadius:3,
-          pointHoverRadius:6,
-          borderWidth:2,
-          yAxisID:'y',
-        },
-        {
-          label:'Total Users',
-          data:cumulativeCounts,
-          borderColor:'#10b981',
-          backgroundColor:'rgba(16,185,129,0.06)',
-          fill:true,
-          tension:0.4,
-          pointBackgroundColor:'#10b981',
-          pointRadius:3,
-          pointHoverRadius:6,
-          borderWidth:2,
-          yAxisID:'y1',
-        }
-      ]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{display:true,position:'top',labels:{color:c.text,font:{size:12},padding:14,usePointStyle:true}},
-        tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===0?ctx.parsed.y+' new users':ctx.parsed.y+' total users'}}
-      },
-      scales:{
-        y:{beginAtZero:true,position:'left',ticks:{color:c.text,stepSize:1},grid:{color:c.grid},title:{display:true,text:'New Users',color:c.text,font:{size:11}}},
-        y1:{beginAtZero:true,position:'right',ticks:{color:c.text},grid:{drawOnChartArea:false},title:{display:true,text:'Total Users',color:c.text,font:{size:11}}},
-        x:{ticks:{color:c.text,maxTicksLimit:10},grid:{display:false}}
-      }
-    }
-  });
+  if($('opTodayUsers'))$('opTodayUsers').textContent=newUsersToday;
+  if($('opMonthUsers'))$('opMonthUsers').textContent=newUsersMonth;
 }
 
 window.refreshDashboardCharts=()=>{
@@ -4678,8 +4647,8 @@ onValue(ref(db, 'users'), s => {
       window.renderReferralLeaderboard();
       window.renderRefTransactions();
     }
-    // Rebuild user growth chart on dashboard
-    if(document.getElementById('userGrowthChart')) {
+    // Refresh Overall Performance (today/month new-user counts)
+    if(document.getElementById('opTodayUsers')) {
       buildUserGrowthChart(data);
     }
   }
