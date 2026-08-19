@@ -1363,6 +1363,14 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
   <p style="font-size:12px;color:var(--text-secondary);margin-top:10px;text-align:center;"><i class="fas fa-info-circle"></i> Changes apply instantly everywhere after saving.</p>
 </div>
 
+<!-- REVENUE CALCULATION CARD -->
+<div class="card" style="border-color:var(--accent-warn);">
+  <h2 class="card-title" style="color:var(--accent-warn);"><i class="fas fa-rupee-sign"></i> Revenue Calculation</h2>
+  <p style="font-size:11px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">Reset karne se Total/Monthly/Weekly/Today revenue aur monthly target sirf reset ke baad ke orders se fresh calculate honge. Purane orders, users, ya baaki koi stats affect nahi hoge — sirf revenue numbers naye se shuru honge.</p>
+  <div style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;" id="revenueResetInfo">Last reset: Never (calculating from all-time data)</div>
+  <button class="btn btn-warn" onclick="resetRevenueCalculation()"><i class="fas fa-redo"></i> Reset Revenue Calculation</button>
+</div>
+
 <div class="card" style="border-color:var(--accent-danger);"><h2 class="card-title" style="color:var(--accent-danger);"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h2>
 <p style="font-size:11px;color:var(--text-secondary);margin-bottom:16px;">Irreversible actions.</p>
 <button class="btn btn-warn" id="clearAllOrdersBtn" style="margin-bottom:12px;">Clear All Orders</button>
@@ -1598,7 +1606,7 @@ document.addEventListener('keydown',(e)=>{
 });
 
 // ── GLOBALS ──────────────────────────────────────────────────────────
-let showOnlyPending=false, globalOrdersData=null, isInitialLoad=true;
+let showOnlyPending=false, globalOrdersData=null, isInitialLoad=true, revenueResetAt=0;
 window._quickDateMode='all';
 // Set "All Time" button active on load
 document.addEventListener('DOMContentLoaded',()=>{ const b=document.getElementById('qdAll'); if(b)b.classList.add('active'); });
@@ -1743,6 +1751,12 @@ function initData(){
   }).catch(()=>{ window.populateCategorySelects(); renderCatMgmtUI(); });
   onValue(ref(db,'products'),s=>{renderProducts(s.val());buildCategoryChart(globalProducts);});
   onValue(ref(db,'orders'),s=>{globalOrdersData=s.val();renderOrders(globalOrdersData);buildOrdersRevenueChart(globalOrdersData);});
+  onValue(ref(db,'meta/revenueResetAt'),s=>{
+    revenueResetAt=s.exists()?new Date(s.val()).getTime():0;
+    const infoEl=$('revenueResetInfo');
+    if(infoEl)infoEl.textContent=s.exists()?('Last reset: '+new Date(s.val()).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})+' (calculating from this point)'):'Last reset: Never (calculating from all-time data)';
+    if(globalOrdersData)renderOrders(globalOrdersData);
+  });
   onValue(ref(db,'coupons'),s=>renderCoupons(s.val()));
   onValue(ref(db,'exclusivePacks'),s=>{ window._globalExclusivePacks = s.val()||{}; renderExclusivePacks(window._globalExclusivePacks); const count=Object.keys(window._globalExclusivePacks).length; if($('dashTotalSubscriptions')) $('dashTotalSubscriptions').textContent=count; });
   onValue(ref(db,'users'),s=>renderUsers(s.val()));
@@ -2598,7 +2612,7 @@ function renderOrders(data){
       if(!isWalletTopup){
         total++;if(isToday)today++;if(status==='pending')pending++;
         if(oDate>=monthStart2)monthlyOrders++;
-        if(status==='completed'){rev+=price;if(isToday)todayRev+=price;if(oDate>=weekStart2)weeklyRev+=price;if(oDate>=monthStart2)monthlyRev+=price;}
+        if(status==='completed'&&oDate.getTime()>=revenueResetAt){rev+=price;if(isToday)todayRev+=price;if(oDate>=weekStart2)weeklyRev+=price;if(oDate>=monthStart2)monthlyRev+=price;}
       }
       const pName=o.productSnapshot?.title||o.productSnapshot?.planName||'Unknown';
       if(pName!=='Unknown')productSales[pName]=(productSales[pName]||0)+1;
@@ -3560,6 +3574,21 @@ $('saveOffersBtn').addEventListener('click',async()=>{const d={name:$('offerName
 // ── DANGER ZONE ───────────────────────────────────────────────────────
 $('clearAllOrdersBtn').addEventListener('click',async()=>{const ok=await customConfirm({title:'Delete ALL Orders?',msg:'Every order will be permanently deleted. This cannot be undone.',icon:'⚠️',okLabel:'Delete All Orders',danger:true});if(ok){showLoading();await remove(ref(db,'orders'));hideLoading();showToast('🗑️ Orders cleared.');}});
 $('clearAllDataBtn').addEventListener('click',async()=>{const ok=await customConfirm({title:'⚠️ Factory Reset?',msg:'EVERYTHING will be wiped — products, orders, users, settings. Absolutely cannot be undone!',icon:'💀',okLabel:'WIPE EVERYTHING',danger:true});if(ok){showLoading();await set(ref(db,'/'),null);hideLoading();window.location.reload();}});
+
+// ── Reset Revenue Calculation ──
+// Sirf revenue numbers (Total/Monthly/Weekly/Today/Target) is point se fresh calculate honge.
+// Orders, users, products, ya koi aur data/stats bilkul touch nahi hota — sirf ek timestamp
+// meta/revenueResetAt me save hota hai, jise revenue sum karte waqt cutoff ki tarah use karte hain.
+window.resetRevenueCalculation=async()=>{
+  const ok=await customConfirm({title:'Reset Revenue Calculation?',msg:'Total/Monthly/Weekly/Today revenue aur monthly target ab sirf is pal ke baad ke orders se calculate honge. Orders, users ya baaki data me koi badlaav nahi hoga.',icon:'🔄',okLabel:'Reset Revenue',danger:false});
+  if(!ok)return;
+  showLoading();
+  try{
+    await set(ref(db,'meta/revenueResetAt'),new Date().toISOString());
+    hideLoading();
+    showToast('✅ Revenue calculation reset — ab yahan se fresh count hoga');
+  }catch(e){hideLoading();showToast('❌ '+e.message);}
+};
 
 // ── CHAT ──────────────────────────────────────────────────────────────
 window.renderChatUsers=async(data)=>{
