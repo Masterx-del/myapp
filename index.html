@@ -995,14 +995,47 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
 <!-- OFFERS TAB -->
 <div id="offersTab" class="tab-content">
 <div class="card">
-<h2 class="card-title"><i class="fas fa-tags"></i> Price Drop Card</h2>
-<div class="input-group"><label>Offer Name</label><input type="text" id="offerName" placeholder="e.g., Mega Weekend Sale"></div>
-<div class="input-group"><label>Image URL</label><input type="text" id="offerImageUrl" placeholder="https://..."></div>
+<h2 class="card-title"><i class="fas fa-tags"></i> Advertisement Carousel — Add / Edit Slide</h2>
+<p style="font-size:11px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6;">This is the Price Drop card shown on the user dashboard. It now supports multiple slides that auto-rotate. Link each slide to an existing service so its Buy Now button routes there automatically.</p>
+<input type="hidden" id="editOfferSlideId">
+<div class="input-group"><label>Service Title</label><input type="text" id="adSlideTitle" placeholder="e.g., Mega Weekend Sale"></div>
+<div class="input-group"><label>Image / Logo URL <span style="font-weight:400;text-transform:none;">(optional — falls back to brand logo)</span></label><input type="text" id="adSlideImageUrl" placeholder="https://..."></div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-  <div class="input-group"><label>New Rate (₹)</label><input type="number" id="offerNewRate" placeholder="e.g., 299"></div>
-  <div class="input-group"><label>Old Rate (₹)</label><input type="number" id="offerOldRate" placeholder="e.g., 599"></div>
+  <div class="input-group"><label>New Price (₹)</label><input type="number" id="adSlideNewPrice" placeholder="e.g., 299"></div>
+  <div class="input-group"><label>Old Price (₹)</label><input type="number" id="adSlideOldPrice" placeholder="e.g., 599"></div>
 </div>
-<div class="input-group"><label>Description</label><textarea id="offerDescription" rows="2" placeholder="Grab this offer before it expires!"></textarea></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+  <div class="input-group"><label>Badge <span style="font-weight:400;text-transform:none;">(pill text)</span></label><input type="text" id="adSlideBadge" placeholder="e.g., PRICE DROP!"></div>
+  <div class="input-group"><label>Display Order</label><input type="number" id="adSlideOrder" placeholder="e.g., 1"></div>
+</div>
+<div class="input-group"><label>Offer / Discount Text</label><textarea id="adSlideOfferText" rows="2" placeholder="Grab this offer before it expires!"></textarea></div>
+<div class="input-group" style="display:flex;flex-direction:column;">
+  <label style="margin-bottom:10px;">Active</label>
+  <label class="toggle-switch"><input type="checkbox" id="adSlideActive" checked><span class="toggle-slider"></span></label>
+</div>
+
+<!-- Linked Service Picker -->
+<div class="api-box" style="margin-bottom:16px;">
+  <div class="api-box-title"><i class="fas fa-link"></i> Linked Service (Buy Now Destination)</div>
+  <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">Select an existing service from your catalog. The slide's Buy Now button will automatically open that service's order page. Leave unselected to hide the Buy Now button on this slide.</p>
+  <div style="display:flex;gap:10px;margin-bottom:12px;">
+    <input type="text" id="adSlideProductSearch" placeholder="🔍 Search products..." oninput="filterAdSlideProductPicker()" style="flex:1;padding:11px 14px;background:var(--card-bg);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:11px;font-family:inherit;">
+  </div>
+  <div id="adSlideProductPicker" style="max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+  <div style="margin-top:12px;">
+    <div style="font-size:12px;font-weight:700;color:var(--accent-primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Linked Service</div>
+    <div id="adSlideSelectedProduct" style="display:flex;flex-direction:column;gap:6px;min-height:30px;padding:8px;background:var(--input-bg);border:1px solid var(--border-color);border-radius:8px;font-size:12px;color:var(--text-secondary);">No service linked — Buy Now button will be hidden</div>
+  </div>
+</div>
+
+<div style="display:flex;gap:12px;margin-top:4px;">
+<button class="btn" id="saveOfferSlideBtn" style="flex:1;"><i class="fas fa-save"></i> Save Slide</button>
+<button class="btn btn-ghost" id="clearOfferSlideBtn" style="flex:1;"><i class="fas fa-times"></i> Clear</button>
+</div>
+</div>
+<div class="card">
+<h2 class="card-title"><i class="fas fa-images"></i> All Advertisement Slides</h2>
+<div id="offerSlidesGrid" class="products-grid"></div>
 </div>
 <div class="card">
 <h2 class="card-title"><i class="fas fa-link"></i> Action Cards</h2>
@@ -1611,6 +1644,8 @@ window._quickDateMode='all';
 // Set "All Time" button active on load
 document.addEventListener('DOMContentLoaded',()=>{ const b=document.getElementById('qdAll'); if(b)b.classList.add('active'); });
 let globalProducts={}, globalCoupons={}, globalSubs={};
+let globalOfferSlides={};
+let _adSlideSelectedProductId='';
 let globalApiConfig={ url:'', key:'' };
 let savedApiConfigs={};
 let allServicesCache=[];
@@ -1774,7 +1809,9 @@ function initData(){
     if($('pgPaypalHandle')) $('pgPaypalHandle').value=pp.handle||'';
     if($('pgPaypalQr')) $('pgPaypalQr').value=pp.qrUrl||'';
   });
-  onValue(ref(db,'meta/offers'),s=>{if(s.exists()){const d=s.val();$('offerName').value=d.name||'';$('offerImageUrl').value=d.imageUrl||'';$('offerNewRate').value=d.newRate||'';$('offerOldRate').value=d.oldRate||'';$('offerDescription').value=d.description||'';$('offerContactUsername').value=d.contactUsername||'';$('offerChannelLink').value=d.channelLink||'';}});
+  onValue(ref(db,'meta/offers'),s=>{if(s.exists()){const d=s.val();$('offerContactUsername').value=d.contactUsername||'';$('offerChannelLink').value=d.channelLink||'';}});
+  onValue(ref(db,'meta/offerSlides'),s=>{ globalOfferSlides = s.val()||{}; renderOfferSlides(globalOfferSlides); });
+  migrateLegacyOfferToSlides();
   onValue(ref(db,'meta/globalApi'),s=>{if(s.exists()){const d=s.val();globalApiConfig={url:d.url||'',key:d.key||''};$('globalApiUrl').value=d.url||'';$('globalApiKey').value=d.key||'';}});
   onValue(ref(db,'meta/savedApis'),s=>{savedApiConfigs=s.exists()?s.val():{};renderSavedApisList();renderBulkApiSelect();});
   onValue(ref(db,'meta/telegramBot'),s=>{if(s.exists()){const d=s.val();$('tgBotToken').value=d.token||'';$('tgChatId').value=d.chatId||'';$('tgGiftCodeChatId').value=d.giftCodeChatId||'';$('tgTopUpChatId').value=d.topUpChatId||'';$('tgSupportChatId').value=d.supportChatId||'';}});
@@ -2252,6 +2289,8 @@ function renderProducts(data){
   const hasAnyProducts=Object.keys(globalProducts).length>0;
   $('productsGrid').innerHTML=html||(hasAnyProducts?'<p style="padding:20px;color:var(--text-secondary);">No products match your search/filter.</p>':'<p style="padding:20px;color:var(--text-secondary);">No products. Add one above.</p>');
   $('dashTotalProducts').textContent=Object.keys(globalProducts).length;
+  if($('offerSlidesGrid')) renderOfferSlides(globalOfferSlides);
+  if($('adSlideProductPicker')) renderAdSlideProductPicker($('adSlideProductSearch')?.value||'');
 }
 
 window.toggleInlineEdit=(panelId,btn,forceClose=false)=>{
@@ -3022,6 +3061,174 @@ window.deleteExclusivePack = async (id) => {
   if (ok) remove(ref(db, `exclusivePacks/${id}`));
 };
 
+// ── ADVERTISEMENT CAROUSEL SLIDES ───────────────────────────────────────
+function renderAdSlideProductPicker(filterText) {
+  const cont = $('adSlideProductPicker');
+  if (!cont) return;
+  const q = (filterText || '').toLowerCase();
+  const entries = Object.entries(globalProducts).filter(([, p]) => {
+    if (!q) return true;
+    return (p.title || '').toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q);
+  });
+  cont.innerHTML = entries.map(([id, p]) => {
+    const selected = _adSlideSelectedProductId === id;
+    return `<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${selected ? 'rgba(37,99,235,0.07)' : 'var(--input-bg)'};border:1px solid ${selected ? 'var(--accent-primary)' : 'var(--border-color)'};border-radius:8px;cursor:pointer;font-size:11px;transition:var(--transition);">
+      <input type="radio" name="adSlideProductRadio" value="${id}" ${selected ? 'checked' : ''} onchange="selectAdSlideProduct('${id}')" style="width:16px;height:16px;accent-color:var(--accent-primary);">
+      <span style="flex:1;"><b>${p.title}</b><span style="font-size:11px;color:var(--text-secondary);display:block;">${p.category || ''} › ${p.subCategory || ''} · ₹${p.discountedPrice ?? 0}</span></span>
+      ${p.isActive === false ? '<span style="font-size:10px;color:var(--accent-danger);font-weight:700;flex-shrink:0;">Inactive</span>' : ''}
+    </label>`;
+  }).join('') || '<p style="color:var(--text-secondary);padding:8px;">No products found.</p>';
+}
+window.filterAdSlideProductPicker = () => renderAdSlideProductPicker($('adSlideProductSearch')?.value || '');
+
+window.selectAdSlideProduct = (id) => {
+  _adSlideSelectedProductId = id;
+  renderAdSlideProductPicker($('adSlideProductSearch')?.value || '');
+  updateAdSlideSelectedPreview();
+};
+window.clearAdSlideProductSelection = () => {
+  _adSlideSelectedProductId = '';
+  renderAdSlideProductPicker($('adSlideProductSearch')?.value || '');
+  updateAdSlideSelectedPreview();
+};
+
+function updateAdSlideSelectedPreview() {
+  const preview = $('adSlideSelectedProduct');
+  if (!preview) return;
+  if (!_adSlideSelectedProductId) {
+    preview.innerHTML = '<span style="color:var(--text-secondary);">No service linked — Buy Now button will be hidden</span>';
+    return;
+  }
+  const p = globalProducts[_adSlideSelectedProductId];
+  if (!p) {
+    preview.innerHTML = '<span style="color:var(--accent-danger);">⚠ Linked service no longer exists — Buy Now button will be hidden</span>';
+    return;
+  }
+  preview.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--card-bg);border:1px solid var(--border-color);border-radius:6px;">
+    <i class="fas fa-check-circle" style="color:var(--accent-success);font-size:12px;flex-shrink:0;"></i>
+    <span style="flex:1;"><b>${p.title}</b> <span style="color:var(--text-secondary);">(${p.category || ''} › ${p.subCategory || ''})</span></span>
+    <button onclick="clearAdSlideProductSelection()" style="background:none;border:none;cursor:pointer;color:var(--accent-danger);font-size:12px;line-height:1;">×</button>
+  </div>`;
+}
+
+$('saveOfferSlideBtn').addEventListener('click', async () => {
+  const name = $('adSlideTitle').value.trim();
+  const newRate = $('adSlideNewPrice').value.trim();
+  if (!name || !newRate) return showToast('⚠️ Service Title and New Price are required');
+  const editId = $('editOfferSlideId').value;
+  showLoading();
+  const slideData = {
+    name,
+    imageUrl: $('adSlideImageUrl').value.trim(),
+    newRate,
+    oldRate: $('adSlideOldPrice').value.trim(),
+    description: $('adSlideOfferText').value.trim(),
+    badge: $('adSlideBadge').value.trim() || 'PRICE DROP!',
+    order: parseInt($('adSlideOrder').value, 10) || 0,
+    isActive: $('adSlideActive').checked,
+    productId: _adSlideSelectedProductId || '',
+    updatedAt: new Date().toISOString(),
+  };
+  try {
+    if (editId) { await update(ref(db, `meta/offerSlides/${editId}`), slideData); }
+    else { slideData.createdAt = new Date().toISOString(); await push(ref(db, 'meta/offerSlides'), slideData); }
+    $('clearOfferSlideBtn').click();
+    hideLoading(); showToast('✅ Advertisement slide saved!');
+  } catch (e) { hideLoading(); showToast('❌ ' + e.message); }
+});
+
+$('clearOfferSlideBtn').addEventListener('click', () => {
+  $('editOfferSlideId').value = '';
+  ['adSlideTitle','adSlideImageUrl','adSlideOldPrice','adSlideNewPrice','adSlideOfferText','adSlideBadge'].forEach(id => { if ($(id)) $(id).value = ''; });
+  if ($('adSlideOrder')) $('adSlideOrder').value = Object.keys(globalOfferSlides).length + 1;
+  if ($('adSlideActive')) $('adSlideActive').checked = true;
+  _adSlideSelectedProductId = '';
+  renderAdSlideProductPicker();
+  updateAdSlideSelectedPreview();
+});
+
+function renderOfferSlides(data) {
+  globalOfferSlides = data || {};
+  const grid = $('offerSlidesGrid');
+  if (!grid) return;
+  const entries = Object.entries(globalOfferSlides).sort((a, b) => (parseFloat(a[1].order) || 0) - (parseFloat(b[1].order) || 0));
+  if (!entries.length) { grid.innerHTML = '<p style="padding:20px;color:var(--text-secondary);">No advertisement slides yet. Add one above.</p>'; return; }
+  grid.innerHTML = entries.map(([id, slide]) => {
+    const linkedProduct = slide.productId ? globalProducts[slide.productId] : null;
+    const linkBadge = !slide.productId
+      ? `<span style="font-size:10px;color:var(--accent-warn);font-weight:700;">⚠ No service linked</span>`
+      : (linkedProduct
+        ? `<span style="font-size:10px;color:#10b981;font-weight:700;">🔗 ${linkedProduct.title}</span>`
+        : `<span style="font-size:10px;color:var(--accent-danger);font-weight:700;">⚠ Linked service deleted</span>`);
+    return `<div class="product-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <div style="font-weight:700;font-size:11px;">${slide.name || 'Untitled Slide'}</div>
+        <span style="background:rgba(37,99,235,0.12);color:#2563eb;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:800;">#${slide.order || 0}</span>
+      </div>
+      <div style="font-size:12px;margin:8px 0;"><span style="color:var(--accent-primary);font-weight:800;">₹${slide.newRate || 0}</span>${slide.oldRate ? ` <span style="text-decoration:line-through;color:var(--text-secondary);margin-left:6px;">₹${slide.oldRate}</span>` : ''}</div>
+      ${slide.description ? `<div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;font-style:italic;">${slide.description}</div>` : ''}
+      <div style="margin-bottom:10px;">${linkBadge}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span style="font-size:12px;color:var(--text-secondary);">Active</span>
+        <label class="toggle-switch"><input type="checkbox" ${slide.isActive !== false ? 'checked' : ''} onchange="toggleOfferSlideActive('${id}',this.checked)"><span class="toggle-slider"></span></label>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:auto;">
+        <button class="btn btn-sm" style="flex:1;" onclick="editOfferSlide('${id}')"><i class="fas fa-edit"></i> Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteOfferSlide('${id}')"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.toggleOfferSlideActive = async (id, val) => {
+  try { await update(ref(db, `meta/offerSlides/${id}`), { isActive: val }); showToast(val ? '✅ Slide activated' : '🔕 Slide disabled'); }
+  catch (e) { showToast('❌ ' + e.message); }
+};
+
+window.editOfferSlide = (id) => {
+  const slide = globalOfferSlides[id];
+  if (!slide) return;
+  $('editOfferSlideId').value = id;
+  $('adSlideTitle').value = slide.name || '';
+  $('adSlideImageUrl').value = slide.imageUrl || '';
+  $('adSlideOldPrice').value = slide.oldRate || '';
+  $('adSlideNewPrice').value = slide.newRate || '';
+  $('adSlideOfferText').value = slide.description || '';
+  $('adSlideBadge').value = slide.badge || '';
+  $('adSlideOrder').value = slide.order || 0;
+  $('adSlideActive').checked = slide.isActive !== false;
+  _adSlideSelectedProductId = slide.productId || '';
+  renderAdSlideProductPicker();
+  updateAdSlideSelectedPreview();
+  $('adSlideTitle').focus();
+  window.scrollTo(0, 0);
+};
+
+window.deleteOfferSlide = async (id) => {
+  const ok = await customConfirm({ title: 'Delete Advertisement Slide?', msg: 'This slide will be permanently removed from the carousel.', icon: '🗑️', okLabel: 'Delete', danger: true });
+  if (ok) remove(ref(db, `meta/offerSlides/${id}`));
+};
+
+// One-time migration: carry the old single Price Drop Card into Slide 1 so nothing is lost
+let _offerSlidesMigrationChecked = false;
+function migrateLegacyOfferToSlides() {
+  if (_offerSlidesMigrationChecked) return;
+  _offerSlidesMigrationChecked = true;
+  get(ref(db, 'meta/offerSlides')).then(slidesSnap => {
+    if (slidesSnap.exists()) return;
+    get(ref(db, 'meta/offers')).then(legacySnap => {
+      if (!legacySnap.exists()) return;
+      const d = legacySnap.val();
+      if (!d.name) return;
+      push(ref(db, 'meta/offerSlides'), {
+        name: d.name || '', imageUrl: d.imageUrl || '', newRate: d.newRate || '', oldRate: d.oldRate || '',
+        description: d.description || '', badge: 'PRICE DROP!', productId: '', order: 1, isActive: true,
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      });
+    });
+  });
+}
+
 // ── USERS ─────────────────────────────────────────────────────────────
 let globalUsersData = {};
 window.renderUsers = function renderUsers(data){
@@ -3569,7 +3776,7 @@ window.submitWalletAdjust=async()=>{
 // ── META ──────────────────────────────────────────────────────────────
 $('saveBrandBtn').addEventListener('click',async()=>{showLoading();await set(ref(db,'meta/brand'),{name:$('brandName').value,logoUrl:$('brandLogoUrl').value});hideLoading();showToast('✅ Branding saved!');});
 $('saveContactBtn').addEventListener('click',async()=>{showLoading();await set(ref(db,'meta/contact'),{email:$('contactEmail').value,socialTelegram:$('contactTelegram').value});hideLoading();showToast('✅ Contact saved!');});
-$('saveOffersBtn').addEventListener('click',async()=>{const d={name:$('offerName').value,imageUrl:$('offerImageUrl').value,newRate:$('offerNewRate').value,oldRate:$('offerOldRate').value,description:$('offerDescription').value,contactUsername:$('offerContactUsername').value,channelLink:$('offerChannelLink').value};showLoading();await set(ref(db,'meta/offers'),d);hideLoading();showToast('✅ Offers saved!');});
+$('saveOffersBtn').addEventListener('click',async()=>{const d={contactUsername:$('offerContactUsername').value,channelLink:$('offerChannelLink').value};showLoading();await update(ref(db,'meta/offers'),d);hideLoading();showToast('✅ Links saved!');});
 
 // ── DANGER ZONE ───────────────────────────────────────────────────────
 $('clearAllOrdersBtn').addEventListener('click',async()=>{const ok=await customConfirm({title:'Delete ALL Orders?',msg:'Every order will be permanently deleted. This cannot be undone.',icon:'⚠️',okLabel:'Delete All Orders',danger:true});if(ok){showLoading();await remove(ref(db,'orders'));hideLoading();showToast('🗑️ Orders cleared.');}});
