@@ -1575,6 +1575,7 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
 </div>
 
 <script type="module">
+const fmtOrderId=(id,o)=>(o&&o.orderNo)?'#'+String(o.orderNo).padStart(5,'0'):'#'+id.slice(-6).toUpperCase();
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, updateProfile } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
 import { getDatabase, ref, set, get, push, remove, onValue, update, onChildAdded, onChildChanged, query, orderByChild, equalTo } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
@@ -2511,8 +2512,8 @@ function buildOrderCardHTML(id, o) {
   <div class="owave-topline">
     <div style="display:flex;align-items:center;gap:6px;">
       <input type="checkbox" class="order-bulk-check" value="${id}" style="width:16px;height:16px;accent-color:#fff;display:none;" onchange="updateBulkCount()">
-      <span class="owave-id">#${id.slice(-6).toUpperCase()}</span>
-      <button onclick="copyToClip('${id.slice(-6).toUpperCase()}')" title="Copy Order ID" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.85);font-size:11px;padding:2px 4px;"><i class="fas fa-copy"></i></button>
+      <span class="owave-id">${fmtOrderId(id,o)}</span>
+      <button onclick="copyToClip('${fmtOrderId(id,o).slice(1)}')" title="Copy Order ID" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.85);font-size:11px;padding:2px 4px;"><i class="fas fa-copy"></i></button>
     </div>
     <span style="font-size:9px;color:rgba(255,255,255,0.75);">${oDate.toLocaleDateString()} ${oDate.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
   </div>
@@ -2589,7 +2590,7 @@ function _getFilteredOrders(data) {
         else if(filter!=='subscription'&&filter!=='free'&&filter!=='paid'&&status!==filter)return false;
       }
       if(search){
-        const hay=(o.userEmail||'')+'|'+(o.userName||'')+'|'+id+'|'+id.slice(-6).toUpperCase()+'|'+(o.utrId||'')+'|'+(o.productSnapshot?.title||'')+'|'+(o.productSnapshot?.planName||'')+'|'+(o.targetLink||'');
+        const hay=(o.userEmail||'')+'|'+(o.userName||'')+'|'+id+'|'+id.slice(-6).toUpperCase()+'|'+(o.orderNo?fmtOrderId(id,o)+'|'+o.orderNo+'|':'')+'|'+(o.utrId||'')+'|'+(o.productSnapshot?.title||'')+'|'+(o.productSnapshot?.planName||'')+'|'+(o.targetLink||'');
         if(!hay.toLowerCase().includes(search))return false;
       }
       return true;
@@ -2760,7 +2761,7 @@ window.updateStatus=async(id,s)=>{
             const histRef=await push(ref(db,`users/${order.userId}/walletHistory`),{
               type:'credit',
               amount:refundAmt,
-              note:`Refund for cancelled order #${id.slice(-6).toUpperCase()}`,
+              note:`Refund for cancelled order ${fmtOrderId(id,order)}`,
               utrId:'REFUND_'+Date.now(),
               createdAt:new Date().toISOString()
             });
@@ -4071,7 +4072,7 @@ window.exportOrdersCSV=()=>{
   const rows=[['Order ID','Product','Amount','User','User Email','UTR/TxID','Status','Link','Date']];
   Object.entries(globalOrdersData).forEach(([id,o])=>{
     rows.push([
-      id.slice(-6).toUpperCase(),
+      fmtOrderId(id,o).slice(1),
       (o.productSnapshot?.title||o.productSnapshot?.planName||'N/A').replace(/,/g,' '),
       o.finalAmount||0,
       o.userName||'N/A',
