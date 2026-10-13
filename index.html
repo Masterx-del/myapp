@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Admin Panel v6.0</title>
+<link rel="preconnect" href="https://selll-d5149-default-rtdb.firebaseio.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <script>
 window.__APP_CONFIG__ = {
     apiKey:            "AIzaSyDrjP8o8adBYGih_28XrDrCwVpL3WRu9rE",
@@ -194,6 +197,10 @@ body { font-family:'Inter',system-ui,-apple-system,sans-serif; background-color:
 .notification-toast { position:fixed; top:25px; right:25px; padding:14px 24px; background:var(--text-primary); color:var(--card-bg); border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.2); transform:translateX(150%); transition:transform 0.4s cubic-bezier(0.68,-0.55,0.27,1.55); z-index:10001; font-weight:600; white-space:nowrap; max-width:90%; font-size:11px; }
 .notification-toast.show { transform:translateX(0); }
 @keyframes spin { to { transform:rotate(360deg); } }
+#bootLoader { position:fixed; inset:0; z-index:20000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; background:var(--bg-color); transition:opacity .35s ease; }
+#bootLoader.hide { opacity:0; pointer-events:none; }
+#bootLoader .boot-spin { width:46px; height:46px; border-radius:50%; border:4px solid var(--border-color,#d1d5db); border-top-color:var(--accent-primary,#2563eb); animation:spin .8s linear infinite; }
+#bootLoader .boot-text { font-size:12px; font-weight:600; color:var(--text-secondary,#6b7280); letter-spacing:.3px; }
 
 /* CHAT MODAL */
 .chat-modal { position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:none; padding:20px; }
@@ -399,6 +406,8 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
 <div class="announcement-banner" id="announcementBannerDisplay"><span id="announcementBannerText"></span><button onclick="dismissAnnouncement()" style="background:none;border:none;color:#fff;margin-left:12px;cursor:pointer;font-size:11px;line-height:1;opacity:0.8;">×</button></div>
 <button class="theme-toggle" id="themeToggle" title="Switch Theme"><i class="fas fa-moon"></i></button>
 <div id="loadingOverlay" style="display:none;"></div>
+<!-- BOOT SPINNER (hides once Firebase data is ready) -->
+<div id="bootLoader"><div class="boot-spin"></div><div class="boot-text" id="bootText">Loading dashboard...</div></div>
 <!-- MINI LOADER BAR -->
 <div id="miniLoader" style="position:fixed;top:0;left:0;right:0;z-index:10002;display:none;align-items:center;justify-content:center;gap:8px;padding:9px 16px;background:var(--accent-primary);color:#fff;font-size:12px;font-weight:600;letter-spacing:0.3px;box-shadow:0 2px 10px rgba(37,99,235,0.35);">
   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="animation:spin 0.7s linear infinite;flex-shrink:0;"><circle cx="7" cy="7" r="5.5" stroke="rgba(255,255,255,0.35)" stroke-width="2"/><path d="M7 1.5A5.5 5.5 0 0 1 12.5 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
@@ -1589,6 +1598,22 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
+// ── BOOT SPINNER + FAST-LOAD CACHE ───────────────────────────────────
+// Cache-first: last orders/users snapshot IndexedDB se turant dikhao, Firebase live data aate hi replace.
+const _boot={orders:false,users:false,done:false};
+window.hideBoot=()=>{ if(_boot.done)return; _boot.done=true; const b=document.getElementById('bootLoader'); if(b){b.classList.add('hide');setTimeout(()=>b.remove(),450);} };
+const _bootMark=(k)=>{ _boot[k]=true; if(_boot.orders&&_boot.users){ hideBoot(); hideLoading(); setTimeout(()=>window._startChatWatch&&window._startChatWatch(),300); } };
+setTimeout(()=>{ if(!_boot.done){ hideBoot(); showToast('⚠️ Slow connection — data abhi load ho raha hai...',5000); } },12000);
+const _idb={
+  _db:null,
+  open(){ if(this._db)return this._db; this._db=new Promise((res,rej)=>{ try{ const r=indexedDB.open('adminFastCache',1); r.onupgradeneeded=()=>r.result.createObjectStore('kv'); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }catch(e){rej(e);} }); return this._db; },
+  async get(k){ try{ const d=await this.open(); return await new Promise(res=>{ const q=d.transaction('kv').objectStore('kv').get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>res(undefined); }); }catch(e){return undefined;} },
+  async set(k,v){ try{ const d=await this.open(); d.transaction('kv','readwrite').objectStore('kv').put(v,k); }catch(e){} },
+  async clear(){ try{ const d=await this.open(); d.transaction('kv','readwrite').objectStore('kv').clear(); }catch(e){} }
+};
+let _cacheTimer={};
+const _cacheSave=(k,v)=>{ clearTimeout(_cacheTimer[k]); _cacheTimer[k]=setTimeout(()=>_idb.set((window._cacheUid||'x')+':'+k,v||null),1500); };
+
 // ── HELPERS ─────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 window.showLoading = (t='Saving...') => { const ml=$('miniLoader'); if(!ml)return; $('loadingText').textContent=t; ml.style.display='flex'; };
@@ -1654,7 +1679,12 @@ let serviceModalTarget=''; // 'product' | 'bulk'
 setTimeout(()=>isInitialLoad=false,3000);
 
 onChildAdded(ref(db,'orders'),(snap)=>{if(!isInitialLoad)showToast('🔔 New Order Placed!');});
-onChildChanged(ref(db,'chats'),(snap)=>{if(!isInitialLoad){const info=snap.val()?.info;if(info)showToast(`💬 New Message: ${info.userName||'User'}`);}});
+// Chats poora tree download karta hai (heavy) — isliye orders/users aane ke baad start hota hai
+let _chatWatchStarted=false;
+window._startChatWatch=()=>{ if(_chatWatchStarted)return; _chatWatchStarted=true;
+  onChildChanged(ref(db,'chats'),(snap)=>{if(!isInitialLoad){const info=snap.val()?.info;if(info)showToast(`💬 New Message: ${info.userName||'User'}`);}});
+  onValue(ref(db,'chats'),s=>renderChatUsers(s.val()));
+};
 
 // ── DRAWER ───────────────────────────────────────────────────────────
 const drawer=$('drawer'),overlay=$('drawerOverlay'),menuToggle=$('menuToggle');
@@ -1718,6 +1748,7 @@ onAuthStateChanged(auth,async(user)=>{
       if(!adminSnap.exists()){
         // Not an admin — force logout immediately
         await signOut(auth);
+        hideBoot();
         $('loginScreen').style.display='flex';
         $('adminDashboard').style.display='none';
         menuToggle.classList.add('hidden');
@@ -1736,13 +1767,15 @@ onAuthStateChanged(auth,async(user)=>{
     } catch(e) {
       console.error('[Auth] Admin verification failed:',e);
       await signOut(auth);
+      hideBoot();
       $('loginScreen').style.display='flex';
       $('adminDashboard').style.display='none';
       menuToggle.classList.add('hidden');
       alert('⚠️ Authentication error. Please try again.\n\n'+e.message);
     }
   } else {
-    const snap=await get(ref(db,'meta/adminSetup'));
+    let snap; try{ snap=await get(ref(db,'meta/adminSetup')); }catch(e){ snap={exists:()=>true,val:()=>({completed:true})}; }
+    hideBoot();
     if(snap.exists()&&snap.val().completed){$('loginScreen').style.display='flex';}
     else{$('setupScreen').style.display='flex';}
     $('adminDashboard').style.display='none';menuToggle.classList.add('hidden');
@@ -1772,11 +1805,20 @@ $('loginBtn').addEventListener('click',async()=>{
   showLoading('Authenticating...');
   try{await signInWithEmailAndPassword(auth,email,pass);hideLoading();}catch(e){hideLoading();alert(e.message);}
 });
-$('drawerLogoutBtn').addEventListener('click',()=>signOut(auth));
+$('drawerLogoutBtn').addEventListener('click',()=>{_idb.clear();signOut(auth);});
 
 // ── INIT DATA ────────────────────────────────────────────────────────
 
 function initData(){
+  // ⚡ Cache-first: purana snapshot turant dikhao (live data aate hi replace ho jayega)
+  window._cacheUid=currentAdminUid;
+  Promise.all([_idb.get(currentAdminUid+':orders'),_idb.get(currentAdminUid+':users')]).then(([co,cu])=>{
+    if(_boot.done)return;
+    let used=false;
+    if(co&&!_boot.liveOrders){ globalOrdersData=co; try{renderOrders(co);buildOrdersRevenueChart(co);}catch(e){} used=true; }
+    if(cu&&!_boot.liveUsers){ try{renderUsers(cu);}catch(e){} used=true; }
+    if(used){ hideBoot(); showLoading('Syncing latest data...'); }
+  });
   // Load category map first so all selects are correct
   get(ref(db,'meta/categoryMap')).then(s=>{
     if(s.exists()&&s.val()&&typeof s.val()==='object'){
@@ -1786,7 +1828,7 @@ function initData(){
     renderCatMgmtUI();
   }).catch(()=>{ window.populateCategorySelects(); renderCatMgmtUI(); });
   onValue(ref(db,'products'),s=>{renderProducts(s.val());buildCategoryChart(globalProducts);});
-  onValue(ref(db,'orders'),s=>{globalOrdersData=s.val();renderOrders(globalOrdersData);buildOrdersRevenueChart(globalOrdersData);});
+  onValue(ref(db,'orders'),s=>{_boot.liveOrders=true;globalOrdersData=s.val();renderOrders(globalOrdersData);buildOrdersRevenueChart(globalOrdersData);_cacheSave('orders',globalOrdersData);_bootMark('orders');});
   onValue(ref(db,'meta/revenueResetAt'),s=>{
     revenueResetAt=s.exists()?new Date(s.val()).getTime():0;
     const infoEl=$('revenueResetInfo');
@@ -1795,8 +1837,7 @@ function initData(){
   });
   onValue(ref(db,'coupons'),s=>renderCoupons(s.val()));
   onValue(ref(db,'exclusivePacks'),s=>{ window._globalExclusivePacks = s.val()||{}; renderExclusivePacks(window._globalExclusivePacks); const count=Object.keys(window._globalExclusivePacks).length; if($('dashTotalSubscriptions')) $('dashTotalSubscriptions').textContent=count; });
-  onValue(ref(db,'users'),s=>renderUsers(s.val()));
-  onValue(ref(db,'chats'),s=>renderChatUsers(s.val()));
+  onValue(ref(db,'users'),s=>{_boot.liveUsers=true;const u=s.val();renderUsers(u);_cacheSave('users',u);_bootMark('users');});
   onValue(ref(db,'meta/brand'),s=>{if(s.exists()){const d=s.val();$('brandName').value=d.name||'';$('brandLogoUrl').value=d.logoUrl||'';if(d.logoUrl){$('drawerLogo').src=d.logoUrl;$('drawerLogo').style.display='block';}if(d.name)$('drawerBrandName').textContent=d.name;}});
   onValue(ref(db,'meta/contact'),s=>{if(s.exists()){const d=s.val();$('contactEmail').value=d.email||'';$('contactTelegram').value=d.socialTelegram||'';}});
   onValue(ref(db,'depositRequests'),s=>{globalDepositRequests=s.val()||{};window.renderPaymentRequests&&window.renderPaymentRequests();});
