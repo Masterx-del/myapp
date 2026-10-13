@@ -1575,7 +1575,7 @@ input:checked + .toggle-slider:before { transform:translateX(20px); }
 </div>
 
 <script type="module">
-const fmtOrderId=(id,o)=>(o&&o.orderNo)?'#'+String(o.orderNo).padStart(5,'0'):'#'+id.slice(-6).toUpperCase();
+const fmtOrderId=(id,o)=>(o&&o.freeOrderNo)?'#FREE'+String(o.freeOrderNo).padStart(5,'0'):(o&&o.orderNo)?'#'+String(o.orderNo).padStart(5,'0'):'#'+id.slice(-6).toUpperCase();
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, updateProfile } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
 import { getDatabase, ref, set, get, push, remove, onValue, update, onChildAdded, onChildChanged, query, orderByChild, equalTo } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
@@ -2590,7 +2590,7 @@ function _getFilteredOrders(data) {
         else if(filter!=='subscription'&&filter!=='free'&&filter!=='paid'&&status!==filter)return false;
       }
       if(search){
-        const hay=(o.userEmail||'')+'|'+(o.userName||'')+'|'+id+'|'+id.slice(-6).toUpperCase()+'|'+(o.orderNo?fmtOrderId(id,o)+'|'+o.orderNo+'|':'')+'|'+(o.utrId||'')+'|'+(o.productSnapshot?.title||'')+'|'+(o.productSnapshot?.planName||'')+'|'+(o.targetLink||'');
+        const hay=(o.userEmail||'')+'|'+(o.userName||'')+'|'+id+'|'+id.slice(-6).toUpperCase()+'|'+((o.orderNo||o.freeOrderNo)?fmtOrderId(id,o)+'|'+fmtOrderId(id,o).slice(1)+'|'+(o.orderNo||o.freeOrderNo)+'|':'')+'|'+(o.utrId||'')+'|'+(o.productSnapshot?.title||'')+'|'+(o.productSnapshot?.planName||'')+'|'+(o.targetLink||'');
         if(!hay.toLowerCase().includes(search))return false;
       }
       return true;
